@@ -1,0 +1,31 @@
+#!/bin/bash
+
+
+cmtn_device_id_varname="CMTN_DEVICE_ID"
+
+if [ "$1" == "" ]; then
+  (>&2 echo "Missing required first argument configuration file path")
+  exit 1
+fi
+
+var_filepath="$1"
+
+existing_device_id=$(grep -oP "${cmtn_device_id_varname}=\K(.*)" $var_filepath)
+
+if [ "$existing_device_id" == "" ]; then
+  systemd-cat -t horizon-set-device-id echo "No existing ${cmtn_device_id_varname} in $var_filepath, calculating one"
+
+  device_id=$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
+
+  if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
+    # can't use this for device id, use mac address of interface instead
+    device_id=$(echo $(sha1sum <(ip -o link show $(basename $(ls -d /proc/sys/net/ipv4/conf/[we]* | head -n1)) | grep -oP "link/ether \K([:\w\d]+) ")) | awk '{print $1}')
+    if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
+      # couldn't use the MAC, using a random string
+      device_id=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-32};echo)
+    fi
+  fi
+
+  systemd-cat -t horizon-set-device-id echo "Setting ${cmtn_device_id_varname} in $var_filepath to $device_id"
+  sed -i "s,${cmtn_device_id_varname}=,${cmtn_device_id_varname}=${device_id}," $var_filepath
+fi

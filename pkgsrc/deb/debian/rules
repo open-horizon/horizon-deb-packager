@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+
+SHELL := /bin/bash
+PACKAGEVERSION = $(shell cat ./debian/PACKAGEVERSION)
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	cd anax-src && $(MAKE) clean
+	cd anax-ui-src && $(MAKE) clean
+
+override_dh_auto_test:
+	@echo "N.B. Test execution not yet plumbed"
+
+#TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
+
+HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
+BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
+# do this b/c install has to rebuild in order to ensure newest pkgs are fetched
+override_dh_auto_build:
+override_dh_auto_install:
+	# horizon package stuff
+	mkdir -p $(HORIZON-OUTDIRBASE)
+	cd $(HORIZON-OUTDIRBASE) && \
+		mkdir -p var/{cache/horizon/torrent/,horizon/,tmp/horizon/workload_ro/} && \
+		mkdir -p etc/{default/,systemd/system/,horizon/{policy.d,agbot/policy.d/,trust/}} && \
+		mkdir -p usr/horizon/bin/
+	cp -pa tmp/conf/anax.json.example $(HORIZON-OUTDIRBASE)/etc/horizon/
+	cp -pa tmp/service/horizon.service $(HORIZON-OUTDIRBASE)/etc/systemd/system/
+	cp -pa tmp/common/horizon-env $(HORIZON-OUTDIRBASE)/etc/default/horizon
+	cp -pa tmp/common/script/horizon-set-device-id $(HORIZON-OUTDIRBASE)/usr/horizon/bin/
+	cd anax-src && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
+	cd anax-ui-src && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
+
+	# bluehorizon package stuff
+	mkdir -p $(BLUEHORIZON-OUTDIRBASE)
+	cd $(BLUEHORIZON-OUTDIRBASE) && \
+		mkdir -p etc/horizon/trust/
+	cp -Ra tmp/common/conf/*.pem $(BLUEHORIZON-OUTDIRBASE)/etc/horizon/trust/
+	find tmp/common/conf/* ! -name "*.pem" -exec cp {} $(BLUEHORIZON-OUTDIRBASE)/etc/horizon/ \;
+
+override_dh_systemd_enable:
+	dh_systemd_enable --name=horizon
+
+clean.%:
+	rm -Rf $(BUILDDIR_$*)

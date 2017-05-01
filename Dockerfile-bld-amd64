@@ -1,0 +1,14 @@
+FROM ubuntu:16.10
+MAINTAINER mdye <mdye@us.ibm.com>
+
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y \
+      build-essential \
+      devscripts \
+      debhelper \
+      golang-1.7-go \
+      git \
+      gnupg \
+      vim
+RUN mkdir /prj
+WORKDIR /prj

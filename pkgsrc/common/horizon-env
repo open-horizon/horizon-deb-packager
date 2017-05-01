@@ -1,0 +1,5 @@
+GOPATH=$SNAP_DATA/go
+mtn_soliditycontract_block_read_delay=3
+CMTN_DIRECTORY_VERSION=0
+CMTN_BLOCKCHAIN=bluehorizon
+CMTN_DEVICE_ID=

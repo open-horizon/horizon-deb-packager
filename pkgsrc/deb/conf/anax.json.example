@@ -1,0 +1,33 @@
+{
+  "Edge": {
+    "TorrentDir": "/var/cache/horizon/torrent/",
+    "APIListen": "0.0.0.0:80",
+    "DBPath": "/var/horizon/",
+    "GethURL": "http://127.0.0.1:8545",
+    "DockerEndpoint": "unix:///var/run/docker.sock",
+    "StaticWebContent": "/var/lib/horizon/web/",
+    "PublicKeyPath": "/etc/horizon/trust/mtn-publicKey.pem",
+    "CACertsPath": "/etc/horizon/trust/horizon.pem",
+    "DefaultCPUSet": "",
+    "WorkloadROStorage": "/var/tmp/horizon/workload_ro/",
+    "ExchangeURL": "https://exchange.bluehorizon.network/api/v1/",
+    "PolicyPath": "/etc/horizon/policy.d/",
+    "ExchangeHeartbeat": 60,
+    "AgreementTimeoutS": 600
+  },
+  "AgreementBot": {
+    "DBPath": "/var/horizon/",
+    "GethURL": "http://127.0.0.1:8545",
+    "TxLostDelayTolerationSeconds": 240,
+    "AgreementWorkers": 5,
+    "ProtocolTimeoutS": 60,
+    "AgreementTimeoutS": 600,
+    "PolicyPath": "/etc/horizon/agbot/policy.d/",
+    "NewContractIntervalS": 15,
+    "ProcessGovernanceIntervalS": 10,
+    "IgnoreContractWithAttribs": "ethereum_account",
+    "ExchangeURL": "https://exchange.bluehorizon.network/api/v1/",
+    "ExchangeHeartbeat": 60,
+    "ActiveDeviceTimeoutS": 180
+  }
+}
