@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+if [[ $# -lt 2 ]]; then
+  (>2 echo "Required args: <input_file> <output_file>")
+  exit 1
+fi
+
+if [[ ! -e "$1" ]]; then
+  (>2 echo "Unspecified but required argument (source file) or unable to read source file $1")
+  exit 1
+fi
+
+envsubst < $1 | jq -r '.' > $2

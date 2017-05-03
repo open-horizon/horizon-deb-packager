@@ -1,0 +1,24 @@
+name: bluehorizon
+version:
+summary: Horizon Decentralized Autonomous Edge Compute System...
+description: This snap includes all Horizon system control components...
+confinement: devmode
+epoch: 0
+grade: devel
+
+apps:
+  anax:
+    command: bluehorizon-start
+    daemon: simple
+    plugs: [firewall-control, network, network-bind]
+    restart-condition: always
+
+parts:
+  horizon-distribution:
+    plugin: dump
+    stage-packages:
+      - bash
+      - curl
+      - gettext
+      - jq
+    source: ./fs/.

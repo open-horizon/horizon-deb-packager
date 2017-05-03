@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+if [ ! -d "$1" ]; then
+  (>&2 echo "Missing required first argument (base directory path) or provided arg doesn't name a directory")
+  exit 1
+fi
+
+mkdir -p $1/var/{cache/horizon/torrent/,horizon/,tmp/horizon/workload_ro/} && \
+mkdir -p $1/etc/{default/,systemd/system/,horizon/{policy.d,agbot/policy.d/,trust/}} && \
+mkdir -p $1/usr/horizon/{bin/,web/}

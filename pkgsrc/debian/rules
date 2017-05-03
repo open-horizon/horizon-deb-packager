@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+
+SHELL := /bin/bash
+PACKAGEVERSION = $(shell cat ./debian/PACKAGEVERSION)
+
+%:
+	dh $@
+
+override_dh_auto_test:
+	@echo "N.B. Test execution not yet plumbed"
+
+#TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
+
+# these are expected to be the same location as in the wrapping Makefile
+HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
+BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
+override_dh_auto_build:
+	cd anax-src && $(MAKE)
+	cd anax-ui-src && $(MAKE)
+
+override_dh_auto_install:
+	cd anax-src && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
+	cd anax-ui-src && $(MAKE) install DESTDIR=$(BLUEHORIZON-OUTDIRBASE)/usr/horizon
+	# copy the staged, static files
+	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
+	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
+
+override_dh_systemd_enable:
+	dh_systemd_enable --name=horizon
+
+clean.%:
+	rm -Rf $(BUILDDIR_$*)

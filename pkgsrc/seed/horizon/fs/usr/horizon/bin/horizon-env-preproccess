@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 cmtn_device_id_varname="CMTN_DEVICE_ID"
 
 if [ "$1" == "" ]; then

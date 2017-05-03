@@ -6,7 +6,7 @@ Vcs-Browser: https://github.com/open-horizon
 Section: misc
 Priority: optional
 Standards-Version: 3.9.8
-Build-Depends: golang-go (>= 1.7), make (>= 4), git (>= 2.8)
+Build-Depends: golang-1.7-go, make (>= 4), git (>= 2.8)
 
 Package: horizon
 Architecture: any
