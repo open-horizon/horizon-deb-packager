@@ -66,7 +66,7 @@ endif
 horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/anax-src horizon_$(VERSION)/anax-ui-src $(wildcard pkgsrc/**/*)
 	# copy deb stuff
 	cp -Ra ./pkgsrc/debian horizon_$(VERSION)
-	-find ./horizon_$(VERSION) -iname "*.git*" -delete
+	-find ./horizon_$(VERSION) -iname "*.git" -type d -exec rm -Rf {} \;
 	tar czf horizon_$(VERSION).orig.tar.gz --dereference ./horizon_$(VERSION)
 
 pkgs:
