@@ -1,0 +1,21 @@
+#!/bin/bash
+
+usage="Usage: $0 repo_path debian_changelog_path tag_prefix"
+
+if [[ $# -lt 3 ]]; then
+  (>&2 echo "Missing required argument(s). $usage")
+fi
+
+repo_path=$1
+debian_changelog_path=$2
+tag_prefix=$3
+
+old_version=$(dpkg-parsechangelog -l "$debian_changelog_path" -c 0 -S version)
+(>&2 echo "INFO: Previous debian package version: $old_version. Gathering all changes for git project since tag ${tag_prefix}/${old_version}...")
+
+cd $repo_path
+
+# the stuff we want to report is below
+# note that the below branch info will be empty if detached
+echo -e "$(git remote show origin -n | grep -oP 'Fetch URL: (ssh|https)://git@?\K(.*)'), branch: $(git symbolic-ref --short -q HEAD)"
+git log --no-merges --oneline --pretty=format:"%h (%aN): %s" ${tag_prefix}/${old_version}..HEAD

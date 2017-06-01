@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]]; then
+  (>&2 echo "No provided root directory argument, cannot continue")
+  exit 1
+fi
+
+pdir=$(dirname $0)
+exec $pdir/mk-dir-trees $1
+exec $pdir/horizon-env-preprocess $1/etc/default/horizon-env

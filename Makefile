@@ -4,9 +4,9 @@ VERSION = $(shell cat VERSION)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
 DEB_REVISION = $(shell cat DEB_REVISION)
 PACKAGEVERSION = $(VERSION)-$(DEB_REVISION)
+SUBPROJECTS = horizon_$(VERSION)/anax horizon_$(VERSION)/anax-ui
 
-anax-branch = master
-anax-ui-branch = master
+TAG_PREFIX = horizon
 
 all: horizon_$(PACKAGEVERSION)_$(ARCH).deb \
 		bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb \
@@ -18,9 +18,9 @@ bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVER
 	cp -Ra ./pkgsrc/snap/. horizon_$(VERSION)/snap
 
 	sed -i "s,version:,version: $(PACKAGEVERSION),g" horizon_$(VERSION)/snap/snapcraft.yaml
-	cd horizon_$(VERSION)/anax-src && \
+	cd horizon_$(VERSION)/anax && \
 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
-	cd horizon_$(VERSION)/anax-ui-src && \
+	cd horizon_$(VERSION)/anax-ui && \
 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
 
 	cd horizon_$(VERSION)/snap && \
@@ -30,8 +30,8 @@ clean: clean-src clean-snap
 	@echo "TODO: remove docker container, etc."
 
 clean-src:
-	-cd horizon_$(VERSION)/anax-ui-src && $(MAKE) clean
-	-cd horizon_$(VERSION)/anax-src && $(MAKE) clean
+	-@[ -e "horizon_$(VERSION)"/anax-ui ] && cd horizon_$(VERSION)/anax-ui && $(MAKE) clean
+	-@[ -e "horizon_$(VERSION)"/anax ] && cd horizon_$(VERSION)/anax && $(MAKE) clean
 	-rm -Rf horizon* bluehorizon*
 
 clean-snap:
@@ -41,38 +41,38 @@ clean-snap:
 bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb:
 horizon_$(PACKAGEVERSION)_$(ARCH).deb: horizon_$(VERSION).orig.tar.gz
 	cd horizon_$(VERSION) && \
-		echo "$(PACKAGEVERSION)" > ./debian/PACKAGEVERSION && \
-		debuild -us -uc
+		debuild -us -uc --lintian-opts --allow-root
 
 horizon_$(VERSION):
 	mkdir -p horizon_$(VERSION)
 
-# N.B: this target will pull anax from the canonical repo w/ the tag $(VERSION)
+# N.B: this target will pull anax from the canonical repo tagged by version
 # if it exists, HEAD if not. During publishing, this Makefile will push a tag
 # to anax. That means that you can bump the VERSION number first, then build
 # from head and the build will be repeatable later with the same VERSION value.
-horizon_$(VERSION)/%-src: horizon_$(VERSION)
-	git clone https://github.com/open-horizon/$*.git horizon_$(VERSION)/$*-src
-ifneq ($($*-branch),"master")
-	cd horizon_$(VERSION)/$*-src && git checkout $($*-branch)
-else
-	# ok for this one to fail, it merely means that we aren't building a previously-build, tagged version
-	-cd horizon_$(VERSION)/$*-src && git checkout tags/$(VERSION)
-endif
+horizon_$(VERSION)/%: horizon_$(VERSION)
+	./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
 
-# N.B. This target runs clean because the .orig tarball mustn't include the
-# build artifacts. This could be improved to preserve built artifacts from
-# anax, etc.
-horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/anax-src horizon_$(VERSION)/anax-ui-src $(wildcard pkgsrc/**/*)
-	# copy deb stuff
-	cp -Ra ./pkgsrc/debian horizon_$(VERSION)
-	-find ./horizon_$(VERSION) -iname "*.git" -type d -exec rm -Rf {} \;
-	tar czf horizon_$(VERSION).orig.tar.gz --dereference ./horizon_$(VERSION)
+publish-meta-horizon_$(VERSION)/%:
+	./tools/git-tag "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
 
-pkgs:
-	@echo horizon_$(PACKAGEVERSION)_$(ARCH).deb
-	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb
-	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+
+# N.B. This target depends on one that runs clean because the .orig tarball
+# mustn't include the build artifacts. This could be improved to preserve
+# built artifacts from anax, etc.
+horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/debian/changelog $(wildcard pkgsrc/**/*)
+	tar czf horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' ./horizon_$(VERSION)
+
+# TODO: fix the dependencies, up-to-date is screwed on the horizon_$(VERSION)... targets and it's not phony like it should be
+horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian pkgsrc/debian/changelog $(SUBPROJECTS)
+	tools/render-debian-changelog $(PACKAGEVERSION) horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog $(shell find horizon_$(VERSION)/ -iname ".git-gen-changelog")
+	find horizon_$(VERSION)/ -iname ".git-gen-changelog" -exec rm {} \;
+
+horizon_$(VERSION)/debian:
+	mkdir -p horizon_$(VERSION)/debian
+
+publish-meta: publish-meta-$(SUBPROJECTS)
+	@echo "not implemented; TODO: overwrite pkgsrc/debian/changelog, commit changelog and VERSION to this repo's canonical remote"
 
 # paths here are expected by debian/rules file
 HORIZON_STGFSBASE=horizon_$(VERSION)/debian/fs-horizon
@@ -83,11 +83,14 @@ seed-debian-stage: horizon_$(VERSION) clean-src
 			./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)
 
 	cp -Ra ./pkgsrc/seed/horizon/fs/. $(HORIZON_STGFSBASE)
-	cp -Ra ./pkgsrc/seed/horizon-only/fs/. $(HORIZON_STGFSBASE)
 	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON_STGFSBASE)
 
 	./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example
+	cp ./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)/usr/horizon/bin/
+
 	cp $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example $(BLUEHORIZON_STGFSBASE)/etc/horizon/anax.json
+	# copy deb stuff
+	rsync -a --exclude="./pkgsrc/debian/changelog" ./pkgsrc/debian horizon_$(VERSION)/
 
 BLUEHORIZON-SNAP-OUTDIRBASE=horizon_$(VERSION)/snap/fs
 seed-snap-stage: seed-debian-stage clean-snap
@@ -98,9 +101,17 @@ seed-snap-stage: seed-debian-stage clean-snap
 	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
 	cp -Ra ./pkgsrc/seed/bluehorizon-snap-only/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
 
-	cp ./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)
+	cp ./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)/usr/horizon/bin/
 	cp ./pkgsrc/seed/dynamic/anax.json.tmpl $(BLUEHORIZON-SNAP-OUTDIRBASE)/etc/horizon/
 
 	find $(BLUEHORIZON-SNAP-OUTDIRBASE)/ -type d -empty -delete
 
-.PHONY: clean clean-src clean-snap seed-snap-stage seed-debian-stage pkgs
+show-pkgs:
+	@echo horizon_$(PACKAGEVERSION)_$(ARCH).deb
+	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb
+	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+
+show-subprojects:
+	@echo $(SUBPROJECTS)
+
+.PHONY: clean clean-src clean-snap publish publish-meta seed-snap-stage seed-debian-stage show-pkgs show-subprojects

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# git-tag will create an annotated tag of the HEAD commit on a local copy of a
+# repo and push that tag to the origin remote. It will report success even if
+# these steps were already performed.
+
+usage="Usage: $0 repo_path tag"
+
+if [[ $# -lt 2 ]]; then
+  (>&2 echo "Missing required argument(s). $usage")
+  exit 1
+fi
+
+repo_path=$1
+tag=$2
+
+function get_local_hash() {
+  local tag_query="$(git show-ref --tags "$tag" 2>&1)"
+
+  if [[ $? != 0 ]] || [[ "$tag_query" == "" ]]; then
+    echo ""
+  else
+    echo $tag_query | cut -d' ' -f 1
+  fi
+}
+
+if [[ "$(get_local_hash)" == "" ]]; then
+  # no local tag exists
+  git tag -m "$(echo "$tag" | sed 's,/, ,')" -a $tag
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to tag repo with $tag. Manual intervention required.")
+    exit 1
+  fi
+fi
+
+# expecting if we got this far, we have a local copy with the right tag
+
+remote_tag_query=$(git ls-remote --exit-code --tags origin "$tag")
+remote_tq_code=$?
+
+if [[ $remote_tq_code == 0 ]]; then
+  # if exit code is 0, it's already there and we just have the compare the commit hash
+  remote_hash=$(echo $remote_tag_query | cut -d' ' -f 1)
+  if [[ "$(get_local_hash)" == "$remote_hash" ]]; then
+    # success case
+    echo "Tag $tag already exists in remote repo and the commit hashes match ($remote_hash)."
+    exit 0
+  else
+    (>&2 echo "Tag $tag already exists in remote repo but the commit hashes *do not* match. Remote: $remote_hash, local: $local_hash. Manual intervention required to remedy this.")
+    exit 1
+  fi
+
+elif [[ $remote_tq_code == 2 ]]; then
+  # if exit code is 2, it doesn't exist upstream and we can try to push
+  git push origin $tag
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
+    exit 1
+  fi
+
+  echo "Succeeded writing $tag to remote."
+else
+  (>&2 echo "Unable to push $tag to remote from local repo copy $repo_path. Manual intervention required.")
+  exit 1
+fi
+
+exit 0

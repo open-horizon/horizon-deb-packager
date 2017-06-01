@@ -60,9 +60,9 @@ A build box requires building, packaging, and signing software. Build a containe
 
 ### Operations
 
-Start a build container with your GPG key and the project source mounted inside:
+#### Manual silly business
 
-    docker run --rm --name hzn-build -v $HOME/.gnupg:/root/.gnupg:ro -v $PWD:/prj -it hzn-build:latest /bin/bash
+docker run --rm --name hzn-build -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent -v $HOME/.ssh-github:/root/.ssh:ro -v $PWD:/prj -it hzn-build:latest /bin/bash
 
 #### Building artifacts
 

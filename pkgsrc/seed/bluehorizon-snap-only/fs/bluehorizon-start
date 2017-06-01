@@ -3,11 +3,12 @@
 # author: mdye@us.ibm.com
 #
 
-# seed dirs if they do not exist
-$(dirname $0)/mk-dir-trees $SNAP_DATA/
+$SNAP/usr/horizon/bin/horizon-prestart $SNAP_DATA/
 
 if [[ -d "$SNAP_DATA"/etc/default/horizon-env ]]; then
   . "$SNAP_DATA"/etc/default/horizon-env
+else
+  . "$SNAP"/etc/default/horizon-env
 fi
 
 if [[ -d "$SNAP_DATA"/etc/horizon/anax.json.tmpl ]]; then
@@ -18,4 +19,4 @@ fi
 
 envsubst <$(cat "$CFG_PATH") > "$SNAP_DATA"/etc/horizon/anax.json
 
-"$SNAP"/bin/anax -v "$ANAX_LOG_LEVEL" -logtostderr -config "$SNAP_DATA"/etc/horizon/anax.json
+"$SNAP"/usr/horizon/bin/anax -v "$ANAX_LOG_LEVEL" -logtostderr -config "$SNAP_DATA"/etc/horizon/anax.json

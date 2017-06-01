@@ -6,5 +6,5 @@ if [ ! -d "$1" ]; then
 fi
 
 mkdir -p $1/var/{cache/horizon/torrent/,horizon/,tmp/horizon/workload_ro/} && \
-mkdir -p $1/etc/{default/,systemd/system/,horizon/{policy.d,agbot/policy.d/,trust/}} && \
+mkdir -p $1/etc/{default/,horizon/{policy.d,agbot/policy.d/,trust/}} && \
 mkdir -p $1/usr/horizon/{bin/,web/}
