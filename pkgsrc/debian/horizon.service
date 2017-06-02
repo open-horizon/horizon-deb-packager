@@ -5,9 +5,9 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-EnvironmentFile=/etc/default/horizon-env
-ExecStartPre=/usr/horizon/bin/horizon-prestart /
-ExecStart=/usr/horizon/bin/anax -v 3 -logtostderr -config /etc/horizon/anax.json
+EnvironmentFile=/etc/default/horizon
+ExecStartPre=/usr/horizon/sbin/horizon-prestart /
+ExecStart=/usr/horizon/bin/anax -v $ANAX_LOG_LEVEL -logtostderr -config /etc/horizon/anax.json
 Restart=always
 TimeoutStopSec=30
 Type=simple

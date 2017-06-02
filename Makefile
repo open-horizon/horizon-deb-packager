@@ -85,8 +85,11 @@ seed-debian-stage: horizon_$(VERSION) clean-src
 	cp -Ra ./pkgsrc/seed/horizon/fs/. $(HORIZON_STGFSBASE)
 	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON_STGFSBASE)
 
+	echo "SNAP_COMMON=/var/horizon" > $(HORIZON_STGFSBASE)/etc/default/horizon && \
+		envsubst < ./pkgsrc/seed/dynamic/horizon.tmpl >> $(HORIZON_STGFSBASE)/etc/default/horizon
+
 	./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example
-	cp ./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)/usr/horizon/bin/
+	cp ./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)/usr/horizon/sbin/
 
 	cp $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example $(BLUEHORIZON_STGFSBASE)/etc/horizon/anax.json
 	# copy deb stuff
@@ -101,8 +104,9 @@ seed-snap-stage: seed-debian-stage clean-snap
 	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
 	cp -Ra ./pkgsrc/seed/bluehorizon-snap-only/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
 
-	cp ./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)/usr/horizon/bin/
+	cp ./pkgsrc/seed/dynamic/horizon.tmpl $(BLUEHORIZON-SNAP-OUTDIRBASE)/etc/default/
 	cp ./pkgsrc/seed/dynamic/anax.json.tmpl $(BLUEHORIZON-SNAP-OUTDIRBASE)/etc/horizon/
+	cp ./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)/usr/horizon/sbin/
 
 	find $(BLUEHORIZON-SNAP-OUTDIRBASE)/ -type d -empty -delete
 

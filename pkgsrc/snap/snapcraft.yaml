@@ -1,7 +1,7 @@
 name: bluehorizon
 version:
-summary: Horizon Decentralized Autonomous Edge Compute System...
-description: This snap includes all Horizon system control components...
+summary: Horizon decentralized autonomous edge compute system
+description: This snap includes all horizon system control components bootstrapped to the Blue Horizon backend
 confinement: devmode
 epoch: 0
 grade: devel
