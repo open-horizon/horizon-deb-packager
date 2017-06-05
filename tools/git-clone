@@ -16,13 +16,13 @@ tag_prefix=$(echo $tag | awk -F "/" '{print $1}')
 if [[ -e "$repo_destination_path" ]]; then
   echo "$repo_destination_path already exists, skipping clone (clean sources to re-fetch)."
 
-  (cd "$repo_destination_path"
-  current_branch=$(git rev-parse --abbrev-ref HEAD)
+  (cd "$repo_destination_path" &&
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
 
   # clean up before proceeding
   if [[ "$current_branch" != "master" ]]; then
     git checkout master
-    git branch -D $(current_branch)
+    git branch -D "$current_branch"
     git reset --hard HEAD
   fi)
 
@@ -35,7 +35,7 @@ cd "$repo_destination_path"
 git tag -l | grep -q "$tag"
 
 if [[ $? == 0 ]]; then
-  echo "git tag $tag exists, building from tagged source and skipping changelog creation"
+  echo "git tag $tag exists in local copy, building from tagged source and skipping changelog creation"
   git checkout -b "$tag-build" "tags/${tag}"
 else
   echo "git tag $tag does not exist, building from HEAD and creating changelog"

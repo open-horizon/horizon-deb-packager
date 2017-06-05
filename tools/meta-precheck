@@ -1,0 +1,30 @@
+#!/bin/bash
+
+usage="Usage: $0 pkg_project tag subprojects..."
+pdir="$(dirname $(realpath $0))"
+
+if [[ $# -lt 3 ]]; then
+  (>&2 echo "Missing required argument(s). $usage")
+  exit 1
+fi
+
+pkg_project=$1
+tag=$2
+
+# VERSION file must have changed in pkg_project
+
+(cd $pkg_project &&
+ git diff-index --name-only HEAD -- | grep -q VERSION
+
+ if [[ "$?" != 0 ]]; then
+  (>&2 echo "VERSION file unchanged in $pkg_project; you must update this version number before publishing package metadata")
+  exit 1
+ fi
+ )
+
+# check for rights to tag dependent project repos
+
+for subp in "${@:3}"; do
+  # ... git-tag 1 ... signifies dry-run
+  (cd $pkg_project/$subp && ${pdir}/git-tag 1 "$subp" "$tag")
+done

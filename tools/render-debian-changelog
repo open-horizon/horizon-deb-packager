@@ -20,5 +20,6 @@ ${gen_content}
  -- Blue Horizon Team <developers@bluehorizon.network>  $(date -R)
 
 $(cat $original_changelog)
+
 EOF
 

@@ -4,15 +4,16 @@
 # repo and push that tag to the origin remote. It will report success even if
 # these steps were already performed.
 
-usage="Usage: $0 repo_path tag"
+usage="Usage: $0 dry repo_path tag"
 
 if [[ $# -lt 2 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
   exit 1
 fi
 
-repo_path=$1
-tag=$2
+dry=$1
+repo_path=$2
+tag=$3
 
 function get_local_hash() {
   local tag_query="$(git show-ref --tags "$tag" 2>&1)"
@@ -52,10 +53,20 @@ if [[ $remote_tq_code == 0 ]]; then
 
 elif [[ $remote_tq_code == 2 ]]; then
   # if exit code is 2, it doesn't exist upstream and we can try to push
-  git push origin $tag
-  if [[ $? != 0 ]]; then
-    (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
-    exit 1
+
+  if [[ "$dry" == 0 ]]; then
+    # no dry run!
+    git push origin $tag
+    if [[ $? != 0 ]]; then
+      (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
+      exit 1
+    fi
+  else
+    git push --dry-run origin $tag
+    if [[ $? != 0 ]]; then
+      (>&2 echo "In a pre-check, failed to push $tag to remote. Please correct this before attempting a real push.")
+      exit 1
+    fi
   fi
 
   echo "Succeeded writing $tag to remote."

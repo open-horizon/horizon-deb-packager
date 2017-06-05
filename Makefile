@@ -4,15 +4,19 @@ VERSION := $(shell cat VERSION)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
 DEB_REVISION := $(shell cat DEB_REVISION)
 PACKAGEVERSION := $(VERSION)-$(DEB_REVISION)
-subprojects = horizon_$(VERSION)/anax \
+subproject = horizon_$(VERSION)/anax \
 							horizon_$(VERSION)/anax-ui
-packages = horizon_$(PACKAGEVERSION)_$(ARCH).deb \
+package = horizon_$(PACKAGEVERSION)_$(ARCH).deb \
 		bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb \
 		bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
 
 TAG_PREFIX := horizon
 
-all:
+all: meta
+
+ifndef VERBOSE
+.SILENT:
+endif
 
 # we don't bother using snapcraft to do the build, just copy files around using its dump plugin
 bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb $(wildcard pkgsrc/**/*)
@@ -45,9 +49,6 @@ horizon_$(PACKAGEVERSION)_$(ARCH).deb: horizon_$(VERSION).orig.tar.gz
 	cd horizon_$(VERSION) && \
 		debuild -us -uc --lintian-opts --allow-root
 
-publish-meta-horizon_$(VERSION)/%:
-	./tools/git-tag "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
-
 ###################
 # more specific to less specific
 ################
@@ -56,12 +57,12 @@ publish-meta-horizon_$(VERSION)/%:
 # mustn't include the build artifacts. This could be improved to preserve
 # built artifacts from anax, etc.
 horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/debian/changelog $(wildcard pkgsrc/**/*)
-	tar czf horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' ./horizon_$(VERSION)
-
-# TODO: fix the dependencies, up-to-date is screwed on the horizon_$(VERSION)... targets and it's not phony like it should be
-horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian $(subprojects) pkgsrc/debian/changelog
-	tools/render-debian-changelog $(PACKAGEVERSION) horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog $(shell find horizon_$(VERSION)/ -iname ".git-gen-changelog")
+	# this is a pain in the ass: our changelogs must be removed before creating the deb; we rem them here and re-builds must recreate them
 	find horizon_$(VERSION)/ -iname ".git-gen-changelog" -exec rm {} \;
+	tar czf horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' ./horizon_$(VERSION)
+# TODO: fix the dependencies, up-to-date is screwed on the horizon_$(VERSION)... targets and it's not phony like it should be
+horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian $(subproject) pkgsrc/debian/changelog
+	tools/render-debian-changelog $(PACKAGEVERSION) horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog $(shell find horizon_$(VERSION)/ -iname ".git-gen-changelog")
 
 horizon_$(VERSION)/debian:
 	mkdir -p horizon_$(VERSION)/debian
@@ -70,15 +71,23 @@ horizon_$(VERSION):
 	mkdir -p horizon_$(VERSION)
 
 meta: horizon_$(VERSION)/debian/changelog
-	@echo "============"
-	@echo "Metadata created."
-	@echo "Please inspect horizon_$(VERSION)/debian/changelog and VERSION. If accurate, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing"
-	@echo "============"
+	bash -x tools/meta-precheck $(CURDIR) "$(TAG_PREFIX)/$(VERSION)" $(subproject)
+	@echo "================="
+	@echo "Metadata created"
+	@echo "================="
+	@echo "Please inspect horizon_$(VERSION)/debian/changelog and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
 
-packages: $(packages)
+package: $(package)
 
-publish-meta: publish-meta-$(SUBPROJECTS)
-	@echo "not implemented; TODO: overwrite pkgsrc/debian/changelog, commit changelog and VERSION to this repo's canonical remote"
+publish-meta: publish-meta-$(SUBPROJECT)
+	git checkout -b horizon_$(VERSION)
+	cp horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog
+	git add ./VERSION ./pkgsrc/debian/changelog
+	git commit -m "updated package metadata to $(VERSION)"
+	git push origin
+
+publish-meta-horizon_$(VERSION)/%:
+	./tools/git-tag 0 "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
 
 # paths here are expected by debian/rules file
 HORIZON_STGFSBASE=horizon_$(VERSION)/debian/fs-horizon
@@ -116,14 +125,14 @@ seed-snap-stage: seed-debian-stage clean-snap
 
 	find $(BLUEHORIZON-SNAP-OUTDIRBASE)/ -type d -empty -delete
 
-show-packages:
-	@echo $(packages)
+show-package:
+	@echo $(package)
 
-show-subprojects:
-	@echo $(subprojects)
+show-subproject:
+	@echo $(subproject)
 
-$(subprojects): horizon_$(VERSION)/%: horizon_$(VERSION)
+$(subproject): horizon_$(VERSION)/%: horizon_$(VERSION)
 	@echo "+ visiting target $*"
-	./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
+	bash -x ./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
 
-.PHONY: clean clean-src clean-snap meta $(packages) publish publish-meta seed-snap-stage seed-debian-stage show-packages show-subprojects $(subprojects)
+.PHONY: clean clean-src clean-snap meta $(package) publish publish-meta seed-snap-stage seed-debian-stage show-package show-subproject $(subproject)
