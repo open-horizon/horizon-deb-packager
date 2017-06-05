@@ -25,6 +25,16 @@ function get_local_hash() {
   fi
 }
 
+if [[ "$dry" != 0 ]]; then
+  # do a dry run: try accessing remote; TODO: find a more accurate test
+  git remote show origin > /dev/null 2>&1
+  if [[ "$?" != 0 ]]; then
+    (>&2 echo "Failed tagging precheck. Adjust remote upstream access to $repo_path and try again.")
+    exit 1
+  fi
+  exit 0
+fi
+
 if [[ "$(get_local_hash)" == "" ]]; then
   # no local tag exists
   git tag -m "$(echo "$tag" | sed 's,/, ,')" -a $tag
@@ -54,19 +64,10 @@ if [[ $remote_tq_code == 0 ]]; then
 elif [[ $remote_tq_code == 2 ]]; then
   # if exit code is 2, it doesn't exist upstream and we can try to push
 
-  if [[ "$dry" == 0 ]]; then
-    # no dry run!
-    git push origin $tag
-    if [[ $? != 0 ]]; then
-      (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
-      exit 1
-    fi
-  else
-    git push --dry-run origin $tag
-    if [[ $? != 0 ]]; then
-      (>&2 echo "In a pre-check, failed to push $tag to remote. Please correct this before attempting a real push.")
-      exit 1
-    fi
+  git push origin $tag
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
+    exit 1
   fi
 
   echo "Succeeded writing $tag to remote."

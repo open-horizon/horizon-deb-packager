@@ -33,7 +33,7 @@ bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVER
 		snapcraft snap -o $(CURDIR)/bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
 
 clean: clean-src clean-snap
-	@echo "TODO: remove docker container, etc."
+	-git checkout master && git branch -D horizon_$(VERSION)
 
 clean-src:
 	-@[ -e "horizon_$(VERSION)"/anax-ui ] && cd horizon_$(VERSION)/anax-ui && $(MAKE) clean
@@ -71,7 +71,7 @@ horizon_$(VERSION):
 	mkdir -p horizon_$(VERSION)
 
 meta: horizon_$(VERSION)/debian/changelog
-	bash -x tools/meta-precheck $(CURDIR) "$(TAG_PREFIX)/$(VERSION)" $(subproject)
+	tools/meta-precheck $(CURDIR) "$(TAG_PREFIX)/$(VERSION)" $(subproject)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
@@ -79,15 +79,16 @@ meta: horizon_$(VERSION)/debian/changelog
 
 package: $(package)
 
-publish-meta: publish-meta-$(SUBPROJECT)
+publish-meta-horizon_$(VERSION)/%:
+	@echo "+ Visiting publish-meta subproject $*"
+	bash -x ./tools/git-tag 0 "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
+
+publish-meta: publish-meta-$(subproject)
 	git checkout -b horizon_$(VERSION)
 	cp horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog
 	git add ./VERSION ./pkgsrc/debian/changelog
 	git commit -m "updated package metadata to $(VERSION)"
-	git push origin
-
-publish-meta-horizon_$(VERSION)/%:
-	./tools/git-tag 0 "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
+	git push --set-upstream origin horizon_$(VERSION)
 
 # paths here are expected by debian/rules file
 HORIZON_STGFSBASE=horizon_$(VERSION)/debian/fs-horizon
@@ -132,7 +133,7 @@ show-subproject:
 	@echo $(subproject)
 
 $(subproject): horizon_$(VERSION)/%: horizon_$(VERSION)
-	@echo "+ visiting target $*"
-	bash -x ./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
+	@echo "+ Visiting subproject $*"
+	bash -x tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
 
 .PHONY: clean clean-src clean-snap meta $(package) publish publish-meta seed-snap-stage seed-debian-stage show-package show-subproject $(subproject)

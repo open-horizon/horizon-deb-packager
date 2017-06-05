@@ -14,13 +14,12 @@ tag=$2
 # VERSION file must have changed in pkg_project
 
 (cd $pkg_project &&
- git diff-index --name-only HEAD -- | grep -q VERSION
+  git diff-index --name-only HEAD -- | grep -q VERSION)
 
- if [[ "$?" != 0 ]]; then
-  (>&2 echo "VERSION file unchanged in $pkg_project; you must update this version number before publishing package metadata")
-  exit 1
- fi
- )
+if [[ "$?" != 0 ]]; then
+(>&2 echo "VERSION file unchanged in $pkg_project; you must update this version number before publishing package metadata")
+exit 1
+fi
 
 # check for rights to tag dependent project repos
 
