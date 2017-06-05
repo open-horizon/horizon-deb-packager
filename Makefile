@@ -1,16 +1,18 @@
 SHELL := /bin/bash
-ARCH = $(shell tools/arch-tag)
-VERSION = $(shell cat VERSION)
+ARCH := $(shell tools/arch-tag)
+VERSION := $(shell cat VERSION)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
-DEB_REVISION = $(shell cat DEB_REVISION)
-PACKAGEVERSION = $(VERSION)-$(DEB_REVISION)
-SUBPROJECTS = horizon_$(VERSION)/anax horizon_$(VERSION)/anax-ui
-
-TAG_PREFIX = horizon
-
-all: horizon_$(PACKAGEVERSION)_$(ARCH).deb \
+DEB_REVISION := $(shell cat DEB_REVISION)
+PACKAGEVERSION := $(VERSION)-$(DEB_REVISION)
+subprojects = horizon_$(VERSION)/anax \
+							horizon_$(VERSION)/anax-ui
+packages = horizon_$(PACKAGEVERSION)_$(ARCH).deb \
 		bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb \
 		bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+
+TAG_PREFIX := horizon
+
+all:
 
 # we don't bother using snapcraft to do the build, just copy files around using its dump plugin
 bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb $(wildcard pkgsrc/**/*)
@@ -43,19 +45,12 @@ horizon_$(PACKAGEVERSION)_$(ARCH).deb: horizon_$(VERSION).orig.tar.gz
 	cd horizon_$(VERSION) && \
 		debuild -us -uc --lintian-opts --allow-root
 
-horizon_$(VERSION):
-	mkdir -p horizon_$(VERSION)
-
-# N.B: this target will pull anax from the canonical repo tagged by version
-# if it exists, HEAD if not. During publishing, this Makefile will push a tag
-# to anax. That means that you can bump the VERSION number first, then build
-# from head and the build will be repeatable later with the same VERSION value.
-horizon_$(VERSION)/%: horizon_$(VERSION)
-	./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
-
 publish-meta-horizon_$(VERSION)/%:
 	./tools/git-tag "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
 
+###################
+# more specific to less specific
+################
 
 # N.B. This target depends on one that runs clean because the .orig tarball
 # mustn't include the build artifacts. This could be improved to preserve
@@ -64,12 +59,23 @@ horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/debian/chan
 	tar czf horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' ./horizon_$(VERSION)
 
 # TODO: fix the dependencies, up-to-date is screwed on the horizon_$(VERSION)... targets and it's not phony like it should be
-horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian pkgsrc/debian/changelog $(SUBPROJECTS)
+horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian $(subprojects) pkgsrc/debian/changelog
 	tools/render-debian-changelog $(PACKAGEVERSION) horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog $(shell find horizon_$(VERSION)/ -iname ".git-gen-changelog")
 	find horizon_$(VERSION)/ -iname ".git-gen-changelog" -exec rm {} \;
 
 horizon_$(VERSION)/debian:
 	mkdir -p horizon_$(VERSION)/debian
+
+horizon_$(VERSION):
+	mkdir -p horizon_$(VERSION)
+
+meta: horizon_$(VERSION)/debian/changelog
+	@echo "============"
+	@echo "Metadata created."
+	@echo "Please inspect horizon_$(VERSION)/debian/changelog and VERSION. If accurate, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing"
+	@echo "============"
+
+packages: $(packages)
 
 publish-meta: publish-meta-$(SUBPROJECTS)
 	@echo "not implemented; TODO: overwrite pkgsrc/debian/changelog, commit changelog and VERSION to this repo's canonical remote"
@@ -110,12 +116,14 @@ seed-snap-stage: seed-debian-stage clean-snap
 
 	find $(BLUEHORIZON-SNAP-OUTDIRBASE)/ -type d -empty -delete
 
-show-pkgs:
-	@echo horizon_$(PACKAGEVERSION)_$(ARCH).deb
-	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb
-	@echo bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+show-packages:
+	@echo $(packages)
 
 show-subprojects:
-	@echo $(SUBPROJECTS)
+	@echo $(subprojects)
 
-.PHONY: clean clean-src clean-snap publish publish-meta seed-snap-stage seed-debian-stage show-pkgs show-subprojects
+$(subprojects): horizon_$(VERSION)/%: horizon_$(VERSION)
+	@echo "+ visiting target $*"
+	./tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
+
+.PHONY: clean clean-src clean-snap meta $(packages) publish publish-meta seed-snap-stage seed-debian-stage show-packages show-subprojects $(subprojects)

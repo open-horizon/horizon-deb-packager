@@ -20,7 +20,7 @@ if [[ -e "$repo_destination_path" ]]; then
   current_branch=$(git rev-parse --abbrev-ref HEAD)
 
   # clean up before proceeding
-  if [[ "$(current_branch)" != "master" ]]; then
+  if [[ "$current_branch" != "master" ]]; then
     git checkout master
     git branch -D $(current_branch)
     git reset --hard HEAD
