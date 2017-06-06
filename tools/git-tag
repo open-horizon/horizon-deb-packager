@@ -25,6 +25,12 @@ function get_local_hash() {
   fi
 }
 
+cd $repo_path
+if [[ "$?" != 0 ]]; then
+  (>&2 echo "Repo not available at given path: $repo_path.")
+  exit 1
+fi
+
 if [[ "$dry" != 0 ]]; then
   # do a dry run: try accessing remote; TODO: find a more accurate test
   git remote show origin > /dev/null 2>&1
@@ -45,11 +51,10 @@ if [[ "$(get_local_hash)" == "" ]]; then
 fi
 
 # expecting if we got this far, we have a local copy with the right tag
-
 remote_tag_query=$(git ls-remote --exit-code --tags origin "$tag")
 remote_tq_code=$?
 
-if [[ $remote_tq_code == 0 ]]; then
+if [[ "$remote_tq_code" == 0 ]]; then
   # if exit code is 0, it's already there and we just have the compare the commit hash
   remote_hash=$(echo $remote_tag_query | cut -d' ' -f 1)
   if [[ "$(get_local_hash)" == "$remote_hash" ]]; then
@@ -64,8 +69,8 @@ if [[ $remote_tq_code == 0 ]]; then
 elif [[ $remote_tq_code == 2 ]]; then
   # if exit code is 2, it doesn't exist upstream and we can try to push
 
-  git push origin $tag
-  if [[ $? != 0 ]]; then
+  git push origin "$tag"
+  if [[ "$?" != 0 ]]; then
     (>&2 echo "Failed to push $tag to remote. Manual intervention required.")
     exit 1
   fi

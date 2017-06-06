@@ -4,11 +4,8 @@ VERSION := $(shell cat VERSION)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
 DEB_REVISION := $(shell cat DEB_REVISION)
 PACKAGEVERSION := $(VERSION)-$(DEB_REVISION)
-subproject = horizon_$(VERSION)/anax \
-							horizon_$(VERSION)/anax-ui
-package = horizon_$(PACKAGEVERSION)_$(ARCH).deb \
-		bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb \
-		bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+subproject = horizon_$(VERSION)/anax horizon_$(VERSION)/anax-ui
+package = horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
 
 TAG_PREFIX := horizon
 
@@ -33,7 +30,7 @@ bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVER
 		snapcraft snap -o $(CURDIR)/bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
 
 clean: clean-src clean-snap
-	-git checkout master && git branch -D horizon_$(VERSION)
+	-@git checkout master && git branch -D horizon_$(VERSION)
 
 clean-src:
 	-@[ -e "horizon_$(VERSION)"/anax-ui ] && cd horizon_$(VERSION)/anax-ui && $(MAKE) clean
@@ -81,9 +78,9 @@ package: $(package)
 
 publish-meta-horizon_$(VERSION)/%:
 	@echo "+ Visiting publish-meta subproject $*"
-	bash -x ./tools/git-tag 0 "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
+	tools/git-tag 0 "$(CURDIR)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
 
-publish-meta: publish-meta-$(subproject)
+publish-meta: $(addprefix publish-meta-,$(subproject))
 	git checkout -b horizon_$(VERSION)
 	cp horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog
 	git add ./VERSION ./pkgsrc/debian/changelog
@@ -134,6 +131,6 @@ show-subproject:
 
 $(subproject): horizon_$(VERSION)/%: horizon_$(VERSION)
 	@echo "+ Visiting subproject $*"
-	bash -x tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(PWD)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(PWD)/pkgsrc/debian/changelog"
+	tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(CURDIR)/pkgsrc/debian/changelog"
 
 .PHONY: clean clean-src clean-snap meta $(package) publish publish-meta seed-snap-stage seed-debian-stage show-package show-subproject $(subproject)

@@ -25,5 +25,5 @@ fi
 
 for subp in "${@:3}"; do
   # ... git-tag 1 ... signifies dry-run
-  (cd $pkg_project/$subp && ${pdir}/git-tag 1 "$subp" "$tag")
+  (cd $pkg_project/$subp && ${pdir}/git-tag 1 "$pkg_project/$subp" "$tag")
 done

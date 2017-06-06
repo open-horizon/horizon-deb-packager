@@ -18,4 +18,4 @@ cd $repo_path
 # the stuff we want to report is below
 # note that the below branch info will be empty if detached
 echo -e "$(git remote show origin -n | grep -oP 'Fetch URL: (ssh|https)://git@?\K(.*)'), branch: $(git symbolic-ref --short -q HEAD)"
-git log --no-merges --oneline --pretty=format:"%h (%aN): %s" ${tag_prefix}/${old_version}..HEAD
+git log --no-merges --oneline --pretty=format:"%h (%aN): %s" "${tag_prefix}/${old_version}..HEAD"
