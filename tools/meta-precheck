@@ -1,7 +1,13 @@
 #!/bin/bash
 
+# b/c mac os doesn't have realpath
+function realpath() {
+  DIR=$(echo "${1%/*}")
+  (cd "$DIR" && echo "$(pwd -P)")
+}
+
 usage="Usage: $0 pkg_project tag subprojects..."
-pdir="$(dirname $(realpath $0))"
+pdir="$(realpath $0)"
 
 if [[ $# -lt 3 ]]; then
   (>&2 echo "Missing required argument(s). $usage")

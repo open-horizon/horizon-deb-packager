@@ -77,3 +77,9 @@ Optionally, you can specify a source branch for either or both of the source pro
 #### Publishing artifacts
 
     (TODO)
+
+### Cross platform
+
+  Mac os packages:
+
+  from ports: dpkg, debianutils

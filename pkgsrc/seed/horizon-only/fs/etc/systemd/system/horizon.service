@@ -1,0 +1,16 @@
+[Unit]
+Description=Service for Horizon control system (cf. https://bluehorizon.network)
+Requires=network-online.target
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=/etc/default/horizon-env
+ExecStartPre=/usr/horizon/bin/horizon-env-preprocess /etc/default/horizon-env
+ExecStart=/usr/horizon/bin/anax -v 3 -logtostderr -config /etc/horizon/anax.json
+Restart=always
+TimeoutStopSec=30
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

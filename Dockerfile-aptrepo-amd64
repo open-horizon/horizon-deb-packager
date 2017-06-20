@@ -1,0 +1,13 @@
+FROM ubuntu:16.04
+MAINTAINER mdye <mdye@us.ibm.com>
+
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y \
+      gnupg \
+      vim \
+      reprepro \
+      software-properties-common \
+      wget
+RUN
+RUN mkdir /prj
+WORKDIR /prj

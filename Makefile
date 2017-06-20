@@ -1,13 +1,28 @@
 SHELL := /bin/bash
 ARCH := $(shell tools/arch-tag)
-VERSION := $(shell cat VERSION)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
-DEB_REVISION := $(shell cat DEB_REVISION)
-PACKAGEVERSION := $(VERSION)-$(DEB_REVISION)
-subproject = horizon_$(VERSION)/anax horizon_$(VERSION)/anax-ui
-package = horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+subproject_names = anax anax-ui
+subproject = $(addprefix horizon_$(VERSION)_bld/,$(subproject_names))
 
-TAG_PREFIX := horizon
+##TODO: fix: this is all broken b/c the PACKAGEVERSION can't be statically specified
+VERSION := $(shell cat VERSION)
+DEB_REVISION := $(shell cat DEB_REVISION)
+
+#TODO: just legacy
+PACKAGEVERSION := $(VERSION)-$(PKG_REVISION)
+
+distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec basename {} \;)
+pkgstub = $(foreach dname,$(distribution_names),horizon_$(VERSION)_dist/$(dname)/$1-$(VERSION)-$(DEB_REVISION)_$(ARCH).deb)
+
+meta = $(addprefix meta-,$(distribution_names))
+
+bluehorizon_deb_packages = $(call pkgstub,bluehorizon)
+horizon_deb_packages = $(call pkgstub,horizon)
+package = $(bluehorizon_deb_packages) $(horizon_deb_packages) bluehorizon_$(VERSION)_$(ARCH).snap
+
+debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
+
+DOCKER_TAG_PREFIX := horizon
 
 all: meta
 
@@ -15,100 +30,125 @@ ifndef VERBOSE
 .SILENT:
 endif
 
+###
+#unordered meta stuff
+###
+
 # we don't bother using snapcraft to do the build, just copy files around using its dump plugin
-bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb $(wildcard pkgsrc/**/*)
+#bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb $(wildcard pkgsrc/**/*)
 	# copy snap stuff
-	cp -Ra ./pkgsrc/snap/. horizon_$(VERSION)/snap
+# 	cp -Ra ./pkgsrc/snap/. horizon_$(VERSION)/snap
+#
+# 	sed -i "" "s,version:,version: $(PACKAGEVERSION),g" horizon_$(VERSION)/snap/snapcraft.yaml
+# 	cd horizon_$(VERSION)/anax && \
+# 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
+# 	cd horizon_$(VERSION)/anax-ui && \
+# 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
+# 	cd horizon_$(VERSION)/snap && \
+# 		snapcraft snap -o $(CURDIR)/bluehorizon_$(df
+# 	ACKAGEVERSION)_$(ARCH).snap
 
-	sed -i "s,version:,version: $(PACKAGEVERSION),g" horizon_$(VERSION)/snap/snapcraft.yaml
-	cd horizon_$(VERSION)/anax && \
-		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
-	cd horizon_$(VERSION)/anax-ui && \
-		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
-
-	cd horizon_$(VERSION)/snap && \
-		snapcraft snap -o $(CURDIR)/bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap
+bluehorizon_$(VERSION)_$(ARCH).snap:
+	@echo "building snap"
 
 clean: clean-src clean-snap
-	-@git checkout master && git branch -D horizon_$(VERSION)
+	@echo "Use distclean target to remove all build artifacts (across all versions) and clean up horizon_$(VERSION) branch"
+	-rm horizon_$(VERSION)_bld/changelog.tmpl
+	-rm -Rf horizon_$(VERSION)_dist
 
 clean-src:
-	-@[ -e "horizon_$(VERSION)"/anax-ui ] && cd horizon_$(VERSION)/anax-ui && $(MAKE) clean
-	-@[ -e "horizon_$(VERSION)"/anax ] && cd horizon_$(VERSION)/anax && $(MAKE) clean
-	-rm -Rf horizon* bluehorizon*
+	@echo "clean-src"
+	for src in $(subproject); do \
+		if [ -e $$src ]; then \
+		  cd $$src && \
+			git checkout . && \
+			$(MAKE) clean && \
+			git reset --hard HEAD && \
+			git clean -fdx; \
+	  fi; \
+	done
 
 clean-snap:
+	@echo "clean-snap"
 	-rm -Rf horizon_$(VERSION)/snap/{parts,prime,stage}
 
+distclean: clean
+	@echo "distclean"
+	-rm -Rf horizon* bluehorizon*
+	-@git checkout master && git branch -D horizon_$(VERSION)
+
+horizon_$(VERSION)_bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subproject))
+	mkdir -p horizon_$(VERSION)_bld
+	tools/render-debian-changelog "##DISTRIBUTIONS##" "$(VERSION)-$(DEB_REVISION)" horizon_$(VERSION)_bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find horizon_$(VERSION)_bld -iname ".git-gen-changelog")
+
+horizon_$(VERSION)_dist/%/debian:
+	mkdir -p horizon_$(VERSION)_dist/$*/debian
+
+# both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
+horizon_$(VERSION)_dist/%/debian/fs-horizon: $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/debian
+	dir=horizon_$(VERSION)_dist/$*/debian/fs-horizon && \
+		mkdir -p $$dir && \
+		./pkgsrc/mk-dir-trees $$dir && \
+		cp -Ra ./pkgsrc/seed/horizon/fs/. $$dir && \
+		echo "SNAP_COMMON=/var/horizon" > $$dir/etc/default/horizon && \
+		envsubst < ./pkgsrc/seed/dynamic/horizon.tmpl >> $$dir/etc/default/horizon && \
+		./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json.example && \
+		cp pkgsrc/mk-dir-trees $$dir/usr/horizon/sbin/
+
+horizon_$(VERSION)_dist/%/debian/fs-bluehorizon: horizon_$(VERSION)_dist/%/debian/fs-horizon $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/debian
+	@echo "making fs-bluehorizon"
+	dir=horizon_$(VERSION)_dist/$*/debian/fs-bluehorizon && \
+		mkdir -p $$dir && \
+		cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $$dir && \
+		cp horizon_$(VERSION)_dist/$*/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
+
+# meta for every distribution, the target of horizon_$(VERSION)-meta/$(distribution_names)
+horizon_$(VERSION)_dist/%/debian/changelog: horizon_$(VERSION)_bld/changelog.tmpl | horizon_$(VERSION)_dist/%/debian
+	sed "s,##DISTRIBUTIONS##,$*,g" horizon_$(VERSION)_bld/changelog.tmpl > horizon_$(VERSION)_dist/$*/debian/changelog
+
+# N.B. This target will copy all files from the source to the dest. as one target
+$(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | horizon_$(VERSION)_dist/%/debian
+	@echo "Writing content to $*/debian/"
+	cp -Ra pkgsrc/deb/shared/debian/. horizon_$(VERSION)_dist/$*/debian/
+
+horizon_$(VERSION)_dist/%/horizon_$(VERSION).orig.tar.gz: horizon_$(VERSION)_dist/%/debian/fs-horizon horizon_$(VERSION)_dist/%/debian/fs-bluehorizon horizon_$(VERSION)_dist/%/debian/changelog $(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)) | $(subproject)
+	@echo "Building tarball in $*"
+	for src in $(subproject); do \
+		ln -s $(PWD)/$$src horizon_$(VERSION)_dist/$*/ || :; \
+	done
+	tar czf horizon_$(VERSION)_dist/$*/horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' --exclude='horizon_$(VERSION).orig.tar.gz' -C ./horizon_$(VERSION)_dist/$* .
+
 # also builds the bluehorizon package
-bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb:
-horizon_$(PACKAGEVERSION)_$(ARCH).deb: horizon_$(VERSION).orig.tar.gz
-	cd horizon_$(VERSION) && \
+$(bluehorizon_deb_packages):
+%/bluehorizon-$(VERSION)-$(DEB_REVISION)_$(ARCH).deb:
+$(horizon_deb_packages): horizon_$(VERSION)_dist/%/horizon-$(VERSION)-$(DEB_REVISION)_$(ARCH).deb: $(addprefix horizon_$(VERSION)_dist/,$(addsuffix /horizon_$(VERSION).orig.tar.gz,$(distribution_names)))
+	@echo "Running Debian build in $*"
+	cd $* && \
 		debuild -us -uc --lintian-opts --allow-root
 
-###################
-# more specific to less specific
-################
-
-# N.B. This target depends on one that runs clean because the .orig tarball
-# mustn't include the build artifacts. This could be improved to preserve
-# built artifacts from anax, etc.
-horizon_$(VERSION).orig.tar.gz: seed-debian-stage horizon_$(VERSION)/debian/changelog $(wildcard pkgsrc/**/*)
-	# this is a pain in the ass: our changelogs must be removed before creating the deb; we rem them here and re-builds must recreate them
-	find horizon_$(VERSION)/ -iname ".git-gen-changelog" -exec rm {} \;
-	tar czf horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' ./horizon_$(VERSION)
-# TODO: fix the dependencies, up-to-date is screwed on the horizon_$(VERSION)... targets and it's not phony like it should be
-horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)/debian $(subproject) pkgsrc/debian/changelog
-	tools/render-debian-changelog $(PACKAGEVERSION) horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog $(shell find horizon_$(VERSION)/ -iname ".git-gen-changelog")
-
-horizon_$(VERSION)/debian:
-	mkdir -p horizon_$(VERSION)/debian
-
-horizon_$(VERSION):
-	mkdir -p horizon_$(VERSION)
-
-meta: horizon_$(VERSION)/debian/changelog
-	tools/meta-precheck $(CURDIR) "$(TAG_PREFIX)/$(VERSION)" $(subproject)
+$(meta): meta-%: horizon_$(VERSION)_bld/changelog.tmpl horizon_$(VERSION)_dist/%/debian/changelog
+	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subproject)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
-	@echo "Please inspect horizon_$(VERSION)/debian/changelog and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
+	@echo "Please inspect horizon_$(VERSION)_dist/$*, the shared template file horizon_$(VERSION)_bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
+
+meta: $(meta)
 
 package: $(package)
 
-publish-meta-horizon_$(VERSION)/%:
+publish-meta-horizon_$(VERSION)_bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
-	tools/git-tag 0 "$(CURDIR)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)"
+	tools/git-tag 0 "$(CURDIR)/horizon_$(VERSION)_bld/$*" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
 
-publish-meta: $(addprefix publish-meta-,$(subproject))
+publish-meta: $(addprefix publish-meta-horizon_$(VERSION)_bld/,$(subproject_names))
 	git checkout -b horizon_$(VERSION)
-	cp horizon_$(VERSION)/debian/changelog pkgsrc/debian/changelog
-	git add ./VERSION ./pkgsrc/debian/changelog
+	cp horizon_$(VERSION)_bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
+	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
 	git commit -m "updated package metadata to $(VERSION)"
 	git push --set-upstream origin horizon_$(VERSION)
 
-# paths here are expected by debian/rules file
-HORIZON_STGFSBASE=horizon_$(VERSION)/debian/fs-horizon
-BLUEHORIZON_STGFSBASE=horizon_$(VERSION)/debian/fs-bluehorizon
-seed-debian-stage: horizon_$(VERSION) clean-src
-	mkdir -p $(HORIZON_STGFSBASE) && \
-		mkdir -p $(BLUEHORIZON_STGFSBASE) && \
-			./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)
-
-	cp -Ra ./pkgsrc/seed/horizon/fs/. $(HORIZON_STGFSBASE)
-	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON_STGFSBASE)
-
-	echo "SNAP_COMMON=/var/horizon" > $(HORIZON_STGFSBASE)/etc/default/horizon && \
-		envsubst < ./pkgsrc/seed/dynamic/horizon.tmpl >> $(HORIZON_STGFSBASE)/etc/default/horizon
-
-	./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example
-	cp ./pkgsrc/mk-dir-trees $(HORIZON_STGFSBASE)/usr/horizon/sbin/
-
-	cp $(HORIZON_STGFSBASE)/etc/horizon/anax.json.example $(BLUEHORIZON_STGFSBASE)/etc/horizon/anax.json
-	# copy deb stuff
-	rsync -a --exclude="./pkgsrc/debian/changelog" ./pkgsrc/debian horizon_$(VERSION)/
-
-BLUEHORIZON-SNAP-OUTDIRBASE=horizon_$(VERSION)/snap/fs
+BLUEHORIZON-SNAP-OUTDIRBASE=horizon_$(VERSION)_dist/snap/fs
 seed-snap-stage: seed-debian-stage clean-snap
 	mkdir -p $(BLUEHORIZON-SNAP-OUTDIRBASE) && \
 		./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)
@@ -129,8 +169,23 @@ show-package:
 show-subproject:
 	@echo $(subproject)
 
-$(subproject): horizon_$(VERSION)/%: horizon_$(VERSION)
-	@echo "+ Visiting subproject $*"
-	tools/git-clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/horizon_$(VERSION)/$*" "$(TAG_PREFIX)/$(VERSION)" "$(CURDIR)/pkgsrc/debian/changelog"
+show-distribution:
+	@echo $(addprefix horizon_$(VERSION)_dist/,$(distribution_names))
 
-.PHONY: clean clean-src clean-snap meta $(package) publish publish-meta seed-snap-stage seed-debian-stage show-package show-subproject $(subproject)
+show-distribution-names:
+	@echo $(distribution_names)
+
+horizon_$(VERSION)_bld:
+	mkdir -p horizon_$(VERSION)_bld
+
+# TODO: could add capability to build from specified branch instead of master (right now this is only supported by doing some of the build steps, monkeying with the local copy and then running the rest of the steps.
+$(subproject): horizon_$(VERSION)_bld/%: | horizon_$(VERSION)_bld
+	-@[ ! -e "horizon_$(VERSION)_bld/$*" ] && git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/horizon_$(VERSION)_bld/$*"
+
+horizon_$(VERSION)_bld/%/.git-gen-changelog: | horizon_$(VERSION)_bld/%
+	tools/git-gen-changelog "$(CURDIR)/horizon_$(VERSION)_bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
+
+# make these "precious" (including the basedir) so Make won't remove them under the assumption that they aren't needed after tarballs are created
+.PRECIOUS: $(addprefix horizon_$(VERSION)_dist/%/debian/,/ $(debian_shared) changelog)
+
+.PHONY: clean clean-src clean-snap $(meta) $(package) publish-meta show-package show-subproject $(subproject)
