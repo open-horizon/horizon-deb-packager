@@ -110,6 +110,8 @@ horizon_$(VERSION)_dist/%/debian/changelog: horizon_$(VERSION)_bld/changelog.tmp
 $(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | horizon_$(VERSION)_dist/%/debian
 	@echo "Writing content to $*/debian/"
 	cp -Ra pkgsrc/deb/shared/debian/. horizon_$(VERSION)_dist/$*/debian/
+	# copy specific package overwrites next
+	cp -Ra pkgsrc/deb/meta/dist/$*/debian/. horizon_$(VERSION)_dist/$*/debian/
 
 horizon_$(VERSION)_dist/%/horizon_$(VERSION).orig.tar.gz: horizon_$(VERSION)_dist/%/debian/fs-horizon horizon_$(VERSION)_dist/%/debian/fs-bluehorizon horizon_$(VERSION)_dist/%/debian/changelog $(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)) | $(subproject)
 	@echo "Building tarball in $*"
