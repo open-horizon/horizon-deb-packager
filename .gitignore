@@ -1,3 +1,4 @@
 horizon_*
 bluehorizon_*
 *.sw*
+pkgsrc/deb/meta/dist/*/debian/*

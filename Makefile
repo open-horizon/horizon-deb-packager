@@ -81,12 +81,12 @@ horizon_$(VERSION)_bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffi
 	mkdir -p horizon_$(VERSION)_bld
 	tools/render-debian-changelog "##DISTRIBUTIONS##" "$(VERSION)-$(DEB_REVISION)" horizon_$(VERSION)_bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find horizon_$(VERSION)_bld -iname ".git-gen-changelog")
 
-horizon_$(VERSION)_dist/%/debian:
-	mkdir -p horizon_$(VERSION)_dist/$*/debian
+horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian:
+	mkdir -p horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
-horizon_$(VERSION)_dist/%/debian/fs-horizon: $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/debian
-	dir=horizon_$(VERSION)_dist/$*/debian/fs-horizon && \
+horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/fs-horizon: $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian
+	dir=horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/fs-horizon && \
 		mkdir -p $$dir && \
 		./pkgsrc/mk-dir-trees $$dir && \
 		cp -Ra ./pkgsrc/seed/horizon/fs/. $$dir && \
@@ -95,45 +95,42 @@ horizon_$(VERSION)_dist/%/debian/fs-horizon: $(shell find pkgsrc/seed) | horizon
 		./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json.example && \
 		cp pkgsrc/mk-dir-trees $$dir/usr/horizon/sbin/
 
-horizon_$(VERSION)_dist/%/debian/fs-bluehorizon: horizon_$(VERSION)_dist/%/debian/fs-horizon $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/debian
-	@echo "making fs-bluehorizon"
-	dir=horizon_$(VERSION)_dist/$*/debian/fs-bluehorizon && \
+horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/fs-bluehorizon: horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/fs-horizon $(shell find pkgsrc/seed) | horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian
+	dir=horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/fs-bluehorizon && \
 		mkdir -p $$dir && \
 		cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $$dir && \
-		cp horizon_$(VERSION)_dist/$*/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
+		cp horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
 
 # meta for every distribution, the target of horizon_$(VERSION)-meta/$(distribution_names)
-horizon_$(VERSION)_dist/%/debian/changelog: horizon_$(VERSION)_bld/changelog.tmpl | horizon_$(VERSION)_dist/%/debian
-	sed "s,##DISTRIBUTIONS##,$*,g" horizon_$(VERSION)_bld/changelog.tmpl > horizon_$(VERSION)_dist/$*/debian/changelog
+horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/changelog: horizon_$(VERSION)_bld/changelog.tmpl | horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian
+	sed "s,##DISTRIBUTIONS##,$*,g" horizon_$(VERSION)_bld/changelog.tmpl > horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/changelog
 
 # N.B. This target will copy all files from the source to the dest. as one target
-$(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | horizon_$(VERSION)_dist/%/debian
-	@echo "Writing content to $*/debian/"
-	cp -Ra pkgsrc/deb/shared/debian/. horizon_$(VERSION)_dist/$*/debian/
+$(addprefix horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian
+	cp -Ra pkgsrc/deb/shared/debian/. horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/
 	# copy specific package overwrites next
-	cp -Ra pkgsrc/deb/meta/dist/$*/debian/. horizon_$(VERSION)_dist/$*/debian/
+	cp -Ra pkgsrc/deb/meta/dist/$*/debian/. horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/debian/
 
-horizon_$(VERSION)_dist/%/horizon_$(VERSION).orig.tar.gz: horizon_$(VERSION)_dist/%/debian/fs-horizon horizon_$(VERSION)_dist/%/debian/fs-bluehorizon horizon_$(VERSION)_dist/%/debian/changelog $(addprefix horizon_$(VERSION)_dist/%/debian/,$(debian_shared)) | $(subproject)
-	@echo "Building tarball in $*"
+horizon_$(VERSION)_dist/%/horizon_$(VERSION).orig.tar.gz: horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/fs-horizon horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/fs-bluehorizon horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/changelog $(addprefix horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/,$(debian_shared)) | $(subproject)
 	for src in $(subproject); do \
-		ln -s $(PWD)/$$src horizon_$(VERSION)_dist/$*/ || :; \
+		rsync -az --exclude=".git" $(PWD)/$$src horizon_$(VERSION)_dist/$*/horizon_$(VERSION)/ || :; \
 	done
-	tar czf horizon_$(VERSION)_dist/$*/horizon_$(VERSION).orig.tar.gz --dereference --exclude='.git*' --exclude='horizon_$(VERSION).orig.tar.gz' -C ./horizon_$(VERSION)_dist/$* .
+	tar czf horizon_$(VERSION)_dist/$*/horizon_$(VERSION).orig.tar.gz --exclude='horizon_$(VERSION).orig.tar.gz' -C ./horizon_$(VERSION)_dist/$* .
 
 # also builds the bluehorizon package
 $(bluehorizon_deb_packages):
 %/bluehorizon-$(VERSION)-$(DEB_REVISION)_$(ARCH).deb:
 $(horizon_deb_packages): horizon_$(VERSION)_dist/%/horizon-$(VERSION)-$(DEB_REVISION)_$(ARCH).deb: $(addprefix horizon_$(VERSION)_dist/,$(addsuffix /horizon_$(VERSION).orig.tar.gz,$(distribution_names)))
 	@echo "Running Debian build in $*"
-	cd $* && \
+	cd horizon_$(VERSION)_dist/$*/horizon_$(VERSION) && \
 		debuild -us -uc --lintian-opts --allow-root
 
-$(meta): meta-%: horizon_$(VERSION)_bld/changelog.tmpl horizon_$(VERSION)_dist/%/debian/changelog
+$(meta): meta-%: horizon_$(VERSION)_bld/changelog.tmpl horizon_$(VERSION)_dist/%/horizon_$(VERSION).orig.tar.gz
 	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subproject)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
-	@echo "Please inspect horizon_$(VERSION)_dist/$*, the shared template file horizon_$(VERSION)_bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
+	@echo "Please inspect horizon_$(VERSION)_dist/$*/*, the shared template file horizon_$(VERSION)_bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
 
 meta: $(meta)
 
@@ -188,6 +185,6 @@ horizon_$(VERSION)_bld/%/.git-gen-changelog: | horizon_$(VERSION)_bld/%
 	tools/git-gen-changelog "$(CURDIR)/horizon_$(VERSION)_bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
 
 # make these "precious" (including the basedir) so Make won't remove them under the assumption that they aren't needed after tarballs are created
-.PRECIOUS: $(addprefix horizon_$(VERSION)_dist/%/debian/,/ $(debian_shared) changelog)
+.PRECIOUS: $(addprefix horizon_$(VERSION)_dist/%/horizon_$(VERSION)/debian/,/ $(debian_shared) changelog fs-horizon fs-bluehorizon)
 
 .PHONY: clean clean-src clean-snap $(meta) $(package) publish-meta show-package show-subproject $(subproject)
