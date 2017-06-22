@@ -3,11 +3,19 @@ MAINTAINER mdye <mdye@us.ibm.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \
-      gnupg \
-      vim \
-      reprepro \
-      software-properties-common \
-      wget
-RUN
-RUN mkdir /prj
-WORKDIR /prj
+  gnupg \
+  vim \
+  software-properties-common \
+  wget \
+  build-essential \
+  g++ \
+  git \
+  libz-dev libdb5.3-dev libbz2-dev libarchive-dev libgpgme11-dev liblzma-dev 
+RUN cd /usr/local/src && \
+  git clone https://github.com/michaeldye/reprepro.git && \
+  cd reprepro && \
+  git checkout 5.1.1-multiple-versions && \
+  ./configure && \
+  make && \
+  make install
+WORKDIR /var/repositories
