@@ -28,6 +28,27 @@ ifndef VERBOSE
 .SILENT:
 endif
 
+bld:
+	mkdir -p bld
+
+# TODO: consider making deps at this stage: that'd put all deps in the orig.tar.gz. This could be good for repeatable builds (we fetch from the internet all deps and wrap them in a source package), but it could be legally tenuous and there is still a chance of differences b/n .orig.tar.gzs between different arch's builds (b/c different machines run the builds and each fetches its own copy of those deps)
+	#-@[ ! -e "bld/$*" ] && git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*" && cd $(CURDIR)/bld/$* && $(MAKE) deps
+# TODO: could add capability to build from specified branch instead of master (right now this is only supported by doing some of the build steps, monkeying with the local copy and then running the rest of the steps.
+
+bld/%/.git/logs/HEAD: | bld
+	@echo "fetching $*"
+	git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*"
+
+bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
+	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
+
+bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subproject))
+	mkdir -p bld
+	tools/render-debian-changelog "##DISTRIBUTIONS##" "##VERSION_RELEASE##" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog")
+
+dist/$(call pkg_version,%)/debian:
+	mkdir -p dist/$(call pkg_version,$*)/debian
+
 clean: clean-src mostlyclean
 	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(VERSION) branch"
 	-rm bld/changelog.tmpl
@@ -57,13 +78,6 @@ distclean: clean
 	# TODO: add other files to reset that might have changed?
 	-@git reset VERSION
 	-@git checkout master && git branch -D horizon_$(VERSION)
-
-bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subproject))
-	mkdir -p bld
-	tools/render-debian-changelog "##DISTRIBUTIONS##" "##VERSION_RELEASE##" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog")
-
-dist/$(call pkg_version,%)/debian:
-	mkdir -p dist/$(call pkg_version,$*)/debian
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
 dist/$(call pkg_version,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | dist/$(call pkg_version,%)/debian
@@ -130,33 +144,16 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	git commit -m "updated package metadata to $(VERSION)"
 	git push --set-upstream origin horizon_$(VERSION)
 
-show-package:
-	@echo $(package)
+show-distribution-names:
+	@echo $(distribution_names)
 
 show-subproject:
 	@echo $(subproject)
 
-show-distribution:
-	@echo $(addprefix dist/,$(distribution_names))
-
-show-distribution-names:
-	@echo $(distribution_names)
-
-bld:
-	mkdir -p bld
-
-# TODO: consider making deps at this stage: that'd put all deps in the orig.tar.gz. This could be good for repeatable builds (we fetch from the internet all deps and wrap them in a source package), but it could be legally tenuous and there is still a chance of differences b/n .orig.tar.gzs between different arch's builds (b/c different machines run the builds and each fetches its own copy of those deps)
-	#-@[ ! -e "bld/$*" ] && git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*" && cd $(CURDIR)/bld/$* && $(MAKE) deps
-# TODO: could add capability to build from specified branch instead of master (right now this is only supported by doing some of the build steps, monkeying with the local copy and then running the rest of the steps.
-
-bld/%/.git/logs/HEAD: | bld
-	@echo "fetching $*"
-	git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*"
-
-bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
-	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
+show-package:
+	@echo $(package)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD dist/$(call pkg_version,%)/debian $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon)
 
-.PHONY: clean clean-src $(meta) mostlyclean publish-meta show-package show-subproject
+.PHONY: clean clean-src $(meta) mostlyclean publish-meta publish-meta-bld/% show-distribution show-distribution-names show-package show-subproject

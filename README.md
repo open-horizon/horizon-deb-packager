@@ -5,81 +5,30 @@ A project used to create and publish Debian packages and Ubuntu snaps of the Hor
  * Raspbian armhf
  * Ubuntu 16.04 arm64, amd64, ppc64
 
-## Use
+## Manual use
 
-### Installation from pkg.bluehorizon.network
+### Publishing new versions
 
-`TODO`
+Steps:
 
-### Installation from on-disk packages
+0. Check out this repository using the `ssh` clone method
+0. Update the `VERSION` string in this repository's root directory. Use the following criteria:
+  * Increment the micro version (*z* in x.y.z) if there are changes in the source repositores that are limited to bug fixes
+  * Increment the minor version (*y* in x.y.z) if source changes only include new features or other non-breaking changes to the system
+  * Increment the major version (*x* in x.y.z) if there are any source changes  that change external interfaces or configuration files such that old clients will fail to behave with the new version as they could with older versions and configuration *or* if the behavior of the system changes substantially such that existing users cannot expect the same behavior of the new version as they could from older versions
+0. Execute `make meta[-distribution_name]`
+0. Review the changes to the local repository as instructed by cli output
+0. If satisfied with the proposed changes, execute `make publish-meta`
 
-#### Snap
+## Build agent
 
-    snap install --devmode --force-dangerous ./bluehorizon...snap
-
-#### Debian packages
-
-    dpkg -i horizon-<version>.deb bluehorizon-<version>.deb
-
-### Post-installation tasks
-
-You may wish to customize the configuration of Horizon before you start its services. Consult the appropriate section below for instructions on that topic.
-
-#### Debian packages
-
-To start Horizon services, execute:
-
-    systemctl start horizon.service
-
-To enable service startup at system boot, execute:
-
-    systemctl enable horizon.service
-
-### Configuration customization
-
-#### Snap
-
-#### Debian packages
-
-The `horizon` and `bluehorizon` packages use configuration in `/etc/horizon`, `/etc/default/horizon`, and `/etc/systemd/system/horizon.service`. Edit the values as you'd like. Note that if you change the systemd unit file, you must execute `systemctl daemon-reload` for the changes to take effect.
-
-## Development
-
-### Preconditions
-
-#### Accounts and keys
-
-You need an account on the destination for build artifacts, pkgs.bluehorizon.network and a GPG key for signing packages.
-
-#### Build system
-
-A build box requires building, packaging, and signing software. Build a container appropriate for your architecture (some of this will be automated soon):
+Docker build agent container creation command examples:
 
     docker build -t hzn-build -f Dockerfile-bld-armhf .
     docker build -t hzn-build -f Dockerfile-bld-amd64 .
 
-### Operations
+**Note**: You must have appropriate SSH keys added to the agent to: 1) pull code from the repository, and 2) push built packages to the apt signing system.
 
-#### Manual silly business
+Docker start command example:
 
-docker run --rm --name hzn-build -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent -v $HOME/.ssh-github:/root/.ssh:ro -v $PWD:/prj -it hzn-build:latest /bin/bash
-
-#### Building artifacts
-
-The build system is intended to build either new or existing versions of Horizon packages. To build new version of a package, update the `VERSION` or `DEB_REVISION` files' content and make an entry in the Debian changelog for that version with the command `dch -i`. After that, execute:
-
-    make all
-
-Optionally, you can specify a source branch for either or both of the source projects that make up Horizon packages:
-
-    make anax-branch="pkg/deb" anax-ui-branch="pkg/deb" all
-
-#### Publishing artifacts
-
-    (TODO)
-
-### Cross platform
-
-  Mac os packages:
-
-  from ports: dpkg, debianutils
+    docker run --rm --name hzn-build -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent -v $HOME/.ssh-github:/root/.ssh:ro -v $PWD:/prj -it hzn-build:latest /bin/bash -c '/prj/continuous_delivery/bin/watch-build http://pkg.bluehorizon.network/linux/ubuntu/dists/xenial-testing/main/binary-amd64/Packages.gz https://raw.githubusercontent.com/open-horizon/horizon-pkg/master/VERSION'

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+#
+# TODO: improvements:
+# 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
+# 2. Improve error handling
+# 3. add version and dist to args, build up the packagesgz_url
+
+usage="Usage: $0 sleep_s packagesgz_url horizon-pkg_version_url"
+
+if [[ $# -lt 3 ]]; then
+  (>&2 echo "Missing required argument(s). $usage")
+fi
+
+sleep_s=$1
+packagesgz_url=$2
+horizon-pkg_version_url=$3
+
+while true; do
+  newest_pkg=$(curl -s "${horizon-pkg_version_url}")
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to determine horizon-pkg current version.")
+    continue
+  fi
+
+  # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
+  packages=$(curl -s "${packagesgz_url}" | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to determine existing deb package versions.")
+    continue
+  fi
+
+  echo "$packages" | grep -q "$newest_pkg"
+  if [[ $? != 0 ]]; then
+    echo "$newest_pkg not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
+    (cd /prj && \
+      make distclean && \
+      git pull && \
+      $(make show-package )
+      make
+      )
+  else
+    echo "$newest_pkg already indexed for our architecture (determined by examining $packagesgz_url)."
+  fi
+
+  sleep $(sleep_s)
+done

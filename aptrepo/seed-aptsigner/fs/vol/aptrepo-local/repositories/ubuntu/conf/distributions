@@ -1,0 +1,79 @@
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial
+Codename: xenial
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-updates
+Codename: xenial-updates
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-testing
+Codename: xenial-testing
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-unstable
+Codename: xenial-unstable
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: yakkety
+Codename: yakkety
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: yakkety-updates
+Codename: yakkety-updates
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: yakkety-testing
+Codename: yakkety-testing
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: yakkety-unstable
+Codename: yakkety-unstable
+Architectures: amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713

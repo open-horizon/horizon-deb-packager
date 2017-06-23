@@ -1,0 +1,1 @@
+*/2 * * * * root  rsync -qauze "ssh -i <key>" --delete-after /vol/aptrepo-local/repositories/raspbian /vol/aptrepo-local/repositories/ubuntu -avz aptsigner@<repo>:/
