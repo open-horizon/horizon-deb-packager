@@ -16,7 +16,7 @@ meta = $(addprefix meta-,$(distribution_names))
 
 bluehorizon_deb_packages = $(call pkgstub,blue)
 horizon_deb_packages = $(call pkgstub,)
-package = $(bluehorizon_deb_packages) $(horizon_deb_packages) bluehorizon_$(VERSION)_$(ARCH).snap
+package = $(bluehorizon_deb_packages) $(horizon_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
@@ -28,25 +28,7 @@ ifndef VERBOSE
 .SILENT:
 endif
 
-###
-#unordered meta stuff
-###
-
-# we don't bother using snapcraft to do the build, just copy files around using its dump plugin
-#bluehorizon_$(PACKAGEVERSION)_$(ARCH).snap: seed-snap-stage horizon_$(PACKAGEVERSION)_$(ARCH).deb bluehorizon_$(PACKAGEVERSION)_$(ARCH).deb $(wildcard pkgsrc/**/*)
-	# copy snap stuff
-# 	cp -Ra ./pkgsrc/snap/. horizon_$(VERSION)/snap
-#
-# 	sed -i "" "s,version:,version: $(PACKAGEVERSION),g" horizon_$(VERSION)/snap/snapcraft.yaml
-# 	cd horizon_$(VERSION)/anax && \
-# 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
-# 	cd horizon_$(VERSION)/anax-ui && \
-# 		$(MAKE) install DESTDIR=$(CURDIR)/horizon_$(VERSION)/snap/fs/usr/horizon
-# 	cd horizon_$(VERSION)/snap && \
-# 		snapcraft snap -o $(CURDIR)/bluehorizon_$(df
-# 	ACKAGEVERSION)_$(ARCH).snap
-
-clean: clean-src clean-snap mostlyclean
+clean: clean-src mostlyclean
 	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(VERSION) branch"
 	-rm bld/changelog.tmpl
 	-rm -Rf horizon* bluehorizon*
@@ -69,10 +51,6 @@ mostlyclean:
 			cd $$src && $(MAKE) clean; \
 	  fi; \
 	done
-
-clean-snap:
-	@echo "clean-snap"
-	-rm -Rf horizon_$(VERSION)/snap/{parts,prime,stage}
 
 distclean: clean
 	@echo "distclean"
@@ -130,12 +108,12 @@ dist/$(call pkg_version,%)_$(ARCH).deb: dist/$(call file_version,%).orig.tar.gz
 	cd dist/$(call pkg_version,$*) && \
 		debuild -us -uc --lintian-opts --allow-root
 
-$(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,$*).orig.tar.gz
+$(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz
 	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subproject)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
-	@echo "Please inspect dist/$*/*, the shared template file bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
+	@echo "Please inspect dist/$(call pkg_version,$*), the shared template file bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
 
 meta: $(meta)
 
@@ -151,21 +129,6 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
 	git commit -m "updated package metadata to $(VERSION)"
 	git push --set-upstream origin horizon_$(VERSION)
-
-BLUEHORIZON-SNAP-OUTDIRBASE=dist/snap/fs
-seed-snap-stage: seed-debian-stage clean-snap
-	mkdir -p $(BLUEHORIZON-SNAP-OUTDIRBASE) && \
-		./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)
-
-	cp -Ra ./pkgsrc/seed/horizon/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
-	cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
-	cp -Ra ./pkgsrc/seed/bluehorizon-snap-only/fs/. $(BLUEHORIZON-SNAP-OUTDIRBASE)
-
-	cp ./pkgsrc/seed/dynamic/horizon.tmpl $(BLUEHORIZON-SNAP-OUTDIRBASE)/etc/default/
-	cp ./pkgsrc/seed/dynamic/anax.json.tmpl $(BLUEHORIZON-SNAP-OUTDIRBASE)/etc/horizon/
-	cp ./pkgsrc/mk-dir-trees $(BLUEHORIZON-SNAP-OUTDIRBASE)/usr/horizon/sbin/
-
-	find $(BLUEHORIZON-SNAP-OUTDIRBASE)/ -type d -empty -delete
 
 show-package:
 	@echo $(package)
@@ -196,4 +159,4 @@ bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD dist/$(call pkg_version,%)/debian $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon)
 
-.PHONY: clean clean-src clean-snap $(meta) publish-meta show-package show-subproject
+.PHONY: clean clean-src $(meta) mostlyclean publish-meta show-package show-subproject
