@@ -1,21 +1,21 @@
 SHELL := /bin/bash
-ARCH := $(shell tools/arch-tag)
+arch-tag := $(shell tools/arch-tag)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
 subproject_names = anax anax-ui
 subprojects = $(addprefix bld/,$(subproject_names))
 
-VERSION := $(shell cat VERSION)
-aug_version = $(addprefix $(1)$(VERSION)~ppa~,$(2))
+version := $(shell cat VERSION)
+aug_version = $(addprefix $(1)$(version)~ppa~,$(2))
 pkg_version = $(call aug_version,horizon-,$(1))
 file_version = $(call aug_version,horizon_,$(1))
 
-git_repo_prefix = ssh://git@github.com/open-horizon/
+git_repo_prefix = ssh://git@github.com/open-horizon
 
 # only returns names of distributions that are valid for this architecture
-distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(ARCH)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
+distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch-tag)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
 
-pkgstub = $(foreach dname,$(distribution_names),dist/$(1)$(call pkg_version,$(dname))_$(ARCH).deb)
+pkgstub = $(foreach dname,$(distribution_names),dist/$(1)$(call pkg_version,$(dname))_$(arch-tag).deb)
 
 meta = $(addprefix meta-,$(distribution_names))
 
@@ -25,11 +25,11 @@ packages = $(bluehorizon_deb_packages) $(horizon_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
-DOCKER_TAG_PREFIX := horizon
+docker_tag_prefix := horizon
 
 all: meta
 
-ifndef VERBOSE
+ifndef verbose
 .SILENT:
 endif
 
@@ -41,11 +41,13 @@ bld:
 # TODO: could add capability to build from specified branch instead of master (right now this is only supported by doing some of the build steps, monkeying with the local copy and then running the rest of the steps.
 
 bld/%/.git/logs/HEAD: | bld
-	@echo "fetching $*"
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
+ifneq ($($(*)-branch),"")
+	cd $(CURDIR)/bld/$* && git checkout $($(*)-branch)
+endif
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
-	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
+	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(docker_tag_prefix)/$(version)"
 
 bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subprojects))
 	mkdir -p bld
@@ -55,7 +57,7 @@ dist/$(call pkg_version,%)/debian:
 	mkdir -p dist/$(call pkg_version,$*)/debian
 
 clean: clean-src mostlyclean
-	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(VERSION) branch"
+	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(version) branch"
 	-rm bld/changelog.tmpl
 	-rm -Rf horizon* bluehorizon*
 	-rm -Rf bld
@@ -82,7 +84,7 @@ distclean: clean
 	@echo "distclean"
 	# TODO: add other files to reset that might have changed?
 	-@git reset VERSION
-	-@git checkout master && git branch -D horizon_$(VERSION)
+	-@git checkout master && git branch -D horizon_$(version)
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
 dist/$(call pkg_version,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | dist/$(call pkg_version,%)/debian
@@ -101,7 +103,7 @@ dist/$(call pkg_version,%)/debian/fs-bluehorizon: dist/$(call pkg_version,%)/deb
 		cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $$dir && \
 		cp dist/$(call pkg_version,$*)/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
 
-# meta for every distribution, the target of horizon_$(VERSION)-meta/$(distribution_names)
+# meta for every distribution, the target of horizon_$(version)-meta/$(distribution_names)
 dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pkg_version,%)/debian
 	sed "s,##DISTRIBUTIONS##,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > dist/$(call pkg_version,$*)/debian/changelog
 	sed -i.bak "s,##VERSION_RELEASE##,$(call aug_version,,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
@@ -120,15 +122,15 @@ dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-ho
 
 # also builds the bluehorizon package
 $(bluehorizon_deb_packages):
-dist/blue$(call pkg_version,%)_$(ARCH).deb:
+dist/blue$(call pkg_version,%)_$(arch-tag).deb:
 $(horizon_deb_packages):
-dist/$(call pkg_version,%)_$(ARCH).deb: dist/$(call file_version,%).orig.tar.gz
+dist/$(call pkg_version,%)_$(arch-tag).deb: dist/$(call file_version,%).orig.tar.gz
 	@echo "Running Debian build in $*"
 	cd dist/$(call pkg_version,$*) && \
 		debuild -us -uc --lintian-opts --allow-root
 
 $(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz
-	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subprojects)
+	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)" $(subprojects)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
@@ -140,14 +142,14 @@ packages: $(packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
-	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
+	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)"
 
 publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
-	git checkout -b horizon_$(VERSION)
+	git checkout -b horizon_$(version)
 	cp bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
 	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
-	git commit -m "updated package metadata to $(VERSION)"
-	git push --set-upstream origin horizon_$(VERSION)
+	git commit -m "updated package metadata to $(version)"
+	git push --set-upstream origin horizon_$(version)
 
 show-distribution-names:
 	@echo $(distribution_names)

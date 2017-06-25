@@ -4,7 +4,8 @@
 # TODO: improvements:
 # 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
 # 2. Improve error handling
-# 3. add version and dist to args, build up the packagesgz_url
+# 3. Add version and dist to args, build up the packagesgz_url
+# 4. Check for presence of package in build indexing queue on server before building; this is smarter than the current post-build sleep in place now
 
 usage="Usage: $0 sleep_s prj_dir packagesgz_url horizon_pkg_version_url publish_destination_stub"
 
@@ -53,10 +54,14 @@ build() {
   if [[ $? != 0 ]]; then
     echo "$newest_pkg not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
     (cd $prj_dir && \
-      make distclean && \
+      make distclean git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup && \
       git pull && \
-      make package && \
+      make packages git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup verbose=y && \
       for dist in $(make show-distribution-names); do rsync -avz -f"- */" --progress --stats "/prj/dist/*${dist}*" "${publish_destination_stub}${dist}"; done)
+
+    local post_build_sleep_s=5
+    echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_s}s to prevent rebuilding before indexing queue is processed"
+    sleep $post_build_sleep_s
   else
     echo "$newest_pkg already indexed for our architecture (determined by examining $packagesgz_url)."
   fi
