@@ -110,7 +110,7 @@ dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pk
 $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | dist/$(call pkg_version,%)/debian
 	cp -Ra pkgsrc/deb/shared/debian/. dist/$(call pkg_version,$*)/debian/
 	# next, copy specific package overwrites
-	cp -Ra pkgsrc/deb/meta/dist/$*/debian/. dist/$(call pkg_version,$*)/debian/
+	-@[ -d pkgsrc/deb/meta/dist/$*/debian ] && cp -Rva pkgsrc/deb/meta/dist/$*/debian/. dist/$(call pkg_version,$*)/debian/
 
 dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-horizon dist/$(call pkg_version,%)/debian/fs-bluehorizon dist/$(call pkg_version,%)/debian/changelog $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
