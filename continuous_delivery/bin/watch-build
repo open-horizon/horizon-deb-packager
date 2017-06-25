@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 #
 # TODO: improvements:
@@ -6,42 +6,67 @@
 # 2. Improve error handling
 # 3. add version and dist to args, build up the packagesgz_url
 
-usage="Usage: $0 sleep_s packagesgz_url horizon-pkg_version_url"
+usage="Usage: $0 sleep_s prj_dir packagesgz_url horizon_pkg_version_url publish_destination_stub"
 
-if [[ $# -lt 3 ]]; then
+if [[ $# -lt 5 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
 fi
 
 sleep_s=$1
-packagesgz_url=$2
-horizon-pkg_version_url=$3
+prj_dir="$2"
+packagesgz_url="$3"
+horizon_pkg_version_url="$4"
+publish_destination_stub="$5"
 
-while true; do
-  newest_pkg=$(curl -s "${horizon-pkg_version_url}")
+function control_c() {
+  exit 0
+}
+
+trap control_c SIGINT SIGQUIT
+
+watch_repo() {
+  newest_pkg=$(curl -s "${horizon_pkg_version_url}")
   if [[ $? != 0 ]]; then
     (>&2 echo "Failed to determine horizon-pkg current version.")
-    continue
+    echo ""
+    return
   fi
 
   # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
   packages=$(curl -s "${packagesgz_url}" | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
   if [[ $? != 0 ]]; then
     (>&2 echo "Failed to determine existing deb package versions.")
-    continue
+    echo ""
+    return
   fi
+
+  # needs to be split by consumer of this function
+  echo "$newest_pkg $packages"
+  return
+}
+
+build() {
+  newest_pkg="$1"
+  packages="${@:2}"
 
   echo "$packages" | grep -q "$newest_pkg"
   if [[ $? != 0 ]]; then
     echo "$newest_pkg not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
-    (cd /prj && \
+    (cd $prj_dir && \
       make distclean && \
       git pull && \
-      $(make show-package )
-      make
-      )
+      make package && \
+      for dist in $(make show-distribution-names); do rsync -avz -f"- */" --progress --stats "/prj/dist/*${dist}*" "${publish_destination_stub}${dist}"; done)
   else
     echo "$newest_pkg already indexed for our architecture (determined by examining $packagesgz_url)."
   fi
+}
 
-  sleep $(sleep_s)
+while true; do
+  sleep $sleep_s
+
+  vers=$(watch_repo)
+  if [[ "$vers" != "" ]]; then
+    build "$vers"
+  fi
 done

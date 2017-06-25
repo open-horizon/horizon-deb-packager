@@ -1,8 +1,8 @@
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial
-Codename: xenial
-Architectures: armhf amd64 ppc64el source
+Suite: jessie
+Codename: jessie
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -10,9 +10,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-updates
-Codename: xenial-updates
-Architectures: armhf amd64 ppc64el source
+Suite: jessie-updates
+Codename: jessie-updates
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -20,9 +20,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-testing
-Codename: xenial-testing
-Architectures: armhf amd64 ppc64el source
+Suite: jessie-testing
+Codename: jessie-testing
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -30,9 +30,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-unstable
-Codename: xenial-unstable
-Architectures: armhf amd64 ppc64el source
+Suite: jessie-unstable
+Codename: jessie-unstable
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -40,9 +40,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety
-Codename: yakkety
-Architectures: armhf amd64 ppc64el source
+Suite: sid
+Codename: sid
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -50,9 +50,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-updates
-Codename: yakkety-updates
-Architectures: armhf amd64 ppc64el source
+Suite: sid-updates
+Codename: sid-updates
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -60,9 +60,9 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-testing
-Codename: yakkety-testing
-Architectures: armhf amd64 ppc64el source
+Suite: sid-testing
+Codename: sid-testing
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -70,10 +70,11 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-unstable
-Codename: yakkety-unstable
-Architectures: armhf amd64 ppc64el source
+Suite: sid-unstable
+Codename: sid-unstable
+Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
 SignWith: 8F813713
+

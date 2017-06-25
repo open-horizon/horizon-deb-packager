@@ -1,14 +1,14 @@
 Name: incoming-xenial
-IncomingDir: /var/repositories/incoming/ubuntu-xenial
-TempDir: /var/repositories/tmp/ubuntu-xenial
+IncomingDir: /var/repositories/incoming/ubuntu.xenial
+TempDir: /var/repositories/tmp/ubuntu.xenial
 Allow: xenial-testing
 Default: xenial-testing
 Permit: older_version
 
 
 Name: incoming-yakkety
-IncomingDir: /var/repositories/incoming/ubuntu-yakkety
-TempDir: /var/repositories/tmp/ubuntu-yakkety
+IncomingDir: /var/repositories/incoming/ubuntu.yakkety
+TempDir: /var/repositories/tmp/ubuntu.yakkety
 Allow: yakkety-testing
 Default: yakkety-testing
 Permit: older_version

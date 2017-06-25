@@ -2,21 +2,24 @@ SHELL := /bin/bash
 ARCH := $(shell tools/arch-tag)
 # N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
 subproject_names = anax anax-ui
-subproject = $(addprefix bld/,$(subproject_names))
+subprojects = $(addprefix bld/,$(subproject_names))
 
 VERSION := $(shell cat VERSION)
 aug_version = $(addprefix $(1)$(VERSION)~ppa~,$(2))
 pkg_version = $(call aug_version,horizon-,$(1))
 file_version = $(call aug_version,horizon_,$(1))
 
-distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec basename {} \;)
+# only returns names of distributions that are valid for this architecture
+distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(ARCH)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
+release_only = $(lastword $(subst ., ,$1))
+
 pkgstub = $(foreach dname,$(distribution_names),dist/$(1)$(call pkg_version,$(dname))_$(ARCH).deb)
 
 meta = $(addprefix meta-,$(distribution_names))
 
 bluehorizon_deb_packages = $(call pkgstub,blue)
 horizon_deb_packages = $(call pkgstub,)
-package = $(bluehorizon_deb_packages) $(horizon_deb_packages)
+packages = $(bluehorizon_deb_packages) $(horizon_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
@@ -42,7 +45,7 @@ bld/%/.git/logs/HEAD: | bld
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
 	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
 
-bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subproject))
+bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subprojects))
 	mkdir -p bld
 	tools/render-debian-changelog "##DISTRIBUTIONS##" "##VERSION_RELEASE##" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog")
 
@@ -56,7 +59,7 @@ clean: clean-src mostlyclean
 	-rm -Rf bld
 
 clean-src:
-	for src in $(subproject); do \
+	for src in $(subprojects); do \
 		if [ -e $$src ]; then \
 		  cd $$src && \
 			git checkout . && \
@@ -67,7 +70,7 @@ clean-src:
 
 mostlyclean:
 	-rm -Rf dist
-	for src in $(subproject); do \
+	for src in $(subprojects); do \
 		if [ -e $$src ]; then \
 			cd $$src && $(MAKE) clean; \
 	  fi; \
@@ -98,7 +101,7 @@ dist/$(call pkg_version,%)/debian/fs-bluehorizon: dist/$(call pkg_version,%)/deb
 
 # meta for every distribution, the target of horizon_$(VERSION)-meta/$(distribution_names)
 dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pkg_version,%)/debian
-	sed "s,##DISTRIBUTIONS##,$* $(addprefix $*-,updates testing unstable),g" bld/changelog.tmpl > dist/$(call pkg_version,$*)/debian/changelog
+	sed "s,##DISTRIBUTIONS##,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > dist/$(call pkg_version,$*)/debian/changelog
 	sed -i.bak "s,##VERSION_RELEASE##,$(call aug_version,,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
 
 # N.B. This target will copy all files from the source to the dest. as one target
@@ -108,7 +111,7 @@ $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pk
 	cp -Ra pkgsrc/deb/meta/dist/$*/debian/. dist/$(call pkg_version,$*)/debian/
 
 dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-horizon dist/$(call pkg_version,%)/debian/fs-bluehorizon dist/$(call pkg_version,%)/debian/changelog $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared))
-	for src in $(subproject); do \
+	for src in $(subprojects); do \
 		rsync -a --exclude=".git" $(PWD)/$$src dist/$(call pkg_version,$*)/; \
 	done
 	tar czf dist/$(call file_version,$*).orig.tar.gz -C dist/$(call pkg_version,$*) .
@@ -123,7 +126,7 @@ dist/$(call pkg_version,%)_$(ARCH).deb: dist/$(call file_version,%).orig.tar.gz
 		debuild -us -uc --lintian-opts --allow-root
 
 $(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz
-	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subproject)
+	tools/meta-precheck $(CURDIR) "$(DOCKER_TAG_PREFIX)/$(VERSION)" $(subprojects)
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
@@ -131,7 +134,7 @@ $(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz
 
 meta: $(meta)
 
-package: $(package)
+packages: $(packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
@@ -147,13 +150,13 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 show-distribution-names:
 	@echo $(distribution_names)
 
-show-subproject:
-	@echo $(subproject)
+show-subprojects:
+	@echo $(subprojects)
 
-show-package:
-	@echo $(package)
+show-packages:
+	@echo $(packages)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD dist/$(call pkg_version,%)/debian $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon)
 
-.PHONY: clean clean-src $(meta) mostlyclean publish-meta publish-meta-bld/% show-distribution show-distribution-names show-package show-subproject
+.PHONY: clean clean-src $(meta) mostlyclean publish-meta publish-meta-bld/% show-distribution-names show-packages show-subprojects
