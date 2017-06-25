@@ -9,6 +9,8 @@ aug_version = $(addprefix $(1)$(VERSION)~ppa~,$(2))
 pkg_version = $(call aug_version,horizon-,$(1))
 file_version = $(call aug_version,horizon_,$(1))
 
+git_repo_prefix = ssh://git@github.com/open-horizon/
+
 # only returns names of distributions that are valid for this architecture
 distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(ARCH)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
@@ -40,7 +42,7 @@ bld:
 
 bld/%/.git/logs/HEAD: | bld
 	@echo "fetching $*"
-	git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*"
+	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
 	tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(DOCKER_TAG_PREFIX)/$(VERSION)"
