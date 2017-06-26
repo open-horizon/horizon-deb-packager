@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 SHELL := /bin/bash
-ANAX_TMPGOPATH := $(CURDIR)/anax-go
+ANAX_TMPGOPATH := $(CURDIR)/anaxtmpgopath
 
 %:
 	dh $@ --with systemd
@@ -22,7 +22,7 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	-[ ! -e "$(ANAX_TMPGOPATH)" ] && mkdir -p $(ANAX_TMPGOPATH)
-	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon TMPGOPATH=$(CURDIR)/go
+	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
 	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-OUTDIRBASE)/usr/horizon
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)

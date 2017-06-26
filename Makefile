@@ -116,7 +116,10 @@ $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pk
 
 dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-horizon dist/$(call pkg_version,%)/debian/fs-bluehorizon dist/$(call pkg_version,%)/debian/changelog $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
-		rsync -a --exclude=".git" $(PWD)/$$src dist/$(call pkg_version,$*)/; \
+		rsync -a --exclude=".git*" $(PWD)/$$src dist/$(call pkg_version,$*)/; \
+		if [ -e $${src}-rules.env ]; then \
+			cp $${src}-rules.env dist/$(call pkg_version,$*)/$$(basename $$src)/rules.env; \
+		fi; \
 	done
 	tar czf dist/$(call file_version,$*).orig.tar.gz -C dist/$(call pkg_version,$*) .
 

@@ -55,9 +55,13 @@ build() {
     echo "$newest_pkg not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
     (cd $prj_dir && \
       make distclean git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup && \
+      git reset --hard HEAD && \
+      git clean -df && \
       git pull && \
+      mkdir bld && \
+      echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
       make packages git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup verbose=y && \
-      for dist in $(make show-distribution-names); do rsync -avz -f"- */" --progress --stats "/prj/dist/*${dist}*" "${publish_destination_stub}${dist}"; done)
+      for dist in $(make show-distribution-names); do rsync -avz -f"- */" --progress --stats "${prj_dir}/dist/*${dist}*" "${publish_destination_stub}${dist}"; done)
 
     local post_build_sleep_s=5
     echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_s}s to prevent rebuilding before indexing queue is processed"
