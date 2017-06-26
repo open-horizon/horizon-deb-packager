@@ -7,17 +7,21 @@
 # 3. Add version and dist to args, build up the packagesgz_url
 # 4. Check for presence of package in build indexing queue on server before building; this is smarter than the current post-build sleep in place now
 
-usage="Usage: $0 sleep_s prj_dir packagesgz_url horizon_pkg_version_url publish_destination_stub"
+usage="Usage: $0 sleep_s prj_dir packagesgz_url_templ publish_destination_stub"
 
-if [[ $# -lt 5 ]]; then
+if [[ $# -lt 4 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
+  exit 1
 fi
 
 sleep_s=$1
 prj_dir="$2"
-packagesgz_url="$3"
-horizon_pkg_version_url="$4"
-publish_destination_stub="$5"
+packagesgz_url_templ="$3"
+publish_destination_stub="$4"
+
+VERSION=""
+ARCH=""
+DIST_RELEASE=""
 
 function control_c() {
   exit 0
@@ -25,41 +29,48 @@ function control_c() {
 
 trap control_c SIGINT SIGQUIT
 
-watch_repo() {
-  newest_pkg=$(curl -s "${horizon_pkg_version_url}")
-  if [[ $? != 0 ]]; then
-    (>&2 echo "Failed to determine horizon-pkg current version.")
-    echo ""
-    return
-  fi
-
-  # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
-  packages=$(curl -s "${packagesgz_url}" | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
-  if [[ $? != 0 ]]; then
-    (>&2 echo "Failed to determine existing deb package versions.")
-    echo ""
-    return
-  fi
-
-  # needs to be split by consumer of this function
-  echo "$newest_pkg $packages"
-  return
-}
-
-build() {
-  newest_pkg="$1"
-  packages="${@:2}"
-
-  echo "$packages" | grep -q "$newest_pkg"
-  if [[ $? != 0 ]]; then
-    echo "$newest_pkg not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
-    (cd $prj_dir && \
-      make distclean git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup && \
+# depends on side effects
+function clone_prj() {
+  if [[ ! -d ${prj_dir}/.git ]]; then
+    git clone https://github.com/open-horizon/horizon-pkg.git $prj_dir
+  else
+    (mkdir -p $prj_dir; cd $prj_dir && \
       git reset --hard HEAD && \
       git clean -df && \
       git pull && \
+      make distclean git_repo_prefix=https://github.com/open-horizon)
+  fi
+
+  local artifacts=""
+  (cd $prj_dir && \
+    DIST_RELEASE="$(make show-packages | xargs -n1 | grep -oP "dist/.*~\K([^_]+)" | sort | uniq | xargs)" && \
+    VERSION=$(cat ./VERSION) && \
+    ARCH=$(./tools/arch-tag))
+}
+
+function artifact_versions() {
+  url="$1"
+
+  # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
+  packages=$(curl -s "${url}" | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
+  if [[ $? != 0 ]]; then
+    (>&2 echo "Failed to determine existing deb package versions.")
+    echo ""
+  else
+    echo "$packages"
+  fi
+}
+
+function build() {
+  packages="${@:1}"
+
+  echo "$packages" | grep -q "$VERSION"
+  if [[ $? != 0 ]]; then
+    echo "$VERSION not yet indexed for our architecture (determined by examining $packagesgz_url). Building package and submitting it to queue."
+    (cd $prj_dir && \
       mkdir bld && \
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
+
       make packages git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup verbose=y && \
       for dist in $(make show-distribution-names); do rsync -avz -f"- */" --progress --stats ${prj_dir}/dist/*${dist}* "${publish_destination_stub}${dist}"; done)
 
@@ -74,8 +85,18 @@ build() {
 while true; do
   sleep $sleep_s
 
-  vers=$(watch_repo)
-  if [[ "$vers" != "" ]]; then
-    build "$vers"
-  fi
+  clone_prj
+
+  for dr in "${DIST_RELEASE}"; do
+    echo "Processing $dr"
+    draddr=""
+
+    echo "$draddr"
+
+    IFS='.' read -ra draddr <<< "$dr"
+    echo "**** $draddr ****"
+    vers=$(artifact_versions $(echo "$packagesgz_url_templ" | sed "s,##DIST##,${draddr[0]},g" | sed "s,##RELEASE##,${draddr[1]},g" | sed "s,##ARCH##,${ARCH},g"))
+
+    echo "** $vers **"
+  done
 done

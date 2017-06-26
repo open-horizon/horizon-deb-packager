@@ -1,5 +1,5 @@
-horizon_*
-bluehorizon_*
+./horizon_*
+./bluehorizon_*
 *.sw*
-bld
-dist
+bld/
+dist/
