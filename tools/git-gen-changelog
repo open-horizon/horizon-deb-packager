@@ -4,6 +4,7 @@ usage="Usage: $0 repo_path debian_changelog_path tag"
 
 if [[ $# -lt 3 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
+  exit 1
 fi
 
 repo_path=$1
@@ -15,6 +16,11 @@ old_version=$(dpkg-parsechangelog -l "$debian_changelog_path" -c 0 -S version)
 (>&2 echo "INFO: Previous debian package version: $old_version. Gathering all changes for git project since tag ${tag_prefix}/${old_version}...")
 
 cd $repo_path
+
+if [[ "$(git tag -l ${tag})" != "" ]] && [[ "$(git rev-parse --abbrev-ref HEAD)" != "heads/$tag" ]]; then
+  (>&2 echo "ERROR: Illegal state: Tag $tag exists but we're not on a branch from it as expected.")
+  exit 2
+fi
 
 # the stuff we want to report is below
 # note that the below branch info will be empty if detached
