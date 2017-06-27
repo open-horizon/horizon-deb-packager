@@ -44,6 +44,9 @@ bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 ifneq ($($(*)-branch),"")
 	cd $(CURDIR)/bld/$* && git checkout $($(*)-branch)
+	@echo "Building from branch override $($(*)-branch)"
+else
+	[ $$(git tag -l "$(docker_tag_prefix)/$(version)") != "" ] && git checkout -b "$(docker_tag_prefix)$(version)" "$(docker_tag_prefix)/$(version)"
 endif
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
