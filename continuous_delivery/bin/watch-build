@@ -37,8 +37,8 @@ function clone_prj() {
     (mkdir -p $prj_dir; cd $prj_dir && \
       git reset --hard HEAD && \
       git clean -df && \
-      git pull && \
-      make distclean git_repo_prefix=https://github.com/open-horizon)
+      make distclean && \
+      git pull)
   fi
 
   VERSION="$(cat ./VERSION)"
@@ -73,7 +73,7 @@ function build_publish() {
     (cd $prj_dir && \
       mkdir -p bld && \
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
-      make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon anax-ui-branch=build_speedup anax-branch=build_speedup verbose=y && \
+      make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y anax-ui-branch=build_speedup anax-branch=build_speedup && \
       for dist in $1; do rsync -avz -f"- */" --progress --stats ${prj_dir}/dist/*${dist}* "${publish_destination_stub}/${dist}.${rel}/"; done)
   else
     echo "$newest_pkg already indexed for our architecture ($ARCH)."
@@ -97,7 +97,7 @@ while true; do
     fi
   done
 
-  local post_build_sleep_m=35m
+  post_build_sleep_m=35m
   echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_m}m to prevent rebuilding before indexing queue is processed"
   sleep $post_build_sleep_m
 done
