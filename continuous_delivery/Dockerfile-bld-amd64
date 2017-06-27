@@ -14,10 +14,11 @@ RUN apt-get update && apt-get install -y \
       vim \
       jq \
       tree \
+      wget \
       snapcraft
 RUN ln -s /usr/lib/go-1.7/bin/go* /usr/bin/
 RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN npm install -g npm-cache
-RUN touch /horizon-pkg.new
+ARG CACHE_DATE=1977-06-27_15:17:32
 RUN git clone https://github.com/open-horizon/horizon-pkg.git /horizon-pkg
 WORKDIR /horizon-pkg

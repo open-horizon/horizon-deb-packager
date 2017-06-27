@@ -22,6 +22,7 @@ publish_destination_stub="$4"
 VERSION=""
 ARCH=""
 DIST_RELEASE=""
+TMPDIR=${TMPDIR:=/tmp}
 
 function control_c() {
   exit 0
@@ -51,14 +52,16 @@ function artifact_versions() {
   url="$1"
 
   # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
-  pkgs=$(curl -sf "${url}" 2> /dev/null)
-  if [[ $? == 22 ]]; then
+  wget -4 -q -O $TMPDIR/horizon-pkgs.gz "${url}" 2> /dev/null
+  ret=$?
+  if [[ $ret == 8 ]]; then
+    # a server error, perhaps a 404; let it build and attempt later push
     echo "-99"
-  elif [[ $? > 0 ]]; then
+  elif [[ $ret > 0 ]]; then
     (>&2 echo "Failed to determine existing deb package versions.")
     echo ""
   else
-    echo $pkgs | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs
+    echo $(cat $TMPDIR/horizon-pkgs.gz | gunzip | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
   fi
 }
 
@@ -74,7 +77,8 @@ function build_publish() {
       mkdir -p bld && \
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
       make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y  && \
-      for dist in $1; do rsync -avz -f"- */" --progress --stats ${prj_dir}/dist/*${dist}.${rel}* "${publish_destination_stub}/${dist}.${rel}/"; done)
+      # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
+      for dist in $1; do rsync -avz --ignore-existing -f"- */" --progress --stats ${prj_dir}/dist/*${dist}.${rel}* "${publish_destination_stub}/${dist}.${rel}/"; done)
   else
     echo "$newest_pkg already indexed for our architecture ($ARCH)."
   fi
