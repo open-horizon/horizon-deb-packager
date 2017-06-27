@@ -74,7 +74,7 @@ function build_publish() {
       mkdir -p bld && \
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
       make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y anax-ui-branch=build_speedup anax-branch=build_speedup && \
-      for dist in $1; do rsync -avz -f"- */" --progress --stats ${prj_dir}/dist/*${dist}* "${publish_destination_stub}/${dist}.${rel}/"; done)
+      for dist in $1; do rsync -avz -f"- */" --progress --stats ${prj_dir}/dist/*${dist}.${rel}* "${publish_destination_stub}/${dist}.${rel}/"; done)
   else
     echo "$newest_pkg already indexed for our architecture ($ARCH)."
   fi
@@ -98,6 +98,6 @@ while true; do
   done
 
   post_build_sleep_m=35m
-  echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_m}m to prevent rebuilding before indexing queue is processed"
+  echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_m} to prevent rebuilding before indexing queue is processed"
   sleep $post_build_sleep_m
 done
