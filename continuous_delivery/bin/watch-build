@@ -144,7 +144,7 @@ function build_publish() {
       push_list=$(echo "$expected_binaries" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
 
       # check for already-uploaded source stuff b/c it's common b/n architectures and may have already been uploaded
-      if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_sources)" == "$VERSION_PREFIX" ]]; then
+      if [[ "$(indexed_or_queued "$sources_url" "${upload_destination}" $expected_sources)" == "$VERSION_PREFIX" ]]; then
         push_list="${push_list} $(echo "$expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)"
       else
         echo "$VERSION_PREFIX sources already indexed or in queue, not adding to transmission."
