@@ -12,12 +12,12 @@ debian_changelog_path=$2
 tag=$3
 tag_prefix=$(echo $tag | awk -F "/" '{print $1}')
 
-old_version=$(dpkg-parsechangelog -l "$debian_changelog_path" -c 0 -S version)
+old_version=$(dpkg-parsechangelog -l "$debian_changelog_path" -c 0 -S version | sed 's,++VERSIONSUFFIX++,,g')
 (>&2 echo "INFO: Previous debian package version: $old_version. Gathering all changes for git project since tag ${tag_prefix}/${old_version}...")
 
 cd $repo_path
 
-if [[ "$(git tag -l ${tag})" != "" ]] && [[ "$(git rev-parse --abbrev-ref HEAD)" != "heads/$tag" ]]; then
+if [[ "$(git tag -l ${tag})" != "" ]] && [[ "$(git rev-parse --abbrev-ref HEAD)" != "${tag}-b" ]]; then
   (>&2 echo "ERROR: Illegal state: Tag $tag exists but we're not on a branch from it as expected.")
   exit 2
 fi
