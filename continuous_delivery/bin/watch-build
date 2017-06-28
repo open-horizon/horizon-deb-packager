@@ -135,7 +135,7 @@ function build_publish() {
       cd $prj_dir
       mkdir -p bld
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env
-      make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
+      make mostlyclean $(make show-packages | xargs -n1 | grep "${dist}.${rel}" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
 
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
       push_list=$(echo "$expected_binaries $expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
