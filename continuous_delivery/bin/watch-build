@@ -129,9 +129,6 @@ function build_publish() {
   expected_sources="horizon_$(source_version $dist $rel).debian.tar.xz horizon_$(source_version $dist $rel).dsc horizon_$(source_version $dist $rel).orig.tar.gz"
   upload_destination="${publish_destination_stub}/${dist}.${rel}/"
 
-  # list of files to transmit
-  push_list=""
-
   if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_binaries)" == "$VERSION_PREFIX" ]]; then
     echo "$VERSION_PREFIX not yet indexed for our architecture ($ARCH). Building package and submitting it to queue."
     (
@@ -141,14 +138,7 @@ function build_publish() {
       make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
 
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
-      push_list=$(echo "$expected_binaries" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
-
-      # check for already-uploaded source stuff b/c it's common b/n architectures and may have already been uploaded
-      if [[ "$(indexed_or_queued "$sources_url" "${upload_destination}" $expected_sources)" == "$VERSION_PREFIX" ]]; then
-        push_list="${push_list} $(echo "$expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)"
-      else
-        echo "$VERSION_PREFIX sources already indexed or in queue, not adding to transmission."
-      fi
+      push_list=$(echo "$expected_binaries $expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
 
       # do the push
       rsync -avz --ignore-existing --progress --stats $push_list "${upload_destination}"
