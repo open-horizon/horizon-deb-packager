@@ -1,3 +1,68 @@
+horizon (2.0.10d##VERSION_SUFFIX##) ##DISTRIBUTIONS##; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - 60ce8eb (michael dye): added efficiencies to build
+      - 26332bd (Varatep Buranintu): remove auto refilling for account form
+      - ff69bab (Varatep Buranintu): fix issue for email validation error still occurring after toggling checkbox for account exists
+      - a88eb5f (Varatep Buranintu): remove gpsdevice mapping
+      - fa3dd4e (Varatep Buranintu): remove v1 reg ui mappings
+      - f986853 (Varatep Buranintu): add extra check for empty inputs in validation
+      - 5b5c349 (Varatep Buranintu): remove duplicate name property
+      - a2c1425 (Varatep Buranintu): remove MTN prefixes
+      - 6f8c467 (Varatep Buranintu): closes #46
+      - eadbb6c (Varatep Buranintu): exclude disabled pocs
+      - 890ad11 (Varatep Buranintu): input with icon to the right for visibility toggle
+      - 9f1a150 (Varatep Buranintu): handle password visibility toggl
+
+    * github.com/open-horizon/anax.git, branch: master
+      - d7684fb (michael dye): fixed ugliness in TMPDIR path building; added feature to use existing gopath/.cache via opt-in var; guard symlink in PKGPATH with check
+      - ca2e412 (Dave Booz): Issue 263 - Cancel agreement when agreement protocol deleted from policy
+      - 7b9a79e (Dave Booz): issue218 - multiple BC stage 2
+      - 627b8e6 (linggao): Fixed issue 259
+      - fa03d7b (Dave Booz): new blockchainless agreement protocol
+      - f722de0 (Dave Booz): final fixes
+      - b9eab3c (Dave Booz): code complete
+      - 2e22c67 (linggao): Added more information to the error message after the exchange.CreateMessageTarget call
+      - a833ca1 (linggao): added description to each anax and agbot apis.
+      - 1b04ca9 (linggao): updated agreement_bot_api doc about the limitation of /workloadusage api.
+      - 51556ea (Dave Booz): preliminary commit to merge up
+      - 5b94a55 (linggao): updated anax api doc.
+      - 4ab4eec (linggao): fixed format in agreement_bot_api.md file
+      - a2c8241 (Dave Booz): move user public key path to config
+      - 75a1a59 (michael dye): removed dep on build from install
+      - 0c35a17 (michael dye): reuse paths
+      - 29728d8 (michael dye): added smarter install target for deb building
+      - 40ec548 (Dave Booz): upgrade API to force a device to attempt upgrade
+      - e0c25f3 (Dave Booz): add valid data transitions to persistence
+      - c9a3377 (Dave Booz): handle http client timeouts
+      - 7633579 (Dave Booz): several shared container fixes
+      - c7bf146 (Dave Booz): rename disable_retries to disable_retry
+      - d143a09 (Dave Booz): remove MTN env var prefix, device BC policy, and whisper
+      - 9aafc18 (Dave Booz): disable workload rollback retry after successful data receipt'
+      - 146debe (linggao): minor fix for agreement_bot_api.md
+      - bbc3e46 (Dave Booz): agbot API doc
+      - 82ccc96 (Dave Booz): workload deployment signature support
+      - e5a690c (Dave Booz): fixed existing agreement bug with saving metering notifications
+      - 08861ee (Dave Booz): added system default for dv check_rate
+      - 673ff00 (Dave Booz): workload image public key API
+      - 97f7c41 (Dave Booz): issue164 - dynamic policy in the agbot
+      - f102246 (Dave Booz): agbot container worker doesnt need to sync up
+      - e8e36df (Dave Booz): issue 197 - agbot API
+      - ff9222e (linggao): Support device wide ha attribute
+      - f74bfb7 (linggao): Fixed issue 194 to make sure service level property attributes override device level property attributes.
+      - 7c61fb9 (Dave Booz): enable counter party props
+      - 26fbb0d (Dave Booz): metering attributes in device
+      - fbf4cd8 (Dave Booz): fix for issue 187
+      - 95d3fdf (Dave Booz): issue 134 metering
+      - adec48d (michael dye): use vendored go-solidity lib; fetch whole tree of go-solidity repo
+      - ec2a6cb (michael dye): default to webseed fetch on all platforms not just named ones (overridable)
+      - 722f237 (linggao): Increased the length of ShortProtocolMessage to 200 in order to show more info
+      - 3941c42 (Dave Booz): issue173 fix
+      - 69b27b5 (Dave Booz): issue 156
+      - 42eae70 (Dave Booz): issue 157 fix
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Wed, 28 Jun 2017 13:09:50 -0600
+
 horizon (2.0.1) stable; urgency=medium
 
   * Initial release.
