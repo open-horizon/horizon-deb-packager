@@ -128,7 +128,7 @@ function build_publish() {
 
       # check for already-uploaded source stuff b/c it's common b/n architectures and may have already been uploaded
       if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_sources)" == "$VERSION" ]]; then
-        for f in $expected_binaries; do
+        for f in $expected_sources; do
           rsync -avz --ignore-existing --progress --stats ${prj_dir}/dist/$f "${upload_destination}"
         done
       else
