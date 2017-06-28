@@ -4,10 +4,8 @@
 # TODO: improvements:
 # 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
 # 2. Improve error handling
-# 3. Add version and dist to args, build up the packages_url
-# 4. Check for presence of package in build indexing queue on server before building; this is smarter than the current post-build sleep in place now
 
-usage="Usage: $0 sleep_s prj_dir packages_url_templ publish_destination_stub"
+usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub"
 
 if [[ $# -lt 4 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
@@ -16,7 +14,7 @@ fi
 
 sleep_s=$1
 prj_dir="$2"
-packages_url_templ="$3"
+repo_url_stub_templ="$3"
 publish_destination_stub="$4"
 
 VERSION=""
@@ -30,7 +28,7 @@ function control_c() {
 
 trap control_c SIGINT SIGQUIT
 
-# depends on side effects
+# depends on side effects: sets global vars
 function clone_prj() {
   if [[ ! -d ${prj_dir}/.git ]]; then
     git clone https://github.com/open-horizon/horizon-pkg.git $prj_dir
@@ -52,56 +50,112 @@ function artifact_versions() {
   url="$1"
 
   # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
-  wget -4 -q -O $TMPDIR/horizon-pkgs "${url}" 2> /dev/null
+  wget -4 -q -O $TMPDIR/horizon-pkgs.gz "${url}" 2> /dev/null
   ret=$?
-  if [[ $ret == 8 ]] || [[ ! -s $TMPDIR/horizon-pkgs ]]; then
-    # a server error, perhaps a 404 or empty file: let it build and attempt later push
+  if [[ $ret == 8 ]] || [[ "$(zcat $TMPDIR/horizon-pkgs.gz)" == "" ]]; then
+    # a server error, perhaps a 404, or empty file: let it build and attempt later push
     echo "-99"
+    return
   elif [[ $ret > 0 ]]; then
     (>&2 echo "Failed to determine existing deb package versions.")
     echo ""
+    return
   else
-    echo $(cat $TMPDIR/horizon-pkgs | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
+    echo $(zcat $TMPDIR/horizon-pkgs.gz | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
+    return
   fi
+}
+
+# an empty return indicates version not found
+function indexed_or_queued() {
+  # to pass this check, the $VERSION has to be in the URL
+  url="$1"
+
+  # to pass this check, all files in list have to be in publish_dest
+  publish_dest="$2"
+  files="${@:3}"
+
+  versions=$(artifact_versions "$url")
+  if [[ $? > 0 ]]; then
+    (>&2 echo "Error checking if artifact is indexed.")
+    echo ""
+    return
+  fi
+
+  echo "$versions" | grep -q "$VERSION"
+  if [[ $? == 0 ]]; then
+    # already in index, don't need to build this version
+    echo ""
+    return
+  fi
+
+  # this version not indexed but could be queued for indexing, check before returning that it should be built
+  queued=$(rsync -nr --out-format='%n' ${publish_dest}/ /dev/false)
+  for ix in $files; do
+    if ! echo "$queued" | grep -q $ix; then
+      # already queued, don't need to build this version
+      echo ""
+      return
+    fi
+  done
+
+  # indicates this version needs to be built
+  echo "$VERSION"
 }
 
 function build_publish() {
   dist="$1"
   rel="$2"
-  versions="${@:3}"
+  packages_url="$3"
+  sources_url="$4"
 
-  echo "$versions" | grep -q "$VERSION"
-  if [[ $? != 0 ]]; then
+  expected_binaries="horizon_$(VERSION)_$(ARCH).changes horizon_$(VERSION)_$(ARCH).deb bluehorizon_$(VERSION)_$(ARCH).deb"
+  expected_sources="horizon_$(VERSION).debian.tar.xz horizon_$(VERSION).dsc horizon_$(VERSION).orig.tar.gz"
+  upload_destination="${publish_destination_stub}/${dist}.${rel}/"
+
+  if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_binaries)" == "$VERSION" ]]; then
     echo "$VERSION not yet indexed for our architecture ($ARCH). Building package and submitting it to queue."
-    (cd $prj_dir && \
-      mkdir -p bld && \
-      echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env && \
-      make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y  && \
+    (
+      cd $prj_dir
+      mkdir -p bld
+      echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env
+      make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
+
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
-      for dist in $1; do rsync -avz --ignore-existing -f"- */" --progress --stats ${prj_dir}/dist/*${dist}.${rel}* "${publish_destination_stub}/${dist}.${rel}/"; done)
+      for f in $expected_binaries; do
+        rsync -avz --ignore-existing --progress --stats ${prj_dir}/dist/$f "${upload_destination}"
+      done
+
+      # check for already-uploaded source stuff b/c it's common b/n architectures and may have already been uploaded
+      if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_sources)" == "$VERSION" ]]; then
+        for f in $expected_binaries; do
+          rsync -avz --ignore-existing --progress --stats ${prj_dir}/dist/$f "${upload_destination}"
+        done
+      else
+        echo "$VERSION sources already indexed or in queue."
+      fi
+    )
   else
-    echo "$newest_pkg already indexed for our architecture ($ARCH)."
+    echo "$VERSION binaries already indexed for our architecture ($ARCH) or in queue."
   fi
 }
 
 while true; do
+  # build check interval
   sleep $sleep_s
 
   clone_prj
 
   for dr in ${DIST_RELEASE}; do
     IFS='.' read -ra draddr <<< "$dr"
-    vers=$(artifact_versions $(echo "$packages_url_templ" | sed "s,##DIST##,${draddr[0]},g" | sed "s,##RELEASE##,${draddr[1]},g" | sed "s,##ARCH##,${ARCH},g"))
-    if [[ $vers == "" ]]; then
-      # TODO: add a backoff, we had a failure getting to the service
-      (>&2 echo "Failed to build, backing off.")
-      sleep 10m
-    else
-      build_publish "${draddr[0]}" "${draddr[1]}" "$vers"
-    fi
+    url_c=$(echo "$repo_url_stub_templ" | sed "s,##DIST##,${draddr[0]},g" | sed "s,##RELEASE##,${draddr[1]},g")
+    packages_url="${url_c}/binary-${ARCH}/Packages.gz"
+    sources_url="${url_c}/source/Sources.gz"
+
+    build_publish "${draddr[0]}" "${draddr[1]}" "$packages_url" "$sources_url"
   done
 
-  post_build_sleep_m=35m
-  echo "Pushed all packages for indexing, sleeping for ${post_build_sleep_m} to prevent rebuilding before indexing queue is processed"
-  sleep $post_build_sleep_m
+  post_build_sleep=35m
+  echo "Pushed all packages for indexing, sleeping for ${post_build_sleep}"
+  sleep $post_build_sleep
 done
