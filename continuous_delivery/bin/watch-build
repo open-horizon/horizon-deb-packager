@@ -17,7 +17,7 @@ prj_dir="$2"
 repo_url_stub_templ="$3"
 publish_destination_stub="$4"
 
-VERSION=""
+VERSION_PREFIX=""
 ARCH=""
 DIST_RELEASE=""
 TMPDIR=${TMPDIR:=/tmp}
@@ -40,8 +40,8 @@ function clone_prj() {
       git pull)
   fi
 
-  VERSION="$(cat ./VERSION)"
-  ARCH="$(./tools/arch-tag)"
+  VERSION_PREFIX="$(cat ${prj_dir}/VERSION)"
+  ARCH="$(${prj_dir}/tools/arch-tag)"
   DIST_RELEASE="$(cd $prj_dir && make show-packages | xargs -n1 | grep -oP "dist/.*~\K([^_]+)" | sort | uniq | xargs)"
 }
 
@@ -52,23 +52,30 @@ function artifact_versions() {
   # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
   wget -4 -q -O $TMPDIR/horizon-pkgs.gz "${url}" 2> /dev/null
   ret=$?
-  if [[ $ret == 8 ]] || [[ "$(zcat $TMPDIR/horizon-pkgs.gz)" == "" ]]; then
+  if [[ $ret == 8 ]]; then
     # a server error, perhaps a 404, or empty file: let it build and attempt later push
-    echo "-99"
+    echo "-88"
     return
   elif [[ $ret > 0 ]]; then
     (>&2 echo "Failed to determine existing deb package versions.")
     echo ""
     return
   else
-    echo $(zcat $TMPDIR/horizon-pkgs.gz | grep -oP 'Version: \K([^~]+)' | sort | uniq | xargs)
+    (cd $TMPDIR && gunzip -f horizon-pkgs.gz)
+    # check if empty
+    if [[ ! -s $TMPDIR/horizon-pkgs ]]; then
+      echo "-99"
+      return
+    fi
+
+    echo $(grep -oP 'Version: \K([^~]+)' $TMPDIR/horizon-pkgs | sort | uniq | xargs)
     return
   fi
 }
 
 # an empty return indicates version not found
 function indexed_or_queued() {
-  # to pass this check, the $VERSION has to be in the URL
+  # to pass this check, the $VERSION_PREFIX has to be in the URL
   url="$1"
 
   # to pass this check, all files in list have to be in publish_dest
@@ -82,7 +89,7 @@ function indexed_or_queued() {
     return
   fi
 
-  echo "$versions" | grep -q "$VERSION"
+  echo "$versions" | grep -q "$VERSION_PREFIX"
   if [[ $? == 0 ]]; then
     # already in index, don't need to build this version
     echo ""
@@ -90,17 +97,26 @@ function indexed_or_queued() {
   fi
 
   # this version not indexed but could be queued for indexing, check before returning that it should be built
-  queued=$(rsync -nr --out-format='%n' ${publish_dest}/ /dev/false)
+  # note: a trailing slash in publish_dest is really important
+  queued=$(rsync -nr --out-format='%n' ${publish_dest} /dev/false)
   for ix in $files; do
-    if ! echo "$queued" | grep -q $ix; then
-      # already queued, don't need to build this version
-      echo ""
+    if [ ! $(echo "$queued" | grep -q $ix) ]; then
+      # missing file in queue need to build this version
+      echo "$VERSION_PREFIX"
       return
     fi
-  done
 
-  # indicates this version needs to be built
-  echo "$VERSION"
+    # didn't short-circuit, all files in the queue
+    echo "" && return
+  done
+}
+
+function binary_version() {
+  echo "${VERSION_PREFIX}~ppa~${1}.${2}_${ARCH}"
+}
+
+function source_version() {
+  echo "${VERSION_PREFIX}~ppa~${1}.${2}"
 }
 
 function build_publish() {
@@ -109,12 +125,15 @@ function build_publish() {
   packages_url="$3"
   sources_url="$4"
 
-  expected_binaries="horizon_$(VERSION)_$(ARCH).changes horizon_$(VERSION)_$(ARCH).deb bluehorizon_$(VERSION)_$(ARCH).deb"
-  expected_sources="horizon_$(VERSION).debian.tar.xz horizon_$(VERSION).dsc horizon_$(VERSION).orig.tar.gz"
+  expected_binaries="horizon_$(binary_version $dist $rel).changes horizon_$(binary_version $dist $rel).deb bluehorizon_$(binary_version $dist $rel).deb"
+  expected_sources="horizon_$(source_version $dist $rel).debian.tar.xz horizon_$(source_version $dist $rel).dsc horizon_$(source_version $dist $rel).orig.tar.gz"
   upload_destination="${publish_destination_stub}/${dist}.${rel}/"
 
-  if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_binaries)" == "$VERSION" ]]; then
-    echo "$VERSION not yet indexed for our architecture ($ARCH). Building package and submitting it to queue."
+  # list of files to transmit
+  push_list=""
+
+  if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_binaries)" == "$VERSION_PREFIX" ]]; then
+    echo "$VERSION_PREFIX not yet indexed for our architecture ($ARCH). Building package and submitting it to queue."
     (
       cd $prj_dir
       mkdir -p bld
@@ -122,21 +141,20 @@ function build_publish() {
       make mostlyclean $(make show-packages | xargs -n1 | grep "$rel" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
 
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
-      for f in $expected_binaries; do
-        rsync -avz --ignore-existing --progress --stats ${prj_dir}/dist/$f "${upload_destination}"
-      done
+      push_list=$(echo "$expected_binaries" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
 
       # check for already-uploaded source stuff b/c it's common b/n architectures and may have already been uploaded
-      if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_sources)" == "$VERSION" ]]; then
-        for f in $expected_sources; do
-          rsync -avz --ignore-existing --progress --stats ${prj_dir}/dist/$f "${upload_destination}"
-        done
+      if [[ "$(indexed_or_queued "$packages_url" "${upload_destination}" $expected_sources)" == "$VERSION_PREFIX" ]]; then
+        push_list="${push_list} $(echo "$expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)"
       else
-        echo "$VERSION sources already indexed or in queue."
+        echo "$VERSION_PREFIX sources already indexed or in queue, not adding to transmission."
       fi
+
+      # do the push
+      rsync -avz --ignore-existing --progress --stats $push_list "${upload_destination}"
     )
   else
-    echo "$VERSION binaries already indexed for our architecture ($ARCH) or in queue."
+    echo "$VERSION_PREFIX binaries already indexed for our architecture ($ARCH) or in queue."
   fi
 }
 

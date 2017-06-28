@@ -44,8 +44,9 @@ bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \
 	if [ "$($(*)-branch)" != "" ]; then git checkout $($(*)-branch); else \
-	  git tag -l "$(docker_tag_prefix)/$(version)" && \
-	  git checkout -b "$(docker_tag_prefix)/$(version)" $(docker_tag_prefix)/$(version); \
+	  if [ "$(git tag -l "$(docker_tag_prefix)/$(version)")" != "" ]; then \
+	  	git checkout -b "$(docker_tag_prefix)/$(version)" $(docker_tag_prefix)/$(version); \
+		fi; \
 	fi
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
