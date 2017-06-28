@@ -1,21 +1,22 @@
 #!/bin/bash
 
-usage="Usage: $0 distribution_release package_version destination_changelog original_changelog changelogfiles..."
+usage="Usage: $0 distribution_release version_prefix version_suffix destination_changelog original_changelog changelogfiles..."
 
-if [[ $# -lt 5 ]]; then
+if [[ $# -lt 6 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
   exit 1
 fi
 
 distribution_release=$1
-package_version=$2
-destination_changelog=$3
-original_changelog=$4
+version_prefix=$2
+version_suffix=$3
+destination_changelog=$4
+original_changelog=$5
 
-gen_content=$(awk '{if (FNR == 1) printf("\n%-4s* %s\n"," ",$0); else printf("%-6s- %s\n"," ",$0);};' $(echo ${@:5}))
+gen_content=$(awk '{if (FNR == 1) printf("\n%-4s* %s\n"," ",$0); else printf("%-6s- %s\n"," ",$0);};' $(echo ${@:6}))
 
 cat <<EOF > $destination_changelog
-horizon ($package_version) $distribution_release; urgency=medium
+horizon (${version_prefix}${version_suffix}) $distribution_release; urgency=medium
 ${gen_content}
 
  -- Blue Horizon Team <developers@bluehorizon.network>  $(date -R)

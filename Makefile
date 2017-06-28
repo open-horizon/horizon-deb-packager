@@ -54,7 +54,11 @@ bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
 
 bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subprojects))
 	mkdir -p bld
-	tools/render-debian-changelog "##DISTRIBUTIONS##" "##VERSION_RELEASE##" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog")
+	if [ "$(cat pkgsrc/deb/meta/changelog.tmpl | head -n1 | grep $(version))" != "" ]; then \
+		cp pkgsrc/deb/meta/changelog.tmpl bld/changelog.tmpl; \
+	else \
+		tools/render-debian-changelog "##DISTRIBUTIONS##" "$(version)" "##VERSION_SUFFIX##" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog"); \
+	fi
 
 dist/$(call pkg_version,%)/debian:
 	mkdir -p dist/$(call pkg_version,$*)/debian
@@ -109,13 +113,13 @@ dist/$(call pkg_version,%)/debian/fs-bluehorizon: dist/$(call pkg_version,%)/deb
 # meta for every distribution, the target of horizon_$(version)-meta/$(distribution_names)
 dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pkg_version,%)/debian
 	sed "s,##DISTRIBUTIONS##,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > dist/$(call pkg_version,$*)/debian/changelog
-	sed -i.bak "s,##VERSION_RELEASE##,$(call aug_version,,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
+	sed -i.bak "s,$(version)##VERSION_SUFFIX##,$(call aug_version,,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
 
 # N.B. This target will copy all files from the source to the dest. as one target
 $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | dist/$(call pkg_version,%)/debian
 	cp -Ra pkgsrc/deb/shared/debian/. dist/$(call pkg_version,$*)/debian/
 	# next, copy specific package overwrites
-	-@[ -d pkgsrc/deb/meta/dist/$*/debian ] && cp -Rva pkgsrc/deb/meta/dist/$*/debian/. dist/$(call pkg_version,$*)/debian/
+	-[[ "$(ls pkgsrc/deb/meta/dist/$*/debian/*)" != "" ]] && cp -Rva pkgsrc/deb/meta/dist/$*/debian/* dist/$(call pkg_version,$*)/debian/
 
 dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-horizon dist/$(call pkg_version,%)/debian/fs-bluehorizon dist/$(call pkg_version,%)/debian/changelog $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
