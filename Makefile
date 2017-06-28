@@ -5,7 +5,8 @@ subproject_names = anax anax-ui
 subprojects = $(addprefix bld/,$(subproject_names))
 
 version := $(shell cat VERSION)
-aug_version = $(addprefix $(1)$(version)~ppa~,$(2))
+version_tail = $(addprefix ~ppa~,$(1))
+aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 pkg_version = $(call aug_version,horizon-,$(1))
 file_version = $(call aug_version,horizon_,$(1))
 
@@ -113,7 +114,7 @@ dist/$(call pkg_version,%)/debian/fs-bluehorizon: dist/$(call pkg_version,%)/deb
 # meta for every distribution, the target of horizon_$(version)-meta/$(distribution_names)
 dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pkg_version,%)/debian
 	sed "s,++DISTRIBUTIONS++,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > dist/$(call pkg_version,$*)/debian/changelog
-	sed -i.bak "s,$(version)++VERSIONSUFFIX++,$(call aug_version,,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
+	sed -i.bak "s,++VERSIONSUFFIX++,$(call version_tail,$*),g" dist/$(call pkg_version,$*)/debian/changelog && rm dist/$(call pkg_version,$*)/debian/changelog.bak
 
 # N.B. This target will copy all files from the source to the dest. as one target
 $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | dist/$(call pkg_version,%)/debian
