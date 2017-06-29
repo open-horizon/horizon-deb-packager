@@ -139,6 +139,7 @@ dist/$(call pkg_version,%)_$(arch-tag).deb: dist/$(call file_version,%).orig.tar
 	@echo "Running Debian build in $*"
 	cd dist/$(call pkg_version,$*) && \
 		debuild -us -uc --lintian-opts --allow-root
+	find "dist/$(call pkg_version,%)*" -exec touch -r $(CURDIR)/VERSION {} +
 
 $(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz
 	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)" $(subprojects)
