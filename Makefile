@@ -129,7 +129,7 @@ dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-ho
 			cp $${src}-rules.env dist/$(call pkg_version,$*)/$$(basename $$src)/rules.env; \
 		fi; \
 	done
-	tar czf dist/$(call file_version,$*).orig.tar.gz -C dist/$(call pkg_version,$*) .
+	tar --mtime $(CURDIR)/VERSION -c -C dist/$(call pkg_version,$*) . | gzip -n > dist/$(call file_version,$*).orig.tar.gz
 
 # also builds the bluehorizon package
 $(bluehorizon_deb_packages):
