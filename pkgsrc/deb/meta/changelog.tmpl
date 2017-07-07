@@ -1,11 +1,43 @@
+horizon (2.0.17++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - ee20ee1 (Varatep Buranintu): use new tabs instead of redirecting in same tab, causing application flow to be corrupt
+      - 3d0bce3 (Varatep Buranintu): show visibility button for password field if account exists
+      - 60ce8eb (michael dye): added efficiencies to build
+      - 26332bd (Varatep Buranintu): remove auto refilling for account form
+      - ff69bab (Varatep Buranintu): fix issue for email validation error still occurring after toggling checkbox for account exists
+      - a88eb5f (Varatep Buranintu): remove gpsdevice mapping
+      - fa3dd4e (Varatep Buranintu): remove v1 reg ui mappings
+      - f986853 (Varatep Buranintu): add extra check for empty inputs in validation
+      - 5b5c349 (Varatep Buranintu): remove duplicate name property
+      - a2c1425 (Varatep Buranintu): remove MTN prefixes
+      - 6f8c467 (Varatep Buranintu): closes #46
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 47c8964 (Dave Booz): issue 270 - agbot places producer policy as-is from exchange into proposal
+      - d7684fb (michael dye): fixed ugliness in TMPDIR path building; added feature to use existing gopath/.cache via opt-in var; guard symlink in PKGPATH with check
+      - ca2e412 (Dave Booz): Issue 263 - Cancel agreement when agreement protocol deleted from policy
+      - 7b9a79e (Dave Booz): issue218 - multiple BC stage 2
+      - 627b8e6 (linggao): Fixed issue 259
+      - fa03d7b (Dave Booz): new blockchainless agreement protocol
+      - f722de0 (Dave Booz): final fixes
+      - b9eab3c (Dave Booz): code complete
+      - 2e22c67 (linggao): Added more information to the error message after the exchange.CreateMessageTarget call
+      - a833ca1 (linggao): added description to each anax and agbot apis.
+      - 1b04ca9 (linggao): updated agreement_bot_api doc about the limitation of /workloadusage api.
+      - 51556ea (Dave Booz): preliminary commit to merge up
+      - 5b94a55 (linggao): updated anax api doc.
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Fri, 07 Jul 2017 12:18:31 -0600
+
 horizon (2.0.13++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
-    * github.com/open-horizon/anax-ui.git, branch: horizon/2.0.13-b
+    * github.com/open-horizon/anax-ui.git, branch: master
       - eadbb6c (Varatep Buranintu): exclude disabled pocs
       - 890ad11 (Varatep Buranintu): input with icon to the right for visibility toggle
       - 9f1a150 (Varatep Buranintu): handle password visibility toggl
 
-    * github.com/open-horizon/anax.git, branch: horizon/2.0.13-b
+    * github.com/open-horizon/anax.git, branch: master
       - 4ab4eec (linggao): fixed format in agreement_bot_api.md file
       - a2c8241 (Dave Booz): move user public key path to config
       - 75a1a59 (michael dye): removed dep on build from install
