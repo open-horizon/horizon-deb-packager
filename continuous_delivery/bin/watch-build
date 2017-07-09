@@ -5,7 +5,7 @@
 # 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
 # 2. Improve error handling
 
-usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub"
+usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub dist.rel1,dist.rel2..."
 
 if [[ $# -lt 4 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
@@ -16,6 +16,7 @@ sleep_s=$1
 prj_dir="$2"
 repo_url_stub_templ="$3"
 publish_destination_stub="$4"
+only_distrel="$5"
 
 VERSION_PREFIX=""
 ARCH=""
@@ -156,11 +157,17 @@ while true; do
 
   for dr in ${DIST_RELEASE}; do
     IFS='.' read -ra draddr <<< "$dr"
-    url_c=$(echo "$repo_url_stub_templ" | sed "s,##DIST##,${draddr[0]},g" | sed "s,##RELEASE##,${draddr[1]},g")
-    packages_url="${url_c}/binary-${ARCH}/Packages.gz"
-    sources_url="${url_c}/source/Sources.gz"
 
-    build_publish "${draddr[0]}" "${draddr[1]}" "$packages_url" "$sources_url"
+    if [[ "$only_distrel" == "" ]] || [[ "$(echo "$only_distrel" | grep "${dr}")" != "" ]]; then
+
+      url_c=$(echo "$repo_url_stub_templ" | sed "s,##DIST##,${draddr[0]},g" | sed "s,##RELEASE##,${draddr[1]},g")
+      packages_url="${url_c}/binary-${ARCH}/Packages.gz"
+      sources_url="${url_c}/source/Sources.gz"
+
+      build_publish "${draddr[0]}" "${draddr[1]}" "$packages_url" "$sources_url"
+    else
+      echo "Skipping building for ${draddr[0]}, ${draddr[1]} b/c a restricted list of build distributions was given"
+    fi
   done
 
   post_build_sleep=35m
