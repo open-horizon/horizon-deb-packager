@@ -159,7 +159,12 @@ function build_publish() {
       artifacts="$(make show-packages | xargs -n1 | grep "${dist}.${rel}" | xargs)"
 
       notify "Building artifacts $artifacts"
-      make mostlyclean "$artifacts" git_repo_prefix=https://github.com/open-horizon verbose=y
+      make git_repo_prefix=https://github.com/open-horizon verbose=y mostlyclean $artifacts
+      if [[ "$?" != 0 ]]; then
+        # TODO: add notification here
+        (>&2 echo "Failed to build $artifacts")
+        return
+      fi
 
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
       push_list=$(echo "$expected_binaries $expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
