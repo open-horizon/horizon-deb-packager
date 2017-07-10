@@ -5,12 +5,14 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \
   gnupg \
   vim \
+  curl \
+  jq \
   software-properties-common \
   wget \
   build-essential \
   g++ \
   git \
-  libz-dev libdb5.3-dev libbz2-dev libarchive-dev libgpgme11-dev liblzma-dev 
+  libz-dev libdb5.3-dev libbz2-dev libarchive-dev libgpgme11-dev liblzma-dev
 RUN cd /usr/local/src && \
   git clone https://github.com/michaeldye/reprepro.git && \
   cd reprepro && \
