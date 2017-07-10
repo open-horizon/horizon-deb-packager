@@ -5,9 +5,9 @@
 # 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
 # 2. Improve error handling
 
-usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub dist.rel1,dist.rel2..."
+usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub notification dist.rel1,dist.rel2..."
 
-if [[ $# -lt 4 ]]; then
+if [[ $# -lt 5 ]]; then
   (>&2 echo "Missing required argument(s). $usage")
   exit 1
 fi
@@ -16,7 +16,8 @@ sleep_s=$1
 prj_dir="$2"
 repo_url_stub_templ="$3"
 publish_destination_stub="$4"
-only_distrel="$5"
+notification="$5"
+only_distrel="$6"
 
 VERSION_PREFIX=""
 ARCH=""
@@ -28,6 +29,25 @@ function control_c() {
 }
 
 trap control_c SIGINT SIGQUIT
+
+function notification_payload() {
+  read -r -d '' payload <<EOF
+    {
+      "username": "Horizon watch-builder on $(hostname)",
+      "text": "$1"
+    }
+EOF
+
+  echo "$payload" | jq -c '.'
+}
+
+function notify() {
+  if [[ "${notification_hook}" != "log" ]]; then
+    notification_payload "$1" | curl -X POST --data-binary @- "$notification_hook"
+  else
+    echo "Skipping web notification"
+  fi
+}
 
 # depends on side effects: sets global vars
 function clone_prj() {
@@ -136,12 +156,16 @@ function build_publish() {
       cd $prj_dir
       mkdir -p bld
       echo "GOPATH_CACHE=/root/go/.cache" > bld/anax-rules.env
-      make mostlyclean $(make show-packages | xargs -n1 | grep "${dist}.${rel}" | xargs) git_repo_prefix=https://github.com/open-horizon verbose=y
+      artifacts="$(make show-packages | xargs -n1 | grep "${dist}.${rel}" | xargs)"
+
+      notify "Building artifacts $artifacts"
+      make mostlyclean "$artifacts" git_repo_prefix=https://github.com/open-horizon verbose=y
 
       # ignore-existing ensures that this doesn't overwrite previously-written files of the same name
       push_list=$(echo "$expected_binaries $expected_sources" | xargs -n1 | xargs -I% echo "${prj_dir}/dist/%" | xargs)
 
       # do the push
+      notify "Pushing $push_list to $upload_destination"
       rsync -avz --ignore-existing --progress --stats $push_list "${upload_destination}"
     )
   else
