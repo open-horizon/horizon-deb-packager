@@ -42,8 +42,8 @@ EOF
 }
 
 function notify() {
-  if [[ "${notification_hook}" != "log" ]]; then
-    notification_payload "$1" | curl -X POST --data-binary @- "$notification_hook"
+  if [[ "${notification}" != "log" ]]; then
+    notification_payload "$1" | curl -X POST --data-binary @- "$notification"
   else
     echo "Skipping web notification"
   fi
