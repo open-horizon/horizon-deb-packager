@@ -4,7 +4,7 @@ SHELL := /bin/bash
 ANAX_TMPGOPATH := $(CURDIR)/anaxtmpgopath
 
 %:
-	dh $@ --with systemd
+	dh $@
 
 override_dh_auto_test:
 	@echo "N.B. Test execution not yet plumbed"
@@ -27,16 +27,6 @@ override_dh_auto_install:
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
-
-# TODO: fix this so it installs and starts but only when bluehorizon package is installed;
-# also, there is a warning when building b/c the horizon.service unit is not in the bluehorizon package
-# and so something like $(cdbs_curpkg) w/ http://build-common.alioth.debian.org/cdbs-doc.html#basic-settings
-# should be used to make conditional rules
-override_dh_systemd_enable:
-	dh_systemd_enable horizon.service
-
-override_dh_systemd_start:
-	dh_systemd_start --no-start horizon.service
 
 clean.%:
 	rm -Rf $(BUILDDIR_$*)

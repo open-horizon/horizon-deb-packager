@@ -22,7 +22,7 @@ meta = $(addprefix meta-,$(distribution_names))
 
 bluehorizon_deb_packages = $(call pkgstub,blue)
 horizon_deb_packages = $(call pkgstub,)
-packages = $(bluehorizon_deb_packages) $(horizon_deb_packages)
+packages = $(horizon_deb_packages) $(bluehorizon_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
