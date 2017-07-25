@@ -2,7 +2,9 @@
 
 uname="$(uname -m)"
 
-if [[ "$uname" =~ "arm" ]]; then
+if [[ "$uname" =~ "aarch64" ]]; then
+  echo "aarch64"
+elif [[ "$uname" =~ "armhf" ]]; then
   echo "armhf"
 elif [[ "$uname" == "x86_64" ]]; then
   echo "amd64"
