@@ -35,8 +35,7 @@ Steps:
 
 Docker build agent container creation command examples:
 
-    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-arm-any .
-    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-amd64 .
+    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-$(tools/arch-tag) .
 
 **Note**: You must have appropriate SSH keys added to the agent to: 1) pull code from the repository, and 2) push built packages to the apt signing system.
 
