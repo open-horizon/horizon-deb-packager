@@ -16,7 +16,10 @@ See also http://www.red-bean.com/doc/reprepro/manual.html
 
 #### Promote package
 
-    docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/ubuntu copy xenial-updates xenial-testing {blue,}horizon'
+    docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/ubuntu copy xenial-updates xenial-testing {blue,}horizon=2.0.17~ppa~ubuntu.xenial'
+Exporting indices...
+    docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/raspbian copy jessie-updates jessie-testing {blue,}horizon=2.0.17~ppa~raspbian.jessie'
+Exporting indices...
 
 #### List packages in a suite
 

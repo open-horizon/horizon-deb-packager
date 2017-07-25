@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+systemctl daemon-reload
+systemctl enable horizon.service
+systemctl start horizon.service
+
+exit 0
