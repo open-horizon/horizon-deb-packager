@@ -6,7 +6,7 @@ A project used to create and publish Debian packages and Ubuntu snaps of the Hor
 
  * Debian jessie, sid on armhf
  * Raspbian jessie, sid on armhf
- * Ubuntu xenial, yakkety on armhf, aarch64, amd64, ppc64
+ * Ubuntu xenial, yakkety on armhf, arm64, amd64, ppc64
 
 Related Projects:
 
