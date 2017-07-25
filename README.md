@@ -6,7 +6,7 @@ A project used to create and publish Debian packages and Ubuntu snaps of the Hor
 
  * Debian jessie, sid on armhf
  * Raspbian jessie, sid on armhf
- * Ubuntu xenial, yakkety on armhf, aarch64, amd64, ppc64
+ * Ubuntu xenial, yakkety on armhf, arm64, amd64, ppc64
 
 Related Projects:
 
@@ -35,8 +35,7 @@ Steps:
 
 Docker build agent container creation command examples:
 
-    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-arm-any .
-    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-amd64 .
+    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-$(tools/arch-tag) .
 
 **Note**: You must have appropriate SSH keys added to the agent to: 1) pull code from the repository, and 2) push built packages to the apt signing system.
 
