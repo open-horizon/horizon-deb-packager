@@ -10,7 +10,7 @@ fi
 var_filepath="$1"
 
 # make sure to avoid matching windows line endings
-existing_device_id=$(grep -oP "${cmtn_device_id_varname}=\K([^]+)" $var_filepath)
+existing_device_id=$(grep -oP "${cmtn_device_id_varname}=\K([^\r\n]+)" $var_filepath)
 
 if [ "$existing_device_id" == "" ]; then
   systemd-cat -t horizon-set-device-id echo "No existing ${cmtn_device_id_varname} in $var_filepath, calculating one"
