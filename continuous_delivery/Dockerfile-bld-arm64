@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y \
       wget \
       gettext \
       snapcraft
-RUN curl -s https://storage.googleapis.com/golang/go1.8.3.linux-armv6l.tar.gz | tar zxvf - -C /usr
-RUN ln -s /usr/go/bin/go* /usr/bin/
+RUN curl -s https://storage.googleapis.com/golang/go1.8.3.linux-armv6l.tar.gz | tar zxvf - -C /usr/local
+RUN ln -s /usr/local/go/bin/go* /usr/bin/
 RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN npm install -g npm-cache
 ARG CACHE_DATE=1977-06-27_15:17:32
