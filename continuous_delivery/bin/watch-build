@@ -2,7 +2,7 @@
 
 #
 # TODO: improvements:
-# 1. Make agent smarter, it should parse the horizon-pkg changelog and build+push all old versions
+# 1. Make agent smarter, it should parse the horizon-deb-packager changelog and build+push all old versions
 # 2. Improve error handling
 
 usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub notification dist.rel1,dist.rel2..."
@@ -52,7 +52,7 @@ function notify() {
 # depends on side effects: sets global vars
 function clone_prj() {
   if [[ ! -d ${prj_dir}/.git ]]; then
-    git clone https://github.com/open-horizon/horizon-pkg.git $prj_dir
+    git clone https://github.com/open-horizon/horizon-deb-packager.git $prj_dir
   else
     (mkdir -p $prj_dir; cd $prj_dir && \
       git reset --hard HEAD && \
@@ -71,7 +71,7 @@ function artifact_versions() {
   url="$1"
 
   # single line of versions published, like this: "2.0.10b 2.0.7 2.0.9"
-  wget -4 -q -O $TMPDIR/horizon-pkgs.gz "${url}" 2> /dev/null
+  wget -4 -q -O $TMPDIR/hzn-deb-pkg-versions.gz "${url}" 2> /dev/null
   ret=$?
   if [[ $ret == 8 ]]; then
     # a server error, perhaps a 404, or empty file: let it build and attempt later push
@@ -82,14 +82,14 @@ function artifact_versions() {
     echo ""
     return
   else
-    (cd $TMPDIR && gunzip -f horizon-pkgs.gz)
+    (cd $TMPDIR && gunzip -f hzn-deb-pkg-versions.gz)
     # check if empty
-    if [[ ! -s $TMPDIR/horizon-pkgs ]]; then
+    if [[ ! -s $TMPDIR/hzn-deb-pkg-versions ]]; then
       echo "-99"
       return
     fi
 
-    echo $(grep -oP 'Version: \K([^~]+)' $TMPDIR/horizon-pkgs | sort | uniq | xargs)
+    echo $(grep -oP 'Version: \K([^~]+)' $TMPDIR/hzn-deb-pkg-versions | sort | uniq | xargs)
     return
   fi
 }

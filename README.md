@@ -1,4 +1,6 @@
-# horizon-pkg
+# horizon-deb-packager
+
+(formerly `horizon-pkg`)
 
 ## Introduction
 
@@ -41,13 +43,13 @@ Docker build agent container creation command examples:
 
 Docker start command example:
 
-    docker run --rm --name hzn-build --hostname=$(hostname) -v /root/.ssh-aptrepo-signer:/root/.ssh:ro -v /root/go/.cache:/root/go/.cache:rw -v /root/.package_cache:/root/.package_cache:rw -it hzn-build:latest /bin/bash -c '/prj/continuous_delivery/bin/watch-build 1 "/horizon-pkg" "http://pkg.bluehorizon.network/linux/##DIST##/dists/##RELEASE##-testing/main" "aptsigner:/incoming" "https://hooks.slack.com/services/..." [restrict_to_distro1,restrict_to_distro2]'
+    docker run --rm --name hzn-build --hostname=$(hostname) -v /root/.ssh-aptrepo-signer:/root/.ssh:ro -v /root/go/.cache:/root/go/.cache:rw -v /root/.package_cache:/root/.package_cache:rw -it hzn-build:latest /bin/bash -c '/prj/continuous_delivery/bin/watch-build 1 "/horizon-deb-packager" "http://pkg.bluehorizon.network/linux/##DIST##/dists/##RELEASE##-testing/main" "aptsigner:/incoming" "https://hooks.slack.com/services/..." [restrict_to_distro1,restrict_to_distro2]'
 
 ### Manual build with a build agent
 
 In order to execute `make meta` inside a container, you need ssh credentials in-container and/or the ssh agent's authorization socket mounted into the build container. You can execute it this way:
 
-    docker run --rm --name hzn-build -v ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK} -e SSH_AUTH_SOCK="${SSH_AUTH_SOCK}" -v /root/.ssh-github:/root/.ssh -v $PWD:/horizon-pkg -it hzn-build /bin/bash
+    docker run --rm --name hzn-build -v ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK} -e SSH_AUTH_SOCK="${SSH_AUTH_SOCK}" -v /root/.ssh-github:/root/.ssh -v $PWD:/horizon-deb-packager -it hzn-build /bin/bash
 
 Inside the container, change the `VERSION` and then execute the build steps (constraining the packages to `xenial` in the example below):
 
