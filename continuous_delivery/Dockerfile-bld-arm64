@@ -1,4 +1,4 @@
-FROM snapcraft/xenial-arm64
+FROM arm64v8/ubuntu:16.04
 MAINTAINER mdye <mdye@us.ibm.com>
 
 ENV DEBIAN_FRONTEND noninteractive
