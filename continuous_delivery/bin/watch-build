@@ -7,7 +7,7 @@
 
 usage="Usage: $0 sleep_s prj_dir repo_url_stub_templ publish_destination_stub notification dist.rel1,dist.rel2..."
 
-if [[ $# -lt 5 ]]; then
+if [ "$#" -lt 5 ]; then
   (>&2 echo "Missing required argument(s). $usage")
   exit 1
 fi

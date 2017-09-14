@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y \
       devscripts \
       debhelper \
       dh-systemd \
-      golang-1.7-go \
       npm \
       git \
       gnupg \
