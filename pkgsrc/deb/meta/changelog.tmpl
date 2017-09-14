@@ -1,3 +1,38 @@
+horizon (2.6.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - 0386901 (Varatep Buranintu): make travis build successfully
+      - 5ad774b (Varatep Buranintu): fix sendAudio in aural audio classification toggle
+      - eb97843 (Varatep Buranintu): input now returns a second param, so we have to check for field name to see if it is a toggle for metering
+      - 90ab409 (Varatep Buranintu): change outdated rpi hardware link
+      - 0811939 (Varatep Buranintu): add dynamic env urls to services form
+      - b20385b (Varatep Buranintu): change hard-coded urls to be dynamic based on env
+      - 1fe9c18 (Varatep Buranintu): map state to props for configuration reducer in services form
+      - 6e4f283 (Varatep Buranintu): map state to props for configuration reducer in device form
+      - a848c7d (Varatep Buranintu): add environment checker with url generator
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 7a632e9 (linggao): issue 324 - support user defined device id
+      - 104cb14 (linggao): Changed WorkloadConfig attribute name version to workload_version
+      - aaa1742 (michael dye): added unit test build flag to non-integration tests
+      - c6bc484 (michael dye): improved separation b/n test types (unit and integration); removed unused jslint invocation, cleaned-up go vet invocation so it excludes vendored files
+      - f6319cd (michael dye): fixed invocation of wl_persistence integration tests b/c of method signature changes in commit e4ff7315
+      - e4d4229 (michael dye): added build flag to prevent executing integration tests depending on net.http.ServeTLS function unless using Golang 1.9
+      - bc56629 (michael dye): fixed invocations of tests that need HTTPClientFactory instances
+      - e7bb7cc (michael dye): added trust test, also added transport connection idle max and timeout
+      - 28cd4f4 (michael dye): added integration test suite to config module that tests the HTTP client factory w/ SSL trust cert config
+      - 519933e (michael dye): implemented an HTTPClient factory in a Collaborators instance that is a member of a fully-formed HorizonConfig instance. Replaced both shared and discrete instances of net/http.Client with those from the factory. This centralization of client instance creation ensures consistent setup of configuration like CA Certificates
+      - 5ec43b5 (michael dye): implemented less noisy build (with verbose flag). Added instructions about it
+      - 8875c0f (michael dye): added collaborators to config
+      - 66bb823 (michael dye): added linting to check make target
+      - 7bbea53 (michael dye): executed gofmt on all files
+      - ca0220b (Dave Booz): issue 312 - agreement protocol defaults and precedence
+      - 021d79f (Dave Booz): issue 316 - support deployment overrides
+      - e53e454 (linggao): issue 295 - Automatic upgrade of microservices
+      - a93184d (Dave Booz): issue292 - support multiple microservice dependencies in a workload definition
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Thu, 14 Sep 2017 15:57:55 -0600
+
 horizon (2.5.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax-ui.git, branch: master
