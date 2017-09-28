@@ -1,3 +1,39 @@
+horizon (2.7.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 9e125ad (michael dye): use Horizon primary key for verifying fetch products
+      - 6d1f10f (michael dye): added booz's fix to LaunchContext structs
+      - 7cbcb3f (Dave Booz): fix policy lib test problems
+      - 5158839 (Dave Booz): properly handle policy attributes in the API
+      - 2eb530f (michael dye): updated workload/microservice/geth container payloads to include Pkg signature, use Pkg fetch in torrent worker to download them
+      - a309e1e (michael dye): updated exchange RPC calls to use base64-encoded basic auth creds
+      - 9312a61 (michael dye): fixed order of header setting in common writeResponse() function such that the content-type gets set appropriately in the HTTP response header
+      - fe47c50 (michael dye): Replaced old fetch mechanism with Horizon Pkg fetch mechanism
+      - 6f6f744 (michael dye): removed old fetch system that depended on a torrent client
+      - c38ebae (michael dye): removed unnecessary hashes, signatures from contexts, events, and messages
+      - 49607bf (michael dye): added dependency on horizon-pkg-fetch for (initially) fetching Horizon images
+      - ec61dc0 (michael dye): add compatibility function producer so HTTPClientFactory can be used by outside modules and avoid the dependency
+      - d55c297 (michael dye): make use of pubKeyFile-derived PSS sig check path optional in favor of userKeys dir
+      - 1e44826 (linggao): Updated the anax api doc, plus a minor fix
+      - 395a7e4 (michael dye): fixed bug in compute / architecture attribute addition
+      - f09803a (michael dye): added patternedDeviceAttributeVerifier to service API
+      - 554d2ac (michael dye): fixed errors in input error string output (whitespace mistakes)
+      - e913412 (michael dye): adjusted test hostnames to pass on stock macos (it doesn't resolve localhost.localdomain)
+      - 7f3c8b9 (michael dye): reworked check of mismatched sensorURLs with attributes specified in services
+      - 35428f5 (michael dye): replaced use of attribute IDs with type names; updated use of type.String() calls with type.Name() calls (which do not include the module name in the type)
+      - f313583 (michael dye): consolidate attributes of all types; reduce API function length; add test coverage
+      - e1cb90b (Dave Booz): Issue 308 - Support patterns in agbot and nodes
+      - 7474b85 (linggao): Fixed so that device id gets checked for POST /horizondevice api call
+      - c58a24d (michael dye): adjusted Anax API input validation to permit characters needed by WIoTP account names, tokens, and other values
+      - a38577f (linggao): updated anax doc for /microservice api.
+      - 5084436 (linggao): issue324 part two - remove user id and email from the /horizondevice api
+      - f1c4fcb (Dave Booz): Issue 307 - support multi-tenant exchange
+      - b2149e8 (linggao): issue 294 - Support microservices that are shared between/across agreements
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Thu, 28 Sep 2017 18:36:33 +0000
+
 horizon (2.6.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax-ui.git, branch: master
