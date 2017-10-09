@@ -1,13 +1,15 @@
-FROM arm32v7/ubuntu:16.04
+FROM ##from_image##
 MAINTAINER mdye <mdye@us.ibm.com>
 
 ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update && apt-get install -y \
       build-essential \
       devscripts \
       debhelper \
       dh-systemd \
-      npm \
+      nodejs \
       git \
       gnupg \
       vim \
@@ -15,12 +17,11 @@ RUN apt-get update && apt-get install -y \
       curl \
       tree \
       wget \
-      gettext \
-      snapcraft
-RUN curl -s https://storage.googleapis.com/golang/go1.8.3.linux-armv6l.tar.gz | tar zxvf - -C /usr/local
+      gettext
+RUN curl -s ##golang_dl_url## | tar zxvf - -C /usr/local
 RUN ln -s /usr/local/go/bin/go* /usr/bin/
-RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN npm install -g npm-cache
 ARG CACHE_DATE=1977-06-27_15:17:32
-RUN git clone https://github.com/open-horizon/horizon-deb-packager.git /horizon-deb-packager
+# project is expected to be mounted at this dir
+RUN mkdir -p /horizon-deb-packager
 WORKDIR /horizon-deb-packager
