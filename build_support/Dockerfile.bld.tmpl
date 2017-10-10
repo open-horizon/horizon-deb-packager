@@ -2,14 +2,11 @@ FROM ##from_image##
 MAINTAINER mdye <mdye@us.ibm.com>
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update && apt-get install -y \
       build-essential \
       devscripts \
       debhelper \
       dh-systemd \
-      nodejs \
       git \
       gnupg \
       vim \
@@ -20,6 +17,8 @@ RUN apt-get update && apt-get install -y \
       gettext
 RUN curl -s ##golang_dl_url## | tar zxvf - -C /usr/local
 RUN ln -s /usr/local/go/bin/go* /usr/bin/
+##node_install##
+RUN bash -c '[[ ! -e "/usr/bin/node" ]] && ln -s $(which nodejs) /usr/bin/node || :'
 RUN npm install -g npm-cache
 ARG CACHE_DATE=1977-06-27_15:17:32
 # project is expected to be mounted at this dir
