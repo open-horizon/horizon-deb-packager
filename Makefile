@@ -119,8 +119,10 @@ dist/$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/$(call pk
 # N.B. This target will copy all files from the source to the dest. as one target
 $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | dist/$(call pkg_version,%)/debian
 	cp -Ra pkgsrc/deb/shared/debian/. dist/$(call pkg_version,$*)/debian/
-	# next, copy specific package overwrites
-	-[[ "$(ls pkgsrc/deb/meta/dist/$*/debian/*)" != "" ]] && cp -Rva pkgsrc/deb/meta/dist/$*/debian/* dist/$(call pkg_version,$*)/debian/
+	# next, copy specific package overwrites if they exist
+	if [[ "$(ls pkgsrc/deb/meta/dist/$*/debian/*)" != "" ]]; then \
+		cp -Rva pkgsrc/deb/meta/dist/$*/debian/* dist/$(call pkg_version,$*)/debian/; \
+	fi
 
 dist/$(call file_version,%).orig.tar.gz: dist/$(call pkg_version,%)/debian/fs-horizon dist/$(call pkg_version,%)/debian/fs-bluehorizon dist/$(call pkg_version,%)/debian/changelog $(addprefix dist/$(call pkg_version,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
@@ -136,7 +138,7 @@ $(bluehorizon_deb_packages):
 dist/blue$(call pkg_version,%)_$(arch-tag).deb:
 $(horizon_deb_packages):
 dist/$(call pkg_version,%)_$(arch-tag).deb: dist/$(call file_version,%).orig.tar.gz
-	@echo "Running Debian build in $* with TMPGOPATH '$(TMPGOPATH)'"
+	@echo "Running build in $* with TMPGOPATH '$(TMPGOPATH)'"
 	cd dist/$(call pkg_version,$*) && \
 		debuild --preserve-envvar "TMPGOPATH" -a$(arch-tag) -us -uc --lintian-opts --allow-root
 	find dist/* -exec touch -r $(CURDIR)/VERSION {} +

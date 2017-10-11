@@ -52,7 +52,7 @@ mostlyclean: clean
 
 artifacts: $(DOCKERB_CNAME)-$(ARCH).flag
 	@echo "Making artifacts using build container"
-	docker exec -it $(DOCKERB_CNAME) /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y TMPGOPATH=$$TMPGOPATH $$(make show-packages)'
+	docker exec -it $(DOCKERB_CNAME) /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y TMPGOPATH=$$TMPGOPATH mostlyclean $$(make show-packages)'
 
 # targets for build infrastructure
 Dockerfile-$(ARCH).bld: Dockerfile.bld.tmpl
