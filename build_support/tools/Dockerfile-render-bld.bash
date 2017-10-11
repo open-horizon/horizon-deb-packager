@@ -30,7 +30,7 @@ case "$ARCH" in
   from_image="ubuntu:16.04"
   golang_dl_url="https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz"
   ;;
-('ppc64el')
+('ppc64*')
   from_image="ppc64le/ubuntu:16.04"
   node_install="RUN apt-get install -y nodejs npm"
   golang_dl_url="https://storage.googleapis.com/golang/go1.9.1.linux-ppc64le.tar.gz"

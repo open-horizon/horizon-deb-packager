@@ -1,7 +1,6 @@
 SHELL := /bin/bash
 arch-tag := $(shell tools/arch-tag)
-# N.B. This number has to match the latest addition to the changelog in pkgsrc/deb/debian/changelog
-subproject_names = anax anax-ui
+subproject_names = anax
 subprojects = $(addprefix bld/,$(subproject_names))
 
 version := $(shell cat VERSION)

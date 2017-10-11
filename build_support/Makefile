@@ -3,7 +3,7 @@ ARCH := $(shell dpkg-architecture -q 'DEB_HOST_ARCH')
 
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
-DOCKERB_INAME := $(DOCKERB_CNAME)-i
+DOCKERB_INAME := summit.hovitos.engineering/$(ARCH)/$(DOCKERB_CNAME)-i
 DOCKERB_TAG := $(shell cat VERSION)
 DOCKERB_OPTS := --rm --no-cache
 HORIZON_PKG_VERSION := $(cat $(horizon-deb-packager-dir/VERSION))
@@ -36,7 +36,7 @@ distclean: mostlyclean
 		docker rm -f "$(DOCKERB_CNAME)"; \
 	fi
 	-if [[ "$$(docker images -a | grep "$(DOCKERB_INAME)")" != "" ]]; then \
-		docker rmi -f "$(DOCKERB_INAME):$(DOCKERB_TAG)"; \
+		docker rmi "$(DOCKERB_INAME):$(DOCKERB_TAG)" "$(DOCKERB_INAME):latest" > /dev/null; \
 	fi
 	-rm -f *.flag
 	# remove golang and node caches

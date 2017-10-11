@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 
 # make sure this is available
-TMPGOPATH := $(CURDIR)/anaxtmpgopath
+TMPGOPATH = $(CURDIR)/anaxtmpgopath
 $(shell mkdir -p $(TMPGOPATH))
 
 %:
@@ -22,11 +22,9 @@ BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 override_dh_auto_build:
 	@echo "gopath: ${TMPGOPATH}"
 	cd anax && $(MAKE) TMPGOPATH=$(TMPGOPATH)
-	cd anax-ui && $(MAKE)
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
-	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-OUTDIRBASE)/usr/horizon
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
