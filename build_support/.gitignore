@@ -1,3 +1,2 @@
 Dockerfile-*.bld
-builder_homedir/
 *.flag

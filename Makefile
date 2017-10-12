@@ -139,7 +139,7 @@ $(horizon_deb_packages):
 dist/$(call pkg_version,%)_$(arch-tag).deb: dist/$(call file_version,%).orig.tar.gz
 	@echo "Running build in $* with TMPGOPATH '$(TMPGOPATH)'"
 	cd dist/$(call pkg_version,$*) && \
-		debuild --preserve-envvar "TMPGOPATH" -a$(arch-tag) -us -uc --lintian-opts --allow-root
+		debuild --preserve-envvar TMPGOPATH -a$(arch-tag) -us -uc --lintian-opts --allow-root
 	find dist/* -exec touch -r $(CURDIR)/VERSION {} +
 
 $(meta): meta-%: bld/changelog.tmpl dist/$(call file_version,%).orig.tar.gz

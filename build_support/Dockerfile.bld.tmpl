@@ -8,19 +8,21 @@ RUN apt-get update && apt-get install -y \
       debhelper \
       dh-systemd \
       git \
-      gnupg \
       vim \
       jq \
       curl \
       tree \
       wget \
       gettext
-RUN curl -s ##golang_dl_url## | tar zxvf - -C /usr/local
+RUN curl -s ##golang_dl_url## | tar zxf - -C /usr/local
 RUN ln -s /usr/local/go/bin/go* /usr/bin/
 ##node_install##
 RUN bash -c '[[ ! -e "/usr/bin/node" ]] && ln -s $(which nodejs) /usr/bin/node || :'
 RUN npm install -g npm-cache
 ARG CACHE_DATE=1977-06-27_15:17:32
+# make these perms liberal so docker run with -u doesn't cause write failure by that user
+RUN bash -c 'mkdir -p /home/builder/go/{src,pkg,bin} && chmod -R a+r,a+x,a+w /home/builder'
+ENV HOME /home/builder
+ENV GOPATH /home/builder/go
 # project is expected to be mounted at this dir
-RUN mkdir -p /horizon-deb-packager
 WORKDIR /horizon-deb-packager

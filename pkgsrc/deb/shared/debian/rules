@@ -2,7 +2,6 @@
 
 SHELL := /bin/bash
 
-# make sure this is available
 TMPGOPATH = $(CURDIR)/anaxtmpgopath
 $(shell mkdir -p $(TMPGOPATH))
 
@@ -20,8 +19,8 @@ override_dh_auto_test:
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 override_dh_auto_build:
-	@echo "gopath: ${TMPGOPATH}"
-	cd anax && $(MAKE) TMPGOPATH=$(TMPGOPATH)
+	@echo "TMPGOPATH used by rules: ${TMPGOPATH}"
+	cd anax && $(MAKE) verbose=y TMPGOPATH=$(TMPGOPATH)
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
