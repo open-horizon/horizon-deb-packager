@@ -4,11 +4,10 @@ NAME=$1
 ARCH=$2
 
 function fc() {
-  if [ "$(echo "$1" | grep ':')" != "" ]; then
-    echo "$1" | sed 's/:/_/'
-  else
-    echo "$1"
-  fi
+  s1="$(echo "$1" | sed 's,:,_,g')"
+  s2="$(echo "$s1" | sed 's,/,-,g')"
+
+  echo $s2
 }
 
 if docker inspect $NAME >/dev/null 2>&1
