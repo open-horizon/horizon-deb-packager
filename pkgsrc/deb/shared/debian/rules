@@ -1,7 +1,9 @@
 #!/usr/bin/make -f
 
 SHELL := /bin/bash
-ANAX_TMPGOPATH := $(CURDIR)/anaxtmpgopath
+
+TMPGOPATH = $(CURDIR)/anaxtmpgopath
+$(shell mkdir -p $(TMPGOPATH))
 
 %:
 	dh $@
@@ -16,17 +18,18 @@ override_dh_auto_test:
 # these are expected to be the same location as in the wrapping Makefile
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
+BLUEHORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/bluehorizon-ui
 override_dh_auto_build:
-	cd anax && $(MAKE) TMPGOPATH=$(ANAX_TMPGOPATH)
+	@echo "TMPGOPATH used by rules: ${TMPGOPATH}"
+	cd anax && $(MAKE) verbose=y TMPGOPATH=$(TMPGOPATH)
 	cd anax-ui && $(MAKE)
 
 override_dh_auto_install:
-	-[ ! -e "$(ANAX_TMPGOPATH)" ] && mkdir -p $(ANAX_TMPGOPATH)
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
-	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-OUTDIRBASE)/usr/horizon
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
+	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-UI-OUTDIRBASE)/usr/horizon
 
 clean.%:
 	rm -Rf $(BUILDDIR_$*)
