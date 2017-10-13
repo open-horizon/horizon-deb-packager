@@ -54,7 +54,10 @@ $(FLAGNAME): Dockerfile-$(ARCH).bld
 	@echo "Building container image $(DOCKERB_INAME) with context dir $(horizon-deb-packager-dir)"
 	docker build $(DOCKERB_OPTS) -t $(DOCKERB_INAME) -f Dockerfile-$(ARCH).bld $(horizon-deb-packager-dir) && docker tag $(DOCKERB_INAME) $(DOCKERB_INAME):$(DOCKERB_TAG)
 
+show-flag:
+	@echo "$(FLAGNAME)"
+
 # to allay confusion, leave these around
 .PRECIOUS: $(FLAGNAME)
 
-.PHONY: artifacts
+.PHONY: artifacts clean distclean mostlyclean show-flag

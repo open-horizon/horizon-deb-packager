@@ -37,13 +37,14 @@ Steps:
 
 Docker build agent container creation command examples:
 
-    docker build -t hzn-build -f ./continuous_delivery/Dockerfile-bld-$(tools/arch-tag) .
+
+    cd build_support/ && make $(make show-flag)
 
 **Note**: You must have appropriate SSH keys added to the agent to: 1) pull code from the repository, and 2) push built packages to the apt signing system.
 
 Docker start command example:
 
-    docker run --rm --name hzn-build --hostname=$(hostname) -v /root/.ssh-aptrepo-signer:/root/.ssh:ro -v /root/go/.cache:/root/go/.cache:rw -v /root/.package_cache:/root/.package_cache:rw -it hzn-build:latest /bin/bash -c '/prj/continuous_delivery/bin/watch-build 1 "/horizon-deb-packager" "http://pkg.bluehorizon.network/linux/##DIST##/dists/##RELEASE##-testing/main" "aptsigner:/incoming" "https://hooks.slack.com/services/..." [restrict_to_distro1,restrict_to_distro2]'
+    docker run --rm --name hzn-build --hostname=$(hostname) -v /root/.ssh-aptrepo-signer:/root/.ssh:ro -v /root/go/.cache:/root/go/.cache:rw -v /root/.package_cache:/root/.package_cache:rw -it summit.hovitos.engineering/amd64/horizon-deb-packager-i:latest /bin/bash -c '/prj/build_support/bin/watch-build 1 "/horizon-deb-packager" "http://pkg.bluehorizon.network/linux/##DIST##/dists/##RELEASE##-testing/main" "aptsigner:/incoming" "https://hooks.slack.com/services/..." [restrict_to_distro1,restrict_to_distro2]'
 
 ### Manual build with a build agent
 
