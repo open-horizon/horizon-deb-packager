@@ -1,3 +1,30 @@
+horizon (2.9.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - 60862c5 (Varatep Buranintu): fixes for attribute api changes
+      - d98c009 (Varatep Buranintu): change attribute api endpoint
+      - abbcf40 (Varatep Buranintu): include `promise` and `whatwg-fetch` to fix hzn deb builder
+      - 2e56078 (Varatep Buranintu): add deviceForm state fields
+      - 7ac3982 (Varatep Buranintu): nest in a call to enable blockchain for the device before navigation
+      - 61797eb (Varatep Buranintu): add blockchain toggle
+      - d372aff (Varatep Buranintu): expose deviceFormSubmitBlockchain to presenter
+      - ad8147e (Varatep Buranintu): add agreement mappings for blockchain enablement
+      - 9169d56 (Varatep Buranintu): expose blockchain api wrapper
+      - dd0e0ef (Varatep Buranintu): add blockchain enablement api wrapper
+
+    * github.com/open-horizon/anax.git, branch: master
+      - ae8963b (linggao): Fixed microservice userInput checking
+      - 000ef50 (linggao): issue 313 - Anax update exchange with container status
+      - 2fad4c2 (Dave Booz): Issue 355 - additional API refactoring, delete agreements with empty DB on restart
+      - be0ad6d (michael dye): updated horizon-pkg-fetch version to one inclusive of big file timeouts
+      - 433b04a (michael dye): add default transport timeouts so large overall Client timeout won't cause problems if idle
+      - 43f0e4f (Dave Booz): Issue 355 - autoconfigure microservices that dont have variables to set
+      - 31f654f (Dave Booz): Issue345 bring container intgeration tests back as CI tests
+      - 2674f93 (linggao): Set the maximum agreements to unlimited if the device is associated with a pattern
+      - 66a3155 (Dave Booz): Issue345 - complete HA with pattern support
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Fri, 13 Oct 2017 17:59:39 +0000
+
 horizon (2.8.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax-ui.git, branch: master
