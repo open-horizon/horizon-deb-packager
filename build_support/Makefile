@@ -44,7 +44,7 @@ mostlyclean: clean
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean $$(make show-packages)'; \
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean packages'; \
 
 # targets for build infrastructure
 Dockerfile-$(ARCH).bld: Dockerfile.bld.tmpl

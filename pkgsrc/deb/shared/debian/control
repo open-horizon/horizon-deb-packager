@@ -19,3 +19,9 @@ Architecture: any
 Depends: horizon (= ${binary:Version})
 Description: Configuration for horizon package to use Blue Horizon backend
   Please consult this project's homepage for more detail on this project
+
+Package: bluehorizon-ui
+Architecture: any
+Depends: horizon (= ${binary:Version})
+Description: Web UI content for Bluehorizon instance of the Horizon platform
+  Please consult this project's homepage for more detail on this project
