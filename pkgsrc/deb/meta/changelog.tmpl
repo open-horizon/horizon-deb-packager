@@ -1,3 +1,125 @@
+horizon (2.12.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - 514af06 (Varatep Buranintu): use float form for lat and lng
+      - ce27ba4 (Varatep Buranintu): add location accuracy input
+      - 364badd (Varatep Buranintu): show error and catch account form submission err
+      - 0dac547 (Varatep Buranintu): updates for default device form values
+      - 1abc02d (Varatep Buranintu): remove sequential promise
+      - 4e01414 (Varatep Buranintu): remove sequential promise
+      - c9c6dcd (Varatep Buranintu): use pattern in current build
+      - 6e677a0 (Varatep Buranintu): set device configured successfully state
+      - f9defe3 (Varatep Buranintu): add action type
+      - eb2e647 (Varatep Buranintu): add submit options for mswl presenter
+      - ecb3204 (Varatep Buranintu): add actions to service form
+      - 1ed7c92 (Varatep Buranintu): updates for sequential promise to pattern view submission
+      - d2dfca0 (Varatep Buranintu): add actions to pattern view
+      - 39f595a (Varatep Buranintu): add actions
+      - 4a5185b (Varatep Buranintu): make reg pattern-only in this build
+      - 035fd74 (Varatep Buranintu): add explicit button type
+      - 4227480 (Varatep Buranintu): set workload and ms configs
+      - 7c98454 (Varatep Buranintu): change url and props
+      - 7772965 (Varatep Buranintu): set device as configured
+      - d04cb0c (Varatep Buranintu): change url and props
+      - d0e2e07 (Varatep Buranintu): use node id if doesn't exist
+      - 410084e (Varatep Buranintu): add sequential promises
+      - 2a4ba02 (Varatep Buranintu): add query string to make url parameters pretty
+      - 1096109 (Varatep Buranintu): add fbjs as explicit dep to fix semantic ui
+      - aa75059 (Varatep Buranintu): add babel preset env
+      - ed267b1 (Varatep Buranintu): updates for semantic accordion
+      - 3b5037a (Varatep Buranintu): expose actions to pattern view
+      - fd233b1 (Varatep Buranintu): set service form page title for mswl
+      - fbc5986 (Varatep Buranintu): state for using pattern or not
+      - 5b5ad3b (Varatep Buranintu): move all api updates to the pattern view
+      - d77ebab (Varatep Buranintu): set the existing account expectations
+      - f1a6fe8 (Varatep Buranintu): expose setExpectExistingAccount
+      - cefde3b (Varatep Buranintu): add action for patching pattern
+      - 226f7a0 (Varatep Buranintu): add pattern when registering account
+      - 916bd6c (Varatep Buranintu): add org to auth
+      - 2995b82 (Varatep Buranintu): include setExpectExistingAccount action and export
+      - 8dad32b (Varatep Buranintu): set reducer state to have expectExistingAccount var
+      - f2d75e9 (Varatep Buranintu): include changes for deprecated babel preset
+      - b802ec0 (Varatep Buranintu): combine pattern reducer to master reducer
+      - d679aa3 (Varatep Buranintu): pattern reducer that makes use of same methods as services reducer
+      - a94940d (Varatep Buranintu): add pattern view to route
+      - 7c55f05 (Varatep Buranintu): export patterns actions
+      - b1c2483 (Varatep Buranintu): show a modal that asks for creds first
+      - d5b90e6 (Varatep Buranintu): remove workload approach for now until ready
+      - 7289ee5 (Varatep Buranintu): pattern view presenter
+      - 6267252 (Varatep Buranintu): map states <-> props for pattern view
+      - 6d38797 (Varatep Buranintu): change services action to accept dynamic env and credentials
+      - bf41c75 (Varatep Buranintu): dynamic patterns action
+      - 0e2ee12 (Varatep Buranintu): add patterns to exported actions
+      - 0a3ba7a (Varatep Buranintu): proper rendering with submit button for two columns
+      - 6fa908c (Varatep Buranintu): use possible workloads when using microservice approach
+      - 0a659f7 (Varatep Buranintu): use current workload instead of from the state -- might not be init'd
+      - df52726 (Varatep Buranintu): remove old code
+      - 2661535 (Varatep Buranintu): helper fn for updating current approach
+      - d19c9cf (Varatep Buranintu): helper fn to reset enablements
+      - 77dd9ca (Varatep Buranintu): get all possible workloads from enabled microservices
+      - d5add20 (Varatep Buranintu): get enabled microservices
+      - 35417c6 (Varatep Buranintu): set initial state for filter
+      - 726f8d3 (Varatep Buranintu): extrac approach const strings into helper file
+      - 2d04b9a (Varatep Buranintu): move the filter segment to its own pure component
+      - 90c237f (Varatep Buranintu): wrap the render fn so the UI can determine state readiness
+      - 4766367 (Varatep Buranintu): conditionally render column based on ms/wl existence
+      - 4a20311 (Varatep Buranintu): make an expandable filter segment
+      - 42d7a83 (Varatep Buranintu): render fn for entire workload section/column
+      - a6dfd80 (Varatep Buranintu): render fn for workload segment/card
+      - b1b2f3a (Varatep Buranintu): render function for required microservices
+      - d640445 (Varatep Buranintu): fn to render user inputs from workload
+      - 5ccdfde (Varatep Buranintu): add microservice lookup helper fn
+      - 09705e6 (Varatep Buranintu): don't show hardware list anymore
+      - 25c6758 (Varatep Buranintu): add microservice download url
+      - a02524b (Varatep Buranintu): document for _generateMicroserviceSegments
+      - 4ace192 (Varatep Buranintu): add the onChange functionality and knowledge of current service
+      - 2ff9561 (Varatep Buranintu): move helper function to global component
+      - f1d386c (Varatep Buranintu): document _generateMicroserviceSegments
+      - 8d95bc2 (Varatep Buranintu): document _generateHardwareList
+      - 834dc41 (Varatep Buranintu): fetch microservices and workloads in one promise
+      - 9744b61 (Varatep Buranintu): populate the state with fields for workloads and microservices
+      - b5a6596 (Varatep Buranintu): find single user input object by input name
+      - cb6b50b (Varatep Buranintu): find ms/wl using the originalKey property
+      - 2aea2b8 (Varatep Buranintu): declare fields property in component state
+      - 7ce9d22 (Varatep Buranintu): handle microservice enablement and bind it
+      - 3e39116 (Varatep Buranintu): handle workload enablement and bind it
+      - 14f218e (Varatep Buranintu): fn for handling user input change in workload segment and bind it
+      - 75d1df8 (Varatep Buranintu): add helper function to parse date property
+      - 0180b45 (Varatep Buranintu): add accordion and popup imports
+      - b7f9d2f (Varatep Buranintu): add agnostic behavior of service calls
+      - cc4e282 (Varatep Buranintu): add orgid, username, password params to api call
+      - 92674d1 (Varatep Buranintu): add microservice handling for reducer
+      - 563bc50 (Varatep Buranintu): render microservice column
+      - d0e7c3c (Varatep Buranintu): update semantic ui
+      - 0825cef (Varatep Buranintu): make presenter aware of microservices and workloads state
+      - 6d3baa9 (Varatep Buranintu): add helper to check if microservice or workload label contains a string
+      - d2f3a4e (Varatep Buranintu): add concept of microservices and workloads to services form redux
+      - 24a0eaa (Varatep Buranintu): add initial split presenter
+      - cbc06ab (Varatep Buranintu): change exchange urls and change device terminology to node
+      - db6e360 (Varatep Buranintu): add organization inputs
+      - a0411bf (Varatep Buranintu): add organization initial state
+      - 4d56664 (Varatep Buranintu): add organization validator
+
+    * github.com/open-horizon/anax.git, branch: master
+      - c594322 (michael dye): fix Makefile target to build CLI_EXECUTABLE
+      - 37fe79e (Bruce Potter): check for hzn register input file early
+      - f3021a0 (michael dye): added hzn cli (and samples) to install target
+      - 7a53bf7 (Bruce Potter): ran gofmt on the cli code
+      - 7e086bd (Bruce Potter): updated use of LocationAttributes because of changes
+      - b8e05e9 (Bruce Potter): added ptr to samples/input.json in hzn help
+      - 7bbf29d (Bruce Potter): added org on show workloads after anax fixed bug
+      - 8d14c07 (Bruce Potter): implemented the real unregister
+      - f5890b4 (Bruce Potter): registration complete, and added makefile targets in top level
+      - 099bc06 (Bruce Potter): register almost done
+      - e6f8c96 (Bruce Potter): added show metering and show keys
+      - 20fa931 (Bruce Potter): hzn register partially working
+      - 33c2ca8 (Bruce Potter): hzn show agreements working
+      - 6da97cd (Bruce Potter): basic hzn cli framework
+      - 514eaa0 (Dave Booz): Issue 413 - Change location attribute fields lat and lon to float
+      - 165521c (linggao): anax API doc update
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Tue, 14 Nov 2017 19:26:31 +0000
+
 horizon (2.11.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax-ui.git, branch: master
