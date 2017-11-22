@@ -130,7 +130,7 @@ dist/horizon$(call file_version,%).orig.tar.gz: dist/horizon$(call pkg_version,%
 			cp $${src}-rules.env dist/horizon$(call pkg_version,$*)/$$(basename $$src)/rules.env; \
 		fi; \
 	done
-	tar --mtime $(CURDIR)/VERSION --sort=name -c -C dist/horizon$(call pkg_version,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
+	tar --mtime="$(shell git log -1 --date=iso --format=%cd $(CURDIR)/VERSION)" --sort=name --user=root --group=root -c -C dist/horizon$(call pkg_version,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
 
 # also builds the bluehorizon package
 $(bluehorizon_deb_packages):
