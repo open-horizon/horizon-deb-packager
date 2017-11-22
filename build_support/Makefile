@@ -42,6 +42,10 @@ mostlyclean: clean
 	-rm -f Dockerfile-*.bld
 	-docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make clean-src mostlyclean'; \
 
+src-artifacts: $(FLAGNAME)
+	@echo "Making source artifacts using build container"
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean src-packages'; \
+
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
 	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean packages'; \

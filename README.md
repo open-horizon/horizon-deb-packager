@@ -37,7 +37,6 @@ Steps:
 
 Docker build agent container creation command examples:
 
-
     cd build_support/ && make $(make show-flag)
 
 **Note**: You must have appropriate SSH keys added to the agent to: 1) pull code from the repository, and 2) push built packages to the apt signing system.

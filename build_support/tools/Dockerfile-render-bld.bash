@@ -26,7 +26,7 @@ case "$ARCH" in
   from_image="arm64v8/ubuntu:16.04"
   golang_arch="arm64"
   ;;
-('amd64')
+*amd64)
   from_image="ubuntu:16.04"
   golang_arch="amd64"
   ;;
