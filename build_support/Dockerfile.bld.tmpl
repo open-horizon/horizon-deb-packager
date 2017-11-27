@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
       jq \
       curl \
       tree \
+      gawk \
       wget \
       gettext
 RUN curl -s ##golang_dl_url## | tar zxf - -C /usr/local

@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-arch-tag := $(shell tools/arch-tag)
+arch ?= $(shell tools/arch-tag)
 subproject_names = anax anax-ui
 subprojects = $(addprefix bld/,$(subproject_names))
 
@@ -12,7 +12,7 @@ file_version = $(call aug_version,_,$(1))
 git_repo_prefix = ssh://git@github.com/open-horizon
 
 # only returns names of distributions that are valid for this architecture
-distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch-tag)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
+distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
 
 pkg_stub = $(foreach dname,$(distribution_names),dist/$(1)$(call pkg_version,$(dname)))
@@ -22,7 +22,7 @@ meta = $(addprefix meta-,$(distribution_names))
 
 src-packages = $(addsuffix .dsc,$(call pkg_stub,horizon))
 
-bin_stub = $(addsuffix _$(arch-tag).deb,$(call pkg_stub,$1))
+bin_stub = $(addsuffix _$(arch).deb,$(call pkg_stub,$1))
 bluehorizon_deb_packages = $(foreach nameprefix, bluehorizon bluehorizon-ui, $(call $(addsuffix _all.deb,$(nameprefix))))
 other_config_deb_packages = $(foreach nameprefix, horizon-wiotp, $(call $(addsuffix _all.deb,$(nameprefix))))
 horizon_deb_packages = $(call bin_stub,horizon)
@@ -145,12 +145,11 @@ dist/horizon$(call file_version,%).orig.tar.gz: dist/horizon$(call pkg_version,%
 	find dist/ -iname ".keep" -exec rm -f {} \;
 	tar -c -C dist/horizon$(call pkg_version,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
 
-# also builds the bluehorizon package
 $(src-packages):
 dist/horizon$(call pkg_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
 	@echo "Running src pkg build in $*'"
 	cd dist/horizon$(call pkg_version,$*) && \
-		debuild -a$(arch-tag) -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
+		debuild --preserve-envvar arch -a$(arch) -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(other_config_deb_packages):
 dist/horizon-wiotp$(call pkg_version,%)_all.deb:
@@ -158,10 +157,10 @@ $(bluehorizon_deb_packages):
 dist/bluehorizon$(call pkg_version,%)_all.deb:
 dist/bluehorizon-ui$(call pkg_version,%)_all.deb:
 $(horizon_deb_packages):
-dist/horizon$(call pkg_version,%)_$(arch-tag).deb: dist/horizon$(call pkg_version,%).dsc
+dist/horizon$(call pkg_version,%)_$(arch).deb: dist/horizon$(call pkg_version,%).dsc
 	@echo "Running bin pkg build in $*'"
 	cd dist/horizon$(call pkg_version,$*) && \
-		debuild -a$(arch-tag) -us -uc -b --lintian-opts --allow-root
+		debuild --preserve-envvar arch -a$(arch) -us -uc -b --lintian-opts --allow-root
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
