@@ -41,9 +41,6 @@ endif
 bld:
 	mkdir -p bld
 
-# TODO: consider making deps at this stage: that'd put all deps in the orig.tar.gz. This could be good for repeatable builds (we fetch from the internet all deps and wrap them in a source package), but it could be legally tenuous and there is still a chance of differences b/n .orig.tar.gzs between different arch's builds (b/c different machines run the builds and each fetches its own copy of those deps)
-#-@[ ! -e "bld/$*" ] && git clone ssh://git@github.com/open-horizon/$*.git "$(CURDIR)/bld/$*" && cd $(CURDIR)/bld/$* && $(MAKE) deps
-
 bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \

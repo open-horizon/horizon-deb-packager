@@ -1,9 +1,12 @@
 SHELL := /bin/bash
-ARCH := $(shell dpkg --print-architecture)
+buildarch := $(shell dpkg --print-architecture)
+
+# the architecture of the eventual executable
+arch ?= $(buildarch)
 
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
-DOCKERB_INAME := summit.hovitos.engineering/$(ARCH)/$(DOCKERB_CNAME)-i
+DOCKERB_INAME := summit.hovitos.engineering/$(buildarch)/$(DOCKERB_CNAME)-i
 DOCKERB_TAG := $(shell cat VERSION)
 DOCKERB_OPTS := --rm --no-cache
 
@@ -27,6 +30,7 @@ clean:
 # clean everything, including docker images
 distclean: mostlyclean
 	@echo "Cleaning containers and images"
+	-rm -f Dockerfile-*.bld
 	-rm -f *.flag
 	-docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make distclean'
 	-if [[ "$$(docker ps -a | grep "$(DOCKERB_CNAME)")" != "" ]]; then \
@@ -39,7 +43,6 @@ distclean: mostlyclean
 # do not remove docker images
 mostlyclean: clean
 	@echo "Cleaning artifacts"
-	-rm -f Dockerfile-*.bld
 	-docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make clean-src mostlyclean'; \
 
 src-artifacts: $(FLAGNAME)
@@ -48,15 +51,15 @@ src-artifacts: $(FLAGNAME)
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean packages'; \
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon arch=$(arch) skip-precheck=y mostlyclean packages'; \
 
 # targets for build infrastructure
-Dockerfile-$(ARCH).bld: Dockerfile.bld.tmpl
-	tools/Dockerfile-render-bld.bash $(ARCH) Dockerfile.bld.tmpl Dockerfile-$(ARCH).bld
+Dockerfile-$(buildarch).bld: Dockerfile.bld.tmpl
+	tools/Dockerfile-render-bld.bash $(buildarch) Dockerfile.bld.tmpl Dockerfile-$(buildarch).bld
 
-$(FLAGNAME): Dockerfile-$(ARCH).bld
+$(FLAGNAME): Dockerfile-$(buildarch).bld
 	@echo "Building container image $(DOCKERB_INAME) with context dir $(horizon-deb-packager-dir)"
-	docker build $(DOCKERB_OPTS) -t $(DOCKERB_INAME) -f Dockerfile-$(ARCH).bld $(horizon-deb-packager-dir) && docker tag $(DOCKERB_INAME) $(DOCKERB_INAME):$(DOCKERB_TAG)
+	docker build $(DOCKERB_OPTS) -t $(DOCKERB_INAME) -f Dockerfile-$(buildarch).bld $(horizon-deb-packager-dir) && docker tag $(DOCKERB_INAME) $(DOCKERB_INAME):$(DOCKERB_TAG)
 
 show-flag:
 	@echo "$(FLAGNAME)"
