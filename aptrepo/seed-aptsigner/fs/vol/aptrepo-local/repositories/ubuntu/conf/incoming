@@ -1,10 +1,16 @@
+Name: incoming-trusty
+IncomingDir: /var/repositories/incoming/ubuntu.trusty
+TempDir: /var/repositories/tmp/ubuntu.trusty
+Allow: trusty-testing
+Default: trusty-testing
+Permit: older_version
+
 Name: incoming-xenial
 IncomingDir: /var/repositories/incoming/ubuntu.xenial
 TempDir: /var/repositories/tmp/ubuntu.xenial
 Allow: xenial-testing
 Default: xenial-testing
 Permit: older_version
-
 
 Name: incoming-yakkety
 IncomingDir: /var/repositories/incoming/ubuntu.yakkety

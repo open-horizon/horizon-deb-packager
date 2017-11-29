@@ -2,7 +2,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: trusty
 Codename: trusty
-Architectures: armhf arm64 amd64 ppc64el source
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -12,7 +12,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: trusty-updates
 Codename: trusty-updates
-Architectures: armhf arm64 amd64 ppc64el source
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -22,7 +22,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: trusty-testing
 Codename: trusty-testing
-Architectures: armhf arm64 amd64 ppc64el source
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -32,7 +32,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: trusty-unstable
 Codename: trusty-unstable
-Architectures: armhf arm64 amd64 ppc64el source
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
