@@ -21,10 +21,10 @@ meta = $(addprefix meta-,$(distribution_names))
 
 src-packages = $(addsuffix .dsc,$(call file_stub,horizon))
 
-bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
-
 bluehorizon_deb_packages = $(foreach nameprefix, bluehorizon bluehorizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
 other_config_deb_packages = $(foreach nameprefix, horizon-wiotp, $(addsuffix _all.deb, $(call file_stub,$(nameprefix))))
+
+bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
 
 packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
@@ -144,21 +144,21 @@ dist/horizon$(call file_version,%).orig.tar.gz: dist/horizon$(call pkg_version,%
 	tar -c -C dist/horizon$(call pkg_version,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
 
 $(src-packages):
-dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
-	@echo "Running src pkg build in $*'"
-	cd dist/horizon$(call pkg_version,$*) && \
-		debuild --preserve-envvar arch -a$(arch) -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
-
 $(other_config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
 $(bluehorizon_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
 dist/bluehorizon-ui$(call file_version,%)_all.deb:
+dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
+	@echo "Running src pkg build in $*'"
+	cd dist/horizon$(call pkg_version,$*) && \
+		debuild --preserve-envvar arch -a$(arch) -us -uc -g --lintian-opts --allow-root -X cruft,init.d,binaries
+
 $(horizon_deb_packages):
 dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running bin pkg build in $*'"
 	cd dist/horizon$(call pkg_version,$*) && \
-		debuild --preserve-envvar arch -a$(arch) -us -uc -b --lintian-opts --allow-root
+		debuild --preserve-envvar arch -a$(arch) -us -uc -B --lintian-opts --allow-root
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck

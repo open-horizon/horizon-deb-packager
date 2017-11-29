@@ -4,11 +4,16 @@ buildarch := $(shell dpkg --print-architecture)
 # the architecture of the eventual executable
 arch ?= $(buildarch)
 
+# TODO: replace this with discovery of all architectures by reading the metadata in the pkgsrc folder
+architectures = amd64 arm64 armhf ppc64el
+
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
 DOCKERB_INAME := summit.hovitos.engineering/$(buildarch)/$(DOCKERB_CNAME)-i
 DOCKERB_TAG := $(shell cat VERSION)
 DOCKERB_OPTS := --rm --no-cache
+
+build_vars = git_repo_prefix=https://github.com/open-horizon skip-precheck=y
 
 # N.B. This has to be consistent with the decoding done by flag.bash
 FLAGNAME = $(shell tools/dname_to_fname.bash "$(DOCKERB_INAME):$(DOCKERB_TAG)")
@@ -17,7 +22,7 @@ $(shell bash -c 'tools/flag.bash "$(DOCKERB_INAME)" "$(DOCKERB_TAG)"')
 
 horizon-deb-packager-dir = $(shell dirname $(CURDIR))
 
-all: artifacts
+all: clean-build-all
 
 ifndef verbose
 .SILENT:
@@ -43,15 +48,29 @@ distclean: mostlyclean
 # do not remove docker images
 mostlyclean: clean
 	@echo "Cleaning artifacts"
-	-docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make clean-src mostlyclean'; \
+	-docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make clean-src mostlyclean'
 
 src-artifacts: $(FLAGNAME)
 	@echo "Making source artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y mostlyclean src-packages'; \
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) mostlyclean src-packages'
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make verbose=y git_repo_prefix=https://github.com/open-horizon arch=$(arch) skip-precheck=y mostlyclean packages'; \
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) mostlyclean packages'
+
+clean-build-all: $(FLAGNAME)
+# src-artifacts
+	@echo "Making all artifacts for all architectures using build container"
+	# important that we don't clean between builds of different architectures b/c they rely on the same source package or indexing will fail
+	docker run --name "$(DOCKERB_CNAME)-all" -d -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash; \
+	docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) src-packages"; \
+	for ix_arch in $(architectures); do \
+		echo "*** Building all packages for architecture $$ix_arch"; \
+		SECONDS=0; \
+		docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) arch=$$ix_arch packages"; \
+		echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
+	done
+	-docker rm -f $(DOCKERB_CNAME)-all
 
 # targets for build infrastructure
 Dockerfile-$(buildarch).bld: Dockerfile.bld.tmpl
