@@ -190,17 +190,6 @@ all-packages: $(packages)
 
 noarch-packages: $(bluehorizon_deb_packages) $(other_config_deb_packages)
 
-publish-meta-bld/%:
-	@echo "+ Visiting publish-meta subproject $*"
-	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)"
-
-publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
-	git checkout -b horizon_$(version)
-	cp bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
-	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
-	git commit -m "updated package metadata to $(version)"
-	git push --set-upstream origin horizon_$(version)
-
 show-distribution-names:
 	@echo $(distribution_names)
 
@@ -213,8 +202,23 @@ show-src-packages:
 show-arch-packages:
 	@echo $(horizon_deb_packages)
 
+show-all-packages:
 show-packages:
-	@echo $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
+	@echo $(packages)
+
+show-noarch-packages:
+	@echo $(bluehorizon_deb_packages) $(other_config_deb_packages)
+
+publish-meta-bld/%:
+	@echo "+ Visiting publish-meta subproject $*"
+	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)"
+
+publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
+	git checkout -b horizon_$(version)
+	cp bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
+	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
+	git commit -m "updated package metadata to $(version)"
+	git push --set-upstream origin horizon_$(version)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
