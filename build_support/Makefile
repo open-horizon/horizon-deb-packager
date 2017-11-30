@@ -5,7 +5,7 @@ buildarch := $(shell dpkg --print-architecture)
 arch ?= $(buildarch)
 
 # TODO: replace this with discovery of all architectures by reading the metadata in the pkgsrc folder
-architectures = amd64 arm64 armhf ppc64el
+architectures ?= arm64 armhf ppc64el amd64
 
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
@@ -56,21 +56,33 @@ src-artifacts: $(FLAGNAME)
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) mostlyclean packages'
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) packages'
 
-clean-build-all: $(FLAGNAME)
-# src-artifacts
-	@echo "Making all artifacts for all architectures using build container"
-	# important that we don't clean between builds of different architectures b/c they rely on the same source package or indexing will fail
-	docker run --name "$(DOCKERB_CNAME)-all" -d -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash; \
-	docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) src-packages"; \
-	for ix_arch in $(architectures); do \
-		echo "*** Building all packages for architecture $$ix_arch"; \
-		SECONDS=0; \
-		docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) arch=$$ix_arch packages"; \
-		echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
-	done
-	-docker rm -f $(DOCKERB_CNAME)-all
+dists = ubuntu.xenial raspbian.jessie raspbian.sid debian.jessie debian.sid ubuntu.yakkety ubuntu.trusty
+
+# make clean-build-all-ubuntu.xenial
+
+# TODO: add documentation that helps with the use cases:
+# - 1) build for arch, 2) build for dist, 3) build in two-stage (not yet built)
+# - remove the docs that do meta / publish meta (now deprecated stuff)
+# - add docs of build_support features
+# - fix setup / teardown of shared container instance
+
+#clean-build-all-%: mostlyclean $(FLAGNAME)
+#	@echo "Making artifacts for all architectures in distribution $*"
+#	docker run --name "$(DOCKERB_CNAME)-all" -d -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/sh; \
+#	for ix_arch in $(architectures); do \
+#		SECONDS=0; \
+#			docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) arch=$$ix_arch $$pkgs"; \
+#			echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
+#		fi; \
+#	done; true
+#	-docker ps -aq -f "name=$(DOCKERB_CNAME)-all" | xargs docker rm -f
+#
+#clean-build-all: $(foreach dist, $(dists), $(addprefix clean-build-all-,$(dist)))
+
+show-clean-build-all:
+	@echo $(foreach dist, $(dists), $(addprefix clean-build-all-,$(dist)))
 
 # targets for build infrastructure
 Dockerfile-$(buildarch).bld: Dockerfile.bld.tmpl

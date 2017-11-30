@@ -10,21 +10,14 @@ override_dh_auto_test:
 
 #TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
 
-#TODO: reuse SUBPROJECTS names from the other makefile
-
-#override_dh_auto_configure:
-#	@echo "TMPGOPATH used by rules: ${TMPGOPATH}"
-#	cd anax && $(MAKE) deps verbose=y TMPGOPATH=$(TMPGOPATH)
-
 # these are expected to be the same location as in the wrapping Makefile
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 BLUEHORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/bluehorizon-ui
 override_dh_auto_build:
-	@echo "TMPGOPATH used by rules: ${TMPGOPATH}"
 	cd anax && $(MAKE) verbose=y arch=$(arch) all-nodeps
-	cd anax-ui && $(MAKE)
+	cd anax-ui && $(MAKE) all-nodeps
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon

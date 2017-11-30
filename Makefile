@@ -2,13 +2,16 @@ SHELL := /bin/bash
 subproject_names := anax anax-ui
 subprojects = $(addprefix bld/,$(subproject_names))
 
+arch ?= $(shell tools/arch-tag)
+
 version := $(shell cat VERSION)
 version_tail = $(addprefix ~ppa~,$(1))
+
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
-pkg_version = $(call aug_version,-,$(1))
+
+dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
 file_version = $(call aug_version,_,$(1))
 
-arch ?= $(shell tools/arch-tag)
 git_repo_prefix ?= ssh://git@github.com/open-horizon
 
 # only returns names of distributions that are valid for this architecture
@@ -52,7 +55,7 @@ bld/%/.git/logs/HEAD: | bld
 	fi
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
-	bash -x tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(docker_tag_prefix)/$(version)"
+	bash tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(docker_tag_prefix)/$(version)"
 
 bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subprojects))
 	mkdir -p bld
@@ -62,8 +65,8 @@ bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changel
 		tools/render-debian-changelog "++DISTRIBUTIONS++" "$(version)" "++VERSIONSUFFIX++" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog"); \
 	fi
 
-dist/horizon$(call pkg_version,%)/debian:
-	mkdir -p dist/horizon$(call pkg_version,$*)/debian
+$(call dist_dir,%)/debian:
+	mkdir -p $(call dist_dir,$*)/debian
 
 clean: clean-src mostlyclean
 	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(version) branch"
@@ -96,8 +99,8 @@ distclean: clean
 	-@git checkout master && git branch -D horizon_$(version)
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
-dist/horizon$(call pkg_version,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | dist/horizon$(call pkg_version,%)/debian
-	dir=dist/horizon$(call pkg_version,$*)/debian/fs-horizon && \
+$(call dist_dir,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
+	dir=$(call dist_dir,$*)/debian/fs-horizon && \
 		mkdir -p $$dir && \
 		./pkgsrc/mk-dir-trees $$dir && \
 		cp -Ra ./pkgsrc/seed/horizon/fs/. $$dir && \
@@ -106,59 +109,67 @@ dist/horizon$(call pkg_version,%)/debian/fs-horizon: $(shell find pkgsrc/seed) |
 		./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json.example && \
 		cp pkgsrc/mk-dir-trees $$dir/usr/horizon/sbin/
 
-dist/horizon$(call pkg_version,%)/debian/fs-horizon-wiotp: $(shell find pkgsrc/seed) | dist/horizon$(call pkg_version,%)/debian
-	dir=dist/horizon$(call pkg_version,$*)/debian/fs-horizon-wiotp && \
+$(call dist_dir,%)/debian/fs-horizon-wiotp: $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
+	dir=$(call dist_dir,$*)/debian/fs-horizon-wiotp && \
 		mkdir -p $$dir && \
 		cp -Ra ./pkgsrc/seed/horizon-wiotp/fs/. $$dir && \
 		envsubst < ./pkgsrc/seed/horizon-wiotp/dynamic/horizon.tmpl >> $$dir/etc/default/horizon && \
 		./pkgsrc/render-json-config ./pkgsrc/seed/horizon-wiotp/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json
 
-dist/horizon$(call pkg_version,%)/debian/fs-bluehorizon: dist/horizon$(call pkg_version,%)/debian/fs-horizon $(shell find pkgsrc/seed) | dist/horizon$(call pkg_version,%)/debian
-	dir=dist/horizon$(call pkg_version,$*)/debian/fs-bluehorizon && \
+$(call dist_dir,%)/debian/fs-bluehorizon: $(call dist_dir,%)/debian/fs-horizon $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
+	dir=$(call dist_dir,$*)/debian/fs-bluehorizon && \
 		mkdir -p $$dir && \
 		cp -Ra ./pkgsrc/seed/bluehorizon/fs/. $$dir && \
-		cp dist/horizon$(call pkg_version,$*)/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
+		cp $(call dist_dir,$*)/debian/fs-horizon/etc/horizon/anax.json.example $$dir/etc/horizon/anax.json
 
 # meta for every distribution, the target of horizon_$(version)-meta/$(distribution_names)
-dist/horizon$(call pkg_version,%)/debian/changelog: bld/changelog.tmpl | dist/horizon$(call pkg_version,%)/debian
-	sed "s,++DISTRIBUTIONS++,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > dist/horizon$(call pkg_version,$*)/debian/changelog
-	sed -i.bak "s,++VERSIONSUFFIX++,$(call version_tail,$*),g" dist/horizon$(call pkg_version,$*)/debian/changelog && rm dist/horizon$(call pkg_version,$*)/debian/changelog.bak
+$(call dist_dir,%)/debian/changelog: bld/changelog.tmpl | $(call dist_dir,%)/debian
+	sed "s,++DISTRIBUTIONS++,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > $(call dist_dir,$*)/debian/changelog
+	sed -i.bak "s,++VERSIONSUFFIX++,$(call version_tail,$*),g" $(call dist_dir,$*)/debian/changelog && rm $(call dist_dir,$*)/debian/changelog.bak
 
 # N.B. This target will copy all files from the source to the dest. as one target
-$(addprefix dist/horizon$(call pkg_version,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | dist/horizon$(call pkg_version,%)/debian
-	cp -Ra pkgsrc/deb/shared/debian/. dist/horizon$(call pkg_version,$*)/debian/
+$(addprefix $(call dist_dir,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb/shared/debian/,$(debian_shared)) | $(call dist_dir,%)/debian
+	cp -Ra pkgsrc/deb/shared/debian/. $(call dist_dir,$*)/debian/
 	# next, copy specific package overwrites if they exist
 	if [[ "$(ls pkgsrc/deb/meta/dist/$*/debian/*)" != "" ]]; then \
-		cp -Rva pkgsrc/deb/meta/dist/$*/debian/* dist/horizon$(call pkg_version,$*)/debian/; \
+		cp -Ra pkgsrc/deb/meta/dist/$*/debian/* $(call dist_dir,$*)/debian/; \
 	fi
 
-dist/horizon$(call file_version,%).orig.tar.gz: dist/horizon$(call pkg_version,%)/debian/fs-horizon-wiotp dist/horizon$(call pkg_version,%)/debian/fs-horizon dist/horizon$(call pkg_version,%)/debian/fs-bluehorizon dist/horizon$(call pkg_version,%)/debian/changelog $(addprefix dist/horizon$(call pkg_version,%)/debian/,$(debian_shared))
+dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon-wiotp $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
 		bash -c "cd $${src} && make deps"; \
-		rsync -a --exclude=".git*" $(PWD)/$$src dist/horizon$(call pkg_version,$*)/; \
+		rsync -a --exclude=".git*" $(PWD)/$$src $(call dist_dir,$*)/; \
 		if [ -e $${src}-rules.env ]; then \
-			cp $${src}-rules.env dist/horizon$(call pkg_version,$*)/$$(basename $$src)/rules.env; \
+			cp $${src}-rules.env $(call dist_dir,$*)/$$(basename $$src)/rules.env; \
 		fi; \
 	done
 	find dist/ -iname ".keep" -exec rm -f {} \;
-	tar -c -C dist/horizon$(call pkg_version,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
+	tar -c -C $(call dist_dir,$*) . | gzip -n > dist/horizon$(call file_version,$*).orig.tar.gz
 
 $(src-packages):
+dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
+	@echo "Running src pkg build in $*'"
+	cd $(call dist_dir,$*) && \
+		debuild --preserve-envvar arch -a$(arch) -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
+
 $(other_config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
 $(bluehorizon_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
-dist/bluehorizon-ui$(call file_version,%)_all.deb:
-dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
-	@echo "Running src pkg build in $*'"
-	cd dist/horizon$(call pkg_version,$*) && \
-		debuild --preserve-envvar arch -a$(arch) -us -uc -g --lintian-opts --allow-root -X cruft,init.d,binaries
+dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
+	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc'"
+		-rm -Rf $(call dist_dir,$*)
+		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
+		cd $(call dist_dir,$*) && \
+			debuild --us -uc -sa --lintian-opts --allow-root -X cruft,init.d,binaries binary-indep
 
 $(horizon_deb_packages):
 dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,%).dsc
-	@echo "Running bin pkg build in $*'"
-	cd dist/horizon$(call pkg_version,$*) && \
-		debuild --preserve-envvar arch -a$(arch) -us -uc -B --lintian-opts --allow-root
+	@echo "Running bin pkg build in $*; using dist/horizon$(call file_version,$*).dsc'"
+		-rm -Rf $(call dist_dir,$*)
+		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
+		cd $(call dist_dir,$*) && \
+			debuild --preserve-envvar arch -a$(arch) -us -uc -sa --lintian-opts --allow-root -X cruft,init.d,binaries binary-arch
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
@@ -167,13 +178,13 @@ endif
 	@echo "================="
 	@echo "Metadata created"
 	@echo "================="
-	@echo "Please inspect dist/horizon$(call pkg_version,$*), the shared template file bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
+	@echo "Please inspect $(call dist_dir,$*), the shared template file bld/changelog.tmpl, and VERSION. If accurate and if no other changes exist in the local copy, execute 'make publish-meta'. This will commit your local changes to the canonical upstream and tag dependent projects. The operation requires manual effort to undo so be sure you're ready before executing."
 
 meta: $(meta)
 
 src-packages: $(src-packages)
 
-packages: $(packages)
+packages: $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
@@ -196,9 +207,9 @@ show-src-packages:
 	@echo $(src-packages)
 
 show-packages:
-	@echo $(packages)
+	@echo $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
 
 # make these "precious" so Make won't remove them
-.PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD dist/horizon$(call pkg_version,%)/debian $(addprefix dist/horizon$(call pkg_version,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
+.PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
 
 .PHONY: clean clean-src $(meta) mostlyclean publish-meta publish-meta-bld/% show-distribution-names show-packages show-subprojects
