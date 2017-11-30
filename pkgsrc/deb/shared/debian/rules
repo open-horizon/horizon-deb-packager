@@ -8,6 +8,10 @@ SHELL := /bin/bash
 override_dh_auto_test:
 	@echo "N.B. Test execution not yet plumbed"
 
+override_dh_clean:
+	@echo "Running mostlyclean in $(CURDIR) to remove compiled artifacts"
+	cd anax && $(MAKE) verbose=y mostlyclean
+
 #TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
 
 # these are expected to be the same location as in the wrapping Makefile
