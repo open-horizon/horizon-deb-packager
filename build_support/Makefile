@@ -5,7 +5,7 @@ buildarch := $(shell dpkg --print-architecture)
 arch ?= $(buildarch)
 
 # TODO: replace this with discovery of all architectures by reading the metadata in the pkgsrc folder
-architectures ?= arm64 armhf ppc64el amd64
+architectures ?= amd64 arm64 armhf ppc64el
 
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
@@ -54,17 +54,11 @@ src-artifacts: $(FLAGNAME)
 	@echo "Making source artifacts using build container"
 	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) mostlyclean src-packages'
 
-all-artifacts: $(FLAGNAME)
+# leaving out arch-artifacts, noarch-artifacts target until someone wants it
+
+artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) packages'
-
-arch-artifacts: $(FLAGNAME)
-	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) arch-packages'
-
-dists = ubuntu.xenial raspbian.jessie raspbian.sid debian.jessie debian.sid ubuntu.yakkety ubuntu.trusty
-
-# make clean-build-all-ubuntu.xenial
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) mostlyclean packages'
 
 # TODO: add documentation that helps with the use cases:
 # - 1) build for arch, 2) build for dist, 3) build in two-stage (not yet built)
@@ -72,21 +66,18 @@ dists = ubuntu.xenial raspbian.jessie raspbian.sid debian.jessie debian.sid ubun
 # - add docs of build_support features
 # - fix setup / teardown of shared container instance
 
-#clean-build-all-%: mostlyclean $(FLAGNAME)
-#	@echo "Making artifacts for all architectures in distribution $*"
-#	docker run --name "$(DOCKERB_CNAME)-all" -d -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/sh; \
-#	for ix_arch in $(architectures); do \
-#		SECONDS=0; \
-#			docker exec -it "$(DOCKERB_CNAME)-all" /bin/bash -c "make $(build_vars) arch=$$ix_arch $$pkgs"; \
-#			echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
-#		fi; \
-#	done; true
-#	-docker ps -aq -f "name=$(DOCKERB_CNAME)-all" | xargs docker rm -f
-#
-#clean-build-all: $(foreach dist, $(dists), $(addprefix clean-build-all-,$(dist)))
-
-show-clean-build-all:
-	@echo $(foreach dist, $(dists), $(addprefix clean-build-all-,$(dist)))
+# N.B. this is for generating all artifacts (src, noarch, arch packages) for
+# all architectures known to this Makefile, across all distributions. This
+# is the most general target for a CI process: without building all distro's
+# artifacts together, differing source packages are built and the deb index will fail to ingest them.
+all-artifacts: $(FLAGNAME)
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) clean noarch-packages'
+	for ix_arch in $(architectures); do \
+		SECONDS=0; \
+		docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$$ix_arch arch-packages'; \
+		echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
+	done; true
+	-docker ps -aq -f "name=$(DOCKERB_CNAME)" | xargs docker rm -f
 
 # targets for build infrastructure
 Dockerfile-$(buildarch).bld: Dockerfile.bld.tmpl

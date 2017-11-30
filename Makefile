@@ -186,7 +186,7 @@ src-packages: $(src-packages)
 
 arch-packages: $(horizon_deb_packages)
 
-all-packages: $(packages)
+packages: $(packages)
 
 noarch-packages: $(bluehorizon_deb_packages) $(other_config_deb_packages)
 
@@ -202,7 +202,6 @@ show-src-packages:
 show-arch-packages:
 	@echo $(horizon_deb_packages)
 
-show-all-packages:
 show-packages:
 	@echo $(packages)
 
