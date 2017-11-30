@@ -22,7 +22,7 @@ $(shell bash -c 'tools/flag.bash "$(DOCKERB_INAME)" "$(DOCKERB_TAG)"')
 
 horizon-deb-packager-dir = $(shell dirname $(CURDIR))
 
-all: clean-build-all
+all: all-artifacts
 
 ifndef verbose
 .SILENT:
@@ -54,9 +54,13 @@ src-artifacts: $(FLAGNAME)
 	@echo "Making source artifacts using build container"
 	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) mostlyclean src-packages'
 
-artifacts: $(FLAGNAME)
+all-artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
 	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) packages'
+
+arch-artifacts: $(FLAGNAME)
+	@echo "Making artifacts using build container"
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) arch-packages'
 
 dists = ubuntu.xenial raspbian.jessie raspbian.sid debian.jessie debian.sid ubuntu.yakkety ubuntu.trusty
 

@@ -27,6 +27,10 @@ override_dh_auto_install:
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
 	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-UI-OUTDIRBASE)/usr/horizon
 
+#override_dh_builddeb:
+#	@echo "Running dh_builddeb"
+#	$(shell env)
+#
 override_dh_strip:
 	@echo "Skipping strip step in debhelper: we have only interpreted code and Golang static binaries"
 

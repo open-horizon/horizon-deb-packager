@@ -150,7 +150,7 @@ $(src-packages):
 dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
 	@echo "Running src pkg build in $*'"
 	cd $(call dist_dir,$*) && \
-		debuild --preserve-envvar arch -a$(arch) -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
+		debuild -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(other_config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
@@ -161,15 +161,15 @@ dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_versi
 		-rm -Rf $(call dist_dir,$*)
 		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
 		cd $(call dist_dir,$*) && \
-			debuild --us -uc -sa --lintian-opts --allow-root -X cruft,init.d,binaries binary-indep
+			debuild -us -uc -A -sa --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(horizon_deb_packages):
 dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,%).dsc
-	@echo "Running bin pkg build in $*; using dist/horizon$(call file_version,$*).dsc'"
+	@echo "Running bin pkg build in $*; using dist/horizon$(call file_version,$*).dsc' (building $(horizon_deb_packages))"
 		-rm -Rf $(call dist_dir,$*)
 		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
 		cd $(call dist_dir,$*) && \
-			debuild --preserve-envvar arch -a$(arch) -us -uc -sa --lintian-opts --allow-root -X cruft,init.d,binaries binary-arch
+			debuild --preserve-envvar arch -a$(arch) -us -uc -B -sa --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
@@ -184,7 +184,11 @@ meta: $(meta)
 
 src-packages: $(src-packages)
 
-packages: $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
+arch-packages: $(horizon_deb_packages)
+
+all-packages: $(packages)
+
+noarch-packages: $(bluehorizon_deb_packages) $(other_config_deb_packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
@@ -205,6 +209,9 @@ show-subprojects:
 
 show-src-packages:
 	@echo $(src-packages)
+
+show-arch-packages:
+	@echo $(horizon_deb_packages)
 
 show-packages:
 	@echo $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
