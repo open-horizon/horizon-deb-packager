@@ -8,10 +8,6 @@ SHELL := /bin/bash
 override_dh_auto_test:
 	@echo "N.B. Test execution not yet plumbed"
 
-override_dh_clean:
-	@echo "Running mostlyclean in $(CURDIR) to remove compiled artifacts"
-	cd anax && $(MAKE) verbose=y mostlyclean
-
 #TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
 
 # these are expected to be the same location as in the wrapping Makefile
@@ -20,7 +16,7 @@ HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 BLUEHORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/bluehorizon-ui
 override_dh_auto_build:
-	cd anax && $(MAKE) verbose=y arch=$(arch) all-nodeps
+	cd anax && $(MAKE) arch=$(arch) all-nodeps
 	cd anax-ui && $(MAKE) all-nodeps
 
 override_dh_auto_install:
@@ -37,6 +33,12 @@ override_dh_auto_install:
 #
 override_dh_strip:
 	@echo "Skipping strip step in debhelper: we have only interpreted code and Golang static binaries"
+
+clean:
+	@echo "Executing rules/clean"
+	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-WIOTP-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(BLUEHORIZON-UI-OUTDIRBASE)
+	@echo "Running mostlyclean in $(CURDIR)/anax to remove compiled artifacts"
+	cd anax && $(MAKE) mostlyclean
 
 clean.%:
 	rm -Rf $(BUILDDIR_$*)

@@ -149,8 +149,10 @@ dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-hor
 $(src-packages):
 dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
 	@echo "Running src pkg build in $*'"
+	-rm -Rf $(call dist_dir,$*)
+	mkdir $(call dist_dir,$*) && tar zxf dist/horizon$(call file_version,$*).orig.tar.gz -C $(call dist_dir,$*)/
 	cd $(call dist_dir,$*) && \
-		debuild -us -uc -S --lintian-opts --allow-root -X cruft,init.d,binaries
+		debuild --preserve-envvar arch -a$(arch) -us -uc -S -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(other_config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
@@ -158,18 +160,18 @@ $(bluehorizon_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
 dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc'"
-		-rm -Rf $(call dist_dir,$*)
-		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
-		cd $(call dist_dir,$*) && \
-			debuild -us -uc -A -sa --lintian-opts --allow-root -X cruft,init.d,binaries
+	-rm -Rf $(call dist_dir,$*)
+	dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
+	cd $(call dist_dir,$*) && \
+		debuild --preserve-envvar arch -a$(arch) -us -uc -A -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(horizon_deb_packages):
 dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running bin pkg build in $*; using dist/horizon$(call file_version,$*).dsc' (building $(horizon_deb_packages))"
-		-rm -Rf $(call dist_dir,$*)
-		dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
-		cd $(call dist_dir,$*) && \
-			debuild --preserve-envvar arch -a$(arch) -us -uc -B -sa --lintian-opts --allow-root -X cruft,init.d,binaries
+	-rm -Rf $(call dist_dir,$*)
+	dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
+	cd $(call dist_dir,$*) && \
+		debuild --preserve-envvar arch -a$(arch) -us -uc -B -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
