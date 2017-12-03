@@ -58,7 +58,7 @@ src-artifacts: $(FLAGNAME)
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) mostlyclean packages'
+	docker run --name "$(DOCKERB_CNAME)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) arch=$(arch) clean packages'
 
 # TODO: add documentation that helps with the use cases:
 # - 1) build for arch, 2) build for dist, 3) build in two-stage (not yet built)
