@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
       jq \
       curl \
       tree \
+      gawk \
       wget \
       gettext
 RUN curl -s ##golang_dl_url## | tar zxf - -C /usr/local
@@ -24,5 +25,6 @@ ARG CACHE_DATE=1977-06-27_15:17:32
 RUN bash -c 'mkdir -p /home/builder/go/{src,pkg,bin} && chmod -R a+r,a+x,a+w /home/builder'
 ENV HOME /home/builder
 ENV GOPATH /home/builder/go
+RUN mkdir -p /home/builder/go/.cache
 # project is expected to be mounted at this dir
 WORKDIR /horizon-deb-packager

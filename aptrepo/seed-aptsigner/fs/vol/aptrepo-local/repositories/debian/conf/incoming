@@ -5,6 +5,13 @@ Allow: jessie-testing
 Default: jessie-testing
 Permit: older_version
 
+Name: incoming-stretch
+IncomingDir: /var/repositories/incoming/debian.stretch
+TempDir: /var/repositories/tmp/debian.stretch
+Allow: stretch-testing
+Default: stretch-testing
+Permit: older_version
+
 Name: incoming-sid
 IncomingDir: /var/repositories/incoming/debian.sid
 TempDir: /var/repositories/tmp/debian.sid

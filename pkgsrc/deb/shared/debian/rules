@@ -2,9 +2,6 @@
 
 SHELL := /bin/bash
 
-TMPGOPATH = $(CURDIR)/anaxtmpgopath
-$(shell mkdir -p $(TMPGOPATH))
-
 %:
 	dh $@
 
@@ -13,23 +10,35 @@ override_dh_auto_test:
 
 #TODO: add an override to make sure the changelog matches the PACKAGEVERSION or bail with a message
 
-#TODO: reuse SUBPROJECTS names from the other makefile
-
 # these are expected to be the same location as in the wrapping Makefile
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
+HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 BLUEHORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/bluehorizon-ui
 override_dh_auto_build:
-	@echo "TMPGOPATH used by rules: ${TMPGOPATH}"
-	cd anax && $(MAKE) verbose=y TMPGOPATH=$(TMPGOPATH)
-	cd anax-ui && $(MAKE)
+	cd anax && $(MAKE) arch=$(arch) all-nodeps
+	cd anax-ui && $(MAKE) all-nodeps
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
+	mkdir -p $(HORIZON-WIOTP-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon-wiotp/. $(HORIZON-WIOTP-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
 	cd anax-ui && $(MAKE) install DESTDIR=$(BLUEHORIZON-UI-OUTDIRBASE)/usr/horizon
+
+#override_dh_builddeb:
+#	@echo "Running dh_builddeb"
+#	$(shell env)
+#
+override_dh_strip:
+	@echo "Skipping strip step in debhelper: we have only interpreted code and Golang static binaries"
+
+clean:
+	@echo "Executing rules/clean"
+	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-WIOTP-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(BLUEHORIZON-UI-OUTDIRBASE)
+	@echo "Running mostlyclean in $(CURDIR)/anax to remove compiled artifacts"
+	cd anax && $(MAKE) mostlyclean
 
 clean.%:
 	rm -Rf $(BUILDDIR_$*)

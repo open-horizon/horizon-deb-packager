@@ -1,8 +1,48 @@
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
+Suite: trusty
+Codename: trusty
+Architectures: amd64 source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: trusty-updates
+Codename: trusty-updates
+Architectures: amd64 source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: trusty-testing
+Codename: trusty-testing
+Architectures: amd64 source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: trusty-unstable
+Codename: trusty-unstable
+Architectures: amd64 source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 8F813713
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
 Suite: xenial
 Codename: xenial
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -12,7 +52,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: xenial-updates
 Codename: xenial-updates
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -22,7 +62,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: xenial-testing
 Codename: xenial-testing
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -32,7 +72,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: xenial-unstable
 Codename: xenial-unstable
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -42,7 +82,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: yakkety
 Codename: yakkety
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -52,7 +92,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: yakkety-updates
 Codename: yakkety-updates
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -62,7 +102,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: yakkety-testing
 Codename: yakkety-testing
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
@@ -72,7 +112,7 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: yakkety-unstable
 Codename: yakkety-unstable
-Architectures: armhf amd64 ppc64el source
+Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal

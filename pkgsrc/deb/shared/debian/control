@@ -1,27 +1,34 @@
 Source: horizon
 Maintainer: michael dye <mdye@us.ibm.com>
+XSBC-Original-Maintainer: michael dye <mdye@us.ibm.com>
 Homepage: https://bluehorizon.network
 Vcs-Git: https://github.com/open-horizon
 Vcs-Browser: https://github.com/open-horizon
 Section: misc
 Priority: optional
 Standards-Version: 3.9.8
-Build-Depends: golang-1.7-go, make (>= 4), git (>= 2.8), debhelper, dh-systemd
+Build-Depends: make (>= 4), git (>= 2.8), debhelper, dh-systemd
 
 Package: horizon
 Architecture: any
-Depends: docker-engine (>= 17.0) | docker-ce (>= 17.0), iptables (>= 1.4), systemd (>= 215-17), bash (>= 4), jq
+Depends: docker-engine (>= 17.0) | docker-ce (>= 17.0), iptables (>= 1.4), systemd (>= 215-17), bash (>= 4), jq, ${misc:Depends}
 Description: The open source version of the Horizon platform
-  Please consult this project's homepage for more detail on this project
+ Please consult this project's homepage for more detail on this project
+
+Package: horizon-wiotp
+Architecture: all
+Depends: horizon (= ${binary:Version}), ${misc:Depends}
+Description: Configuration for the Horizon platform on WIoTP
+ Please consult this project's homepage for more detail on this project
 
 Package: bluehorizon
-Architecture: any
-Depends: horizon (= ${binary:Version})
+Architecture: all
+Depends: horizon (= ${binary:Version}), ${misc:Depends}
 Description: Configuration for horizon package to use Blue Horizon backend
-  Please consult this project's homepage for more detail on this project
+ Please consult this project's homepage for more detail on this project
 
 Package: bluehorizon-ui
-Architecture: any
-Depends: horizon (= ${binary:Version})
+Architecture: all
+Depends: horizon (= ${binary:Version}), ${misc:Depends}
 Description: Web UI content for Bluehorizon instance of the Horizon platform
-  Please consult this project's homepage for more detail on this project
+ Please consult this project's homepage for more detail on this project
