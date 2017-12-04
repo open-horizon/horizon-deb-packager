@@ -4,11 +4,10 @@
 
 ## Introduction
 
-A project used to create and publish Debian packages and Ubuntu snaps of the Horizon platform. Current supported platforms include:
+A project used to create and publish Debian packages of the Horizon platform. Current supported architectures and distributions include:
 
- * Debian jessie, sid on armhf
- * Raspbian jessie, sid on armhf
- * Ubuntu xenial, yakkety on armhf, arm64, amd64, ppc64
+ * Architectures: amd64, armhf, arm64 ppc64el
+ * Distributions: Ubuntu Trusty, Xenial, and Yakkety; Raspbian Jessie, Stretch and Sid; and Debian Jessie and Sid
 
 Related Projects:
 
@@ -18,7 +17,7 @@ Related Projects:
 
 ## Manual use
 
-### Publishing new versions
+### Publishing new versions using remote builders
 
 Steps:
 
@@ -31,9 +30,15 @@ Steps:
 4. Review the changes to the local repository as instructed by cli output
 5. If satisfied with the proposed changes, execute `make publish-meta`
 
+### Creating a local version
 
+(Shown below is use of the optional cross compilation feature).
 
-## Build agent
+    cd build_support/ && make artifacts arch=arm64
+
+This command will build all packages for all distributions supported for the current architecture.
+
+## Running your own build agent
 
 Docker build agent container creation command examples:
 
@@ -49,10 +54,8 @@ Docker start command example:
 
 In order to execute `make meta` inside a container, you need ssh credentials in-container and/or the ssh agent's authorization socket mounted into the build container. You can execute it this way:
 
-    docker run --rm --name hzn-build -v ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK} -e SSH_AUTH_SOCK="${SSH_AUTH_SOCK}" -v /root/.ssh-github:/root/.ssh -v $PWD:/horizon-deb-packager -it hzn-build /bin/bash
+    docker run --rm --name hzn-build-manual -v $PWD:/horizon-deb-packager -it hzn-build /bin/bash
 
 Inside the container, change the `VERSION` and then execute the build steps (constraining the packages to `xenial` in the example below):
 
-    make verbose=y meta
-
-    make verbose=y $(make show-packages | xargs -n1 | grep xenial | xargs)
+    make verbose=y git_repo_prefix=https://github.com/open-horizon skip-precheck=y $(make show-packages | xargs -n1 | grep xenial | xargs)
