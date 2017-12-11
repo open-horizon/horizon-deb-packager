@@ -1,0 +1,3 @@
+#!/bin/bash
+rm -f /usr/bin/wiotp_create_certificate
+rm -f /usr/bin/wiotp_agent_setup
