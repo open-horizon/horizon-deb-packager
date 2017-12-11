@@ -112,9 +112,7 @@ $(call dist_dir,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | $(call dist_di
 $(call dist_dir,%)/debian/fs-horizon-wiotp: $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
 	dir=$(call dist_dir,$*)/debian/fs-horizon-wiotp && \
 		mkdir -p $$dir && \
-		cp -Ra ./pkgsrc/seed/horizon-wiotp/fs/. $$dir && \
-		envsubst < ./pkgsrc/seed/horizon-wiotp/dynamic/horizon.tmpl >> $$dir/etc/default/horizon && \
-		./pkgsrc/render-json-config ./pkgsrc/seed/horizon-wiotp/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json
+		cp -Ra ./pkgsrc/seed/horizon-wiotp/fs/. $$dir
 
 $(call dist_dir,%)/debian/fs-bluehorizon: $(call dist_dir,%)/debian/fs-horizon $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
 	dir=$(call dist_dir,$*)/debian/fs-bluehorizon && \
