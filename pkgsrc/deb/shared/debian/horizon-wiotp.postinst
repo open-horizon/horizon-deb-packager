@@ -1,0 +1,3 @@
+#!/bin/bash
+ln -s /usr/wiotp-edge/bin/wiotp_create_certificate.sh /usr/bin/wiotp_create_certificate
+ln -s /usr/wiotp-edge/bin/wiotp_agent_setup.sh /usr/bin/wiotp_agent_setup

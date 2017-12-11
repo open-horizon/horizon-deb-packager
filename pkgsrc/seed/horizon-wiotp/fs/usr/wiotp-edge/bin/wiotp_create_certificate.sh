@@ -85,7 +85,7 @@ sed /\$COUNTRY/s//${COUNTRY}/ <<'EOF' > req.conf
 EOF
 
 # Get the password for the CA key file
-CA_PASSWORD=$1
+CA_PASSWORD=$2
 if [ -z $CA_PASSWORD ]; then
   read -s -p "Enter password for the CA key file: " CA_PASSWORD
   echo

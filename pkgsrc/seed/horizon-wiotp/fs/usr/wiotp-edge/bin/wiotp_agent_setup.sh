@@ -185,7 +185,7 @@ echo "$configJson" > $ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
 # Generate edge-mqttbroker certificates
 mkdir -p ${VAR_DIR}/wiotp-edge/persist/
 fancyLog "Generating Edge internal certificates" 
-wiotp_create_certificate $WIOTP_INSTALL_DEVICE_TOKEN
+wiotp_create_certificate "/etc/wiotp-edge/edge.conf" $WIOTP_INSTALL_DEVICE_TOKEN
 
 fancyLog "Waiting for Horizon service to restart ..."
 sleep 1
