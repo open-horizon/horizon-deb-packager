@@ -1,3 +1,26 @@
+horizon (2.13.4++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax-ui.git, branch: master
+      - 215894d (Varatep Buranintu): add errors and check account credentials in initial account form
+      - 7777431 (Varatep Buranintu): handle the case where there are no patterns for an org
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 042e0db (linggao): Issue 477 part 2 - Error in version comparision
+      - 2a20f05 (linggao): Issue 477 - Error in version comparision
+      - 3f9032f (Dave Booz): Issue 419 - dev command infrastructure
+      - fc130d9 (linggao): GetMicroservice and GetWorkload return nil when there are no items to return.
+      - 89e9ef4 (linggao): Issue 471 - anax does not check for the arch of a microservice in a workload
+      - 72b9580 (michael dye): fix small issues reported by lint
+      - c4ee2b7 (michael dye): added docker image loading to torrent worker for hzn Pkg consistency w/ docker pull mechanism; added logic for pulling docker images; added integration tests and updated lib dependencies for fetching and verifying signatures
+      - 5fe6da2 (michael dye): added BXDockerRegistryAuthAttributes, support for manipulating it with the API, and config param DockerCredFilePath for setting docker credentials more generally
+      - 92643bd (michael dye): refactored launch context content to add deployment description fetching method to interface
+      - f00fc4a (michael dye): factored out container structs for common sharing among other workers; new package named 'containermessage'
+      - 612c6d3 (Bruce Potter): added viewing patterns to hzn
+      - eb5c0b9 (michael dye): remove Snap mention in Readme
+      - 990157e (Bruce Potter): small fixes to hzn help - ammended to remove show/show.go
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Tue, 12 Dec 2017 18:36:12 +0000
+
 horizon (2.13.3++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax-ui.git, branch: master
