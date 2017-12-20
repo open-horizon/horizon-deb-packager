@@ -10,16 +10,22 @@
 usage() {
     cat <<EOF
 Usage: $0 [options] 
+
 Arguments:
+
   -h, --help
     Display this usage message and exit.
+
   -c <val>, --configFile <val>, --configFile=<val>
     (Optional) Edge config file to be used. If not provided /etc/wiotp-edge/edge.conf will be used by default.
+
   -p <val>, --caKeyPassword <val>, --caKeyPassword=<val>
     (Optional) CA Key password. If not provide user will be prompted for one. 
+
   -cn <val>, --edgeConnectorCN <val>, --edgeConnectorCN=<val>
     (Optional) CN to be used when generating the server certificate for the edge-connector. 
     If not provided one will be generated based on the network interfaces definition.
+
 EOF
 }
 
@@ -179,6 +185,7 @@ sed /\$COUNTRY/s//${COUNTRY}/ <<'EOF' > ca.conf
     distinguished_name     = req_distinguished_name
     prompt                 = no
     output_password        = 
+    req_extensions         = v3_ca
 [ req_distinguished_name ]
     C                      = $COUNTRY
     ST                     = CAState
@@ -188,6 +195,7 @@ sed /\$COUNTRY/s//${COUNTRY}/ <<'EOF' > ca.conf
     CN                     = localhost
     emailAddress           = some@thing
 [ v3_ca ]
+    basicConstraints       = CA:true
     
 EOF
 
