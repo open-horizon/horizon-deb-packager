@@ -135,6 +135,10 @@ $(addprefix $(call dist_dir,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb
 
 dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon-wiotp $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
+        	if [ "$$(basename $$src)" == "anax" ]; then \
+        		sed -i.bak 's,local build,'${version}',' $${src}/version/version.go; \
+        		rm -f $${src}/version/version.go.bak; \
+        	fi; \
 		bash -c "cd $${src} && make deps"; \
 		rsync -a --exclude=".git*" $(PWD)/$$src $(call dist_dir,$*)/; \
 		if [ -e $${src}-rules.env ]; then \
