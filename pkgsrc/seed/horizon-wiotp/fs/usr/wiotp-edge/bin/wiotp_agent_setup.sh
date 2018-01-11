@@ -214,6 +214,15 @@ checkrc $?
 configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
 checkrc $?
 
+configJson=$(jq ".microservices[0].variables.WIOTP_ORG_ID = \"$WIOTP_INSTALL_ORGID\" " <<< $configJson)
+checkrc $?
+
+configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_TYPE = \"$WIOTP_INSTALL_DEVICE_TYPE\" " <<< $configJson)
+checkrc $?
+
+configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_ID = \"$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
+checkrc $?
+
 configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
 checkrc $?
 
