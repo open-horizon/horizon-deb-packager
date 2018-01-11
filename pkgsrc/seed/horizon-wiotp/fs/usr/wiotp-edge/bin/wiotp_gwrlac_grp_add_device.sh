@@ -1,5 +1,4 @@
 #!/bin/bash
-# FOR INTERNAL USE ONLY (Test environments only)
 # Script for adding a device into the gateway RLAC group
 #
 orgId=$1
