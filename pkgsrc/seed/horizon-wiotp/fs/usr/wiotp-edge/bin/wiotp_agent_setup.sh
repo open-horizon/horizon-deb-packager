@@ -95,7 +95,7 @@ if [[ -z $WIOTP_INSTALL_DEVICE_ID ]] || [[ -z $WIOTP_INSTALL_DEVICE_TYPE ]] || [
   usage_fatal "Values for the following options are required: --org, --deviceType, --deviceId, --deviceToken"
 fi
 # Check valid regions
-if [[ "${WIOTP_INSTALL_REGION}" != "us" && "${WIOTP_INSTALL_REGION}" != "uk" && "${WIOTP_INSTALL_REGION}" != "de" && "${WIOTP_INSTALL_REGION}" != "ch" ]];then
+if [[ "${WIOTP_INSTALL_REGION}" != "us" && "${WIOTP_INSTALL_REGION}" != "uk" && "${WIOTP_INSTALL_REGION}" != "de" && "${WIOTP_INSTALL_REGION}" != "ch" && "${WIOTP_INSTALL_REGION}" != "nl" ]];then
     usage_fatal "Invalid region."
 fi
 
@@ -165,7 +165,7 @@ if [[ $output -ne 200 ]]; then
   log "ERROR: Could not access device $WIOTP_INSTALL_DEVICE_ID of type $WIOTP_INSTALL_DEVICE_TYPE."
   log "  Troubleshooting:"
   log "    1. Check if the device type was created in Watson IoT Platform."
-  log "    2. Make sure that when device type was created, 'Gateway' type was selected and 'Edge Cababilities' toggle was enabled."
+  log "    2. Make sure that when device type was created, 'Gateway' type was selected and 'Edge Capabilities' toggle was enabled."
   log "    3. Check if a device was created under that device type."
   log "    4. Make sure the device credentials are correct."
   exit 1
