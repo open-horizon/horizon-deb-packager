@@ -188,13 +188,18 @@ echo "$anaxJson" > $ETC_DIR/horizon/anax.json
 log "Restarting Horizon service ..."
 systemctl restart horizon.service
 
-# Adjusting edge.conf for enabling/disabling cloud server certificate checks
-etc_default_edge_conf_path="${ETC_DIR}/wiotp-edge/edge.conf"
-log "Setting $etc_default_edge_conf_path[EC.CloudDisableCertCheck=$WIOTP_INSTALL_EC_DISABLE_CERT_CHECK]"
-sed -i.bak "/EC.CloudDisableCertCheck.*/c\EC.CloudDisableCertCheck $WIOTP_INSTALL_EC_DISABLE_CERT_CHECK" $etc_default_edge_conf_path
-rm $etc_default_edge_conf_path.bak
+edge_conf_template_path="${ETC_DIR}/wiotp-edge/edge.conf.template"
+edge_conf_path="${ETC_DIR}/wiotp-edge/edge.conf"
 
-# Create the config.json using the emptyConfig.json template and user inputs
+# Create the edge.conf using the edge.conf.template
+cp $edge_conf_template_path $edge_conf_path
+
+# Adjusting edge.conf for enabling/disabling cloud server certificate checks
+log "Setting $edge_conf_path[EC.CloudDisableCertCheck=$WIOTP_INSTALL_EC_DISABLE_CERT_CHECK]"
+sed -i.bak "/EC.CloudDisableCertCheck.*/c\EC.CloudDisableCertCheck $WIOTP_INSTALL_EC_DISABLE_CERT_CHECK" $edge_conf_path
+rm $edge_conf_path.bak
+
+# Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
 log "Creating hzn config input file ..."
 emptyConfigJson=$(jq '.' $ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json.template)
 checkrc $?
