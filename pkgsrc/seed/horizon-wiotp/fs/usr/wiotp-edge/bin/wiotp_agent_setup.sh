@@ -29,7 +29,7 @@ Arguments:
     (Required) Device or Gateway Token.
 
   -r <val>, --region <val>, --region=<val>
-    (Optional) Organization Region: us | uk | ch | de . Default is us.
+    (Optional) Organization Region: us | uk | ch | de | nl . Default is us.
     Use us for US South and East
     Use uk for United Kingdom
     Use ch for China
