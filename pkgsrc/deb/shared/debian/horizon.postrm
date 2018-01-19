@@ -31,8 +31,6 @@ elif [ "$1" == "remove" ]; then
 
     # remove container images; TODO: use labels to remove infrastructure container images too once they are tagged properly upon
     cat /var/horizon/prerm.images <(echo $containers | jq -r '.Config.Image') | sort | uniq | xargs docker rmi 2> /dev/null
-
-  rm -f /usr/bin/hzn
 fi
 
 # dh_installdeb will replace this with shell code automatically

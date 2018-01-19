@@ -29,8 +29,9 @@ other_config_deb_packages = $(foreach nameprefix, horizon-wiotp, $(addsuffix _al
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
+cli_deb_packages = $(call bin_stub,horizon-cli)
 
-packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
+packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages) $(cli_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
