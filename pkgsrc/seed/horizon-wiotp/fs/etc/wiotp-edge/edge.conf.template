@@ -186,5 +186,10 @@ EC.CloudDisableCertCheck false
 # Default value: Persist
 #EC.DeviceAuthCache Persist
 
+# If true, Cloud Connector performs wildcard subscription instead of
+# forwarding device subscriptions to the cloud. 
+EC.WildcardSubscription false
 
+# Clean session parameter for the gateway's connection to the cloud.
+# EC.CloudCleanSession false
 

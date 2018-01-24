@@ -72,80 +72,88 @@ if [ "${OPENSSL_PATH}" = "" ]; then
   exit 99
 fi
 
-# get list of network addresses on this computer
 if [ -z $CN_ADDRESS_PARAM ]; then
-  ADDRESSES=()
+  EXTRA_SUBJECT_NAMES=""
+else
+  IP_ADDRESS_REGEX='^(0*(1?[0-9]{1,2}|2([0-4][0-9]|5[0-5]))\.){3}'
+  IP_ADDRESS_REGEX+='0*(1?[0-9]{1,2}|2([‌​0-4][0-9]|5[0-5]))$'
+  if [[ ${CN_ADDRESS_PARAM} =~ ${IP_ADDRESS_REGEX} ]]; then
+    EXTRA_SUBJECT_NAMES="IP:${CN_ADDRESS_PARAM}, "
+  else
+    EXTRA_SUBJECT_NAMES="DNS:${CN_ADDRESS_PARAM}, "
+  fi
+fi
 
-  if [ "Linux" = "$(uname)" ]; then
-    
+# get list of network addresses on this computer
+ADDRESSES=()
+
+if [ "Linux" = "$(uname)" ]; then
+  
+  ADDRESS=""
+  ACTIVE=""
+  while read -r LINE; do
+    WORDS=($LINE)
+    PREFIX="${WORDS[0]%:}"
+    if [[ "${PREFIX}" =~ ^[0-9]+$ ]]; then
+      if [ "${ADDRESS}" != "" ] && [ "${ACTIVE}" != "" ]; then
+        ADDRESSES+=($ADDRESS)
+        ADDRESS=""
+        ACTIVE=""
+      fi
+      if [ "${WORDS[8]}" = "UP" ]; then
+        ACTIVE="Y"
+      fi
+    elif [ "${WORDS[0]}" = "inet" ]; then
+      ADDRESS="${WORDS[1]%/*}"
+    fi
+  done < <(ip address)
+
+  if [ "${ADDRESS}" != "" ] && [ "${ACTIVE}" != "" ]; then
+    ADDRESSES+=($ADDRESS)
+  fi
+
+elif [ "Darwin" = "$(uname)" ]; then
+
+  for INTERFACE in $(ifconfig -l) ; do
     ADDRESS=""
     ACTIVE=""
-    while read -r LINE; do
-      WORDS=($LINE)
-      PREFIX="${WORDS[0]%:}"
-      if [[ "${PREFIX}" =~ ^[0-9]+$ ]]; then
-        if [ "${ADDRESS}" != "" ] && [ "${ACTIVE}" != "" ]; then
-          ADDRESSES+=($ADDRESS)
-          ADDRESS=""
-          ACTIVE=""
-        fi
-        if [ "${WORDS[8]}" = "UP" ]; then
-          ACTIVE="Y"
-        fi
-      elif [ "${WORDS[0]}" = "inet" ]; then
-        ADDRESS="${WORDS[1]%/*}"
-      fi
-    done < <(ip address)
-
+    while read -r WORD1 WORD2 REST; do
+      if [ "${WORD1}" = "inet" ]; then
+        ADDRESS="${WORD2}"
+      elif [ "${WORD1}" = "status:" ] && [ "${WORD2}" = "active" ]; then
+        ACTIVE="Y"
+      fi  
+    done < <(ifconfig ${INTERFACE})
     if [ "${ADDRESS}" != "" ] && [ "${ACTIVE}" != "" ]; then
       ADDRESSES+=($ADDRESS)
     fi
+  done
 
-  elif [ "Darwin" = "$(uname)" ]; then
+else
+  echo "You are running this script on an unsupported Operating system."
+  exit
+fi
 
-    for INTERFACE in $(ifconfig -l) ; do
-      ADDRESS=""
-      ACTIVE=""
-      while read -r WORD1 WORD2 REST; do
-        if [ "${WORD1}" = "inet" ]; then
-          ADDRESS="${WORD2}"
-        elif [ "${WORD1}" = "status:" ] && [ "${WORD2}" = "active" ]; then
-          ACTIVE="Y"
-        fi  
-      done < <(ifconfig ${INTERFACE})
-      if [ "${ADDRESS}" != "" ] && [ "${ACTIVE}" != "" ]; then
-        ADDRESSES+=($ADDRESS)
-      fi
-    done
-
-  else
-    echo "You are running this script on an unsupported Operating system."
+ADDRESS_COUNT=${#ADDRESSES[@]}
+if [ $ADDRESS_COUNT -eq 0 ]; then
+  if [ -z $CN_ADDRESS_PARAM ]; then
+    echo "No network interfaces were discovered and neither the"
+    echo "-cn parameter nor the --edgeConnectorCN parameter was specified."
+    echo "Rerun after fixing the network interfaces or specify"
+    echo "either the -cn parameter or the --edgeConnectorCN parameter."
     exit
-  fi
-
-  ADDRESS_COUNT=${#ADDRESSES[@]}
-  if [ $ADDRESS_COUNT -eq 1 ]; then
-    echo "There appears to be only one network interface on this computer."
-    echo "The address of that network interface (${ADDRESSES[0]}) will be"
-    echo "used in the CN of the generated certificate for the edge connector."
-    CN_ADDRESS=${ADDRESSES[0]}
   else
-    echo "There appear to be multiple network interfaces on this computer."
-    echo "Please select from the list below the network address that will"
-    echo "be used by devices to connect to this edge connector."
-
-    select CHOICE in ${ADDRESSES[@]}; do
-      CN_ADDRESS=${CHOICE}
-      break
-    done
+    CN_ADDRESS=${CN_ADDRESS_PARAM}
   fi
 else
-  # use the CN provide by the user instead
-  CN_ADDRESS=$CN_ADDRESS_PARAM
-  echo "The following Common Name ($CN_ADDRESS) provided by the user"
-  echo "will be used in the CN of the generated certificate for the edge connector." 
+  for ADDRESS in ${ADDRESSES[@]}; do
+    if [ -z ${CN_ADDRESS} ]; then
+      CN_ADDRESS=${ADDRESS}
+    else
+      EXTRA_SUBJECT_NAMES="${EXTRA_SUBJECT_NAMES}IP:${ADDRESS}, "
+    fi
+  done
 fi
-echo ""
 
 # Read the config file for the persistence root directory
 if [ -z $CONFIG_FILE ]; then
@@ -206,7 +214,7 @@ sed /\$COUNTRY/s//${COUNTRY}/ <<'EOF' > broker.conf
     default_keyfile        = key.pem
     distinguished_name     = req_distinguished_name
     prompt                 = no
-    output_password        = 
+    output_password        =
 [ req_distinguished_name ]
     C                      = $COUNTRY
     ST                     = SomeState
@@ -215,18 +223,18 @@ sed /\$COUNTRY/s//${COUNTRY}/ <<'EOF' > broker.conf
     OU                     = Edge Node
     CN                     = localhost
     emailAddress           = some@thing
-[ v3_ca ]
     
 EOF
 
 # Create a configuration file to create the certificate request for the connector
-sed "/\COUNTRY/s//${COUNTRY}/; /\CN_ADDRESS/s//${CN_ADDRESS}/" <<'EOF' > connector.conf
+sed "/\COUNTRY/s//${COUNTRY}/; /\CN_ADDRESS/s//${CN_ADDRESS}/g; /\EXTRA_SUBJECT_NAMES/s//${EXTRA_SUBJECT_NAMES}/" <<'EOF' > connector.conf
 [ req ]
     default_bits           = 2048
     default_keyfile        = key.pem
     distinguished_name     = req_distinguished_name
     prompt                 = no
-    output_password        = 
+    output_password        =
+    req_extensions         = v3_req
 [ req_distinguished_name ]
     C                      = COUNTRY
     ST                     = SomeState
@@ -235,7 +243,8 @@ sed "/\COUNTRY/s//${COUNTRY}/; /\CN_ADDRESS/s//${CN_ADDRESS}/" <<'EOF' > connect
     OU                     = Edge Node
     CN                     = CN_ADDRESS
     emailAddress           = some@thing
-[ v3_ca ]
+[ v3_req ]
+    subjectAltName = IP:CN_ADDRESS, EXTRA_SUBJECT_NAMES DNS:localhost, IP:127.0.0.1
     
 EOF
 
@@ -314,6 +323,7 @@ openssl req -new -key ${DC_DIR}/certs/key.pem -out ${DC_DIR}/certs/cert.csr \
 echo "${CA_PASSWORD}" | openssl x509 -req -in ${DC_DIR}/certs/cert.csr -days 500 -sha256 \
                                      -CA ${BROKER_DIR}/ca/ca.cert.pem -CAkey ${BROKER_DIR}/ca/ca.key.pem \
                                      -CAcreateserial -out ${DC_DIR}/certs/cert.pem \
+				     -extfile connector.conf -extensions v3_req \
                                      -passin stdin
 chmod 444 ${DC_DIR}/certs/cert.pem
 
