@@ -29,8 +29,9 @@ other_config_deb_packages = $(foreach nameprefix, horizon-wiotp, $(addsuffix _al
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
+cli_deb_packages = $(call bin_stub,horizon-cli)
 
-packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages)
+packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages) $(cli_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
@@ -161,12 +162,14 @@ dist/horizon-wiotp$(call file_version,%)_all.deb:
 $(bluehorizon_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
 dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
-	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc'"
+	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc"
 	-rm -Rf $(call dist_dir,$*)
 	dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
 	cd $(call dist_dir,$*) && \
 		debuild --preserve-envvar arch -a$(arch) -us -uc -A -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
+$(cli_deb_packages):
+dist/horizon-cli$(call file_version,%)_$(arch).deb:
 $(horizon_deb_packages):
 dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running bin pkg build in $*; using dist/horizon$(call file_version,$*).dsc' (building $(horizon_deb_packages))"
@@ -188,7 +191,7 @@ meta: $(meta)
 
 src-packages: $(src-packages)
 
-arch-packages: $(horizon_deb_packages)
+arch-packages: $(horizon_deb_packages) $(cli_deb_packages)
 
 packages: $(packages)
 
@@ -204,7 +207,7 @@ show-src-packages:
 	@echo $(src-packages)
 
 show-arch-packages:
-	@echo $(horizon_deb_packages)
+	@echo $(horizon_deb_packages) $(cli_deb_packages)
 
 show-packages:
 	@echo $(packages)
