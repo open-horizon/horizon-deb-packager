@@ -11,7 +11,7 @@ Build-Depends: make (>= 4), git (>= 2.8), debhelper, dh-systemd
 
 Package: horizon-cli
 Architecture: any
-Replaces: horizon (<< 2.14.0)
+Replaces: horizon (<< 2.15.0)
 Depends: ${misc:Depends}
 Description: The Horizon CLI binary 'hzn'
  Please consult this project's homepage for more detail on this project
