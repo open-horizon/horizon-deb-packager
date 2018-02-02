@@ -49,7 +49,7 @@ Arguments:
     Enabling this property on production environments is not recommended.
 
   -shr, --skipHorizonRegistration
-    (Optional) Performs all setup steps (certificate creation and hzn input json file), but do not run hzn register
+    (Optional) Performs all setup steps (internal certificate creation and hzn input json file preparation), without running hzn register
     Passing this parameter allows the user to edit hznEdgeCoreIoTInput.json and add specific workload variables 
 
 EOF
