@@ -258,6 +258,13 @@ else
   checkrc $?
 fi
 
+touch /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID" > /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_TYPE=$WIOTP_INSTALL_DEVICE_TYPE" >> /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_ID=$WIOTP_INSTALL_DEVICE_ID" >> /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_TOKEN=$WIOTP_INSTALL_DEVICE_TOKEN" >> /tmp/hzn_register_vars.env
+echo "export VERBOSE=$VERBOSE" >> /tmp/hzn_register_vars.env
+
 if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
   logIfVerbose "Waiting for Horizon service to restart ..."
   sleep 1
@@ -265,12 +272,6 @@ if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
   wiotp_agent_register
 
 else
-  touch /tmp/hzn_register_vars.env
-  echo "export WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID" > /tmp/hzn_register_vars.env
-  echo "export WIOTP_INSTALL_DEVICE_TYPE=$WIOTP_INSTALL_DEVICE_TYPE" >> /tmp/hzn_register_vars.env
-  echo "export WIOTP_INSTALL_DEVICE_ID=$WIOTP_INSTALL_DEVICE_ID" >> /tmp/hzn_register_vars.env
-  echo "export WIOTP_INSTALL_DEVICE_TOKEN=$WIOTP_INSTALL_DEVICE_TOKEN" >> /tmp/hzn_register_vars.env
-  echo "export VERBOSE=$VERBOSE" >> /tmp/hzn_register_vars.env
   log "Horizon registration skipped. Edit /etc/wiotp-edge/hznEdgeCoreIoTInput.json to add specific workload/microservice variables, then run wiotp_agent_register (alternatively, run hzn register manually)."
 fi
 
