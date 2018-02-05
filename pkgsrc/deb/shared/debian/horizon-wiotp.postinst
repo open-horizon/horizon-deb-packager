@@ -2,6 +2,7 @@
 
 ln -s /usr/wiotp-edge/bin/wiotp_create_certificate.sh /usr/bin/wiotp_create_certificate
 ln -s /usr/wiotp-edge/bin/wiotp_agent_setup.sh /usr/bin/wiotp_agent_setup
+ln -s /usr/wiotp-edge/bin/wiotp_agent_register.sh /usr/bin/wiotp_agent_register
 ln -s /usr/wiotp-edge/bin/wiotp_gwrlac_grp_add_device.sh /usr/bin/wiotp_gwrlac_grp_add_device
 
 # We can now start the horizon service b/c horizon-wiotp contains all of the

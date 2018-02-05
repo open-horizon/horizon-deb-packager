@@ -16,6 +16,9 @@ Arguments:
   -h, --help
     Display this usage message and exit.
 
+  -v, --verbose
+    Verbose output
+
   -o <val>, --org <val>, --org=<val>
     (Required) Organization Id.
 
@@ -45,6 +48,10 @@ Arguments:
     (Optional) Sets the CloudDisableCertCheck property for the Edge Connector configuration file. Using true will ignore non-trusted server certificates. 
     Enabling this property on production environments is not recommended.
 
+  -shr, --skipHorizonRegistration
+    (Optional) Performs all setup steps (internal certificate creation and hzn input json file preparation), without running hzn register
+    Passing this parameter allows the user to edit hznEdgeCoreIoTInput.json and add specific workload variables 
+
 EOF
 }
 
@@ -53,14 +60,6 @@ log() { printf '%s\n' "$*"; }
 error() { log "ERROR: $*" >&2; }
 fatal() { error "$*"; exit 1; }
 usage_fatal() { error "$*"; usage >&2; exit 1; }
-
-fancyLog() {
-	echo ""
-	echo "**************************************************************"
-	echo $1
-	echo "**************************************************************"
-	echo ""
-}
 
 # Optional arguments
 WIOTP_INSTALL_REGION="us"
@@ -81,13 +80,21 @@ while [ "$#" -gt 0 ]; do
         -r|--region) shift; WIOTP_INSTALL_REGION=$1;;
         -dm|--domain) shift; WIOTP_INSTALL_DOMAIN=$1;;
         -cdc|--cloudDisableCertCheck) shift; CDCC_TEMP=$1;;
+        -shr|--skipHorizonRegistration) SKIP_HORIZON_REGISTRATION=true;;
         -cn|--edgeCN) shift; WIOTP_INSTALL_EDGE_CN=$1;;
         -h|--help) usage; exit 0;;
+        -v|--verbose) VERBOSE='-v';;
         -*) usage_fatal "unknown option: '$1'";;
         *) break;; # reached the list of file names
     esac
     shift || usage_fatal "option '${arg}' requires a value"
 done
+
+logIfVerbose() {
+  if [ ! -z $VERBOSE ]; then
+    log $1
+  fi
+}
 
 # Check if a required option was not set
 #if [[ -z $WIOTP_INSTALL_DEVICE_ID || -z  $WIOTP_INSTALL_DEVICE_TYPE || -z $WIOTP_INSTALL_DEVICE_ID  || -z $WIOTP_INSTALL_DEVICE_TOKEN ]]; then
@@ -104,7 +111,7 @@ case $CDCC_TEMP in
   (true)    WIOTP_INSTALL_EC_DISABLE_CERT_CHECK=true;;
 esac
 
-# fancyLog "$0 script arguments:"
+# log "$0 script arguments:"
 # echo WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID
 # echo WIOTP_INSTALL_DEVICE_TYPE=$WIOTP_INSTALL_DEVICE_TYPE
 # echo WIOTP_INSTALL_DEVICE_ID=$WIOTP_INSTALL_DEVICE_ID
@@ -119,12 +126,11 @@ esac
 
 function checkrc {
 	if [[ $1 -ne 0 ]]; then
-		echo "Last command exited with rc $1, exiting."
-		exit $1
+		fatal "Last command exited with rc $1, exiting."
 	fi
 }
 
-fancyLog "WIoTP Horizon agent setup"
+log "WIoTP Horizon agent setup start."
 
 VAR_DIR="/var"
 ETC_DIR="/etc"
@@ -142,24 +148,24 @@ else
 fi
 
 # Check if domain exists
-log "Checking domain..."
+logIfVerbose "Checking domain..."
 output=$(curl -Is -o /dev/null -w "%{http_code}" https://$httpDomain)
 if [[ $output -ne 200 ]]; then
   fatal "Invalid domain $httpDomain. Could not reach https://$httpDomain"
 fi
 
-log "Domain is valid."
+logIfVerbose "Domain is valid."
 
 # Check if org exists
-log "Checking org..."
+logIfVerbose "Checking org..."
 output=$(curl -Is -o /dev/null -w "%{http_code}" https://$httpDomainPrefix.$WIOTP_INSTALL_DOMAIN)
 if [[ $output -ne 200 ]]; then
   fatal "Invalid org $WIOTP_INSTALL_ORGID. Could not reach https://$httpDomainPrefix.$WIOTP_INSTALL_DOMAIN. Check the value passed to --org"
 fi
 
-log "Org is valid."
+logIfVerbose "Org is valid."
 
-log "Checking device id and device type..."
+logIfVerbose "Checking device id and device type..."
 output=$(curl -s -o /dev/null -w "%{http_code}" -u "$WIOTP_INSTALL_ORGID/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" https://$httpDomainPrefix.$WIOTP_INSTALL_DOMAIN/api/v0002/edgenode/orgs/$WIOTP_INSTALL_ORGID/nodes/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID)
 if [[ $output -ne 200 ]]; then
   log "ERROR: Could not access device $WIOTP_INSTALL_DEVICE_ID of type $WIOTP_INSTALL_DEVICE_TYPE."
@@ -171,7 +177,7 @@ if [[ $output -ne 200 ]]; then
   exit 1
 fi
 
-log "Device id, device type and device authentication token are valid."
+logIfVerbose "Device id, device type and device authentication token are valid."
 
 # Read the json object in /etc/horizon/anax.json
 anaxJson=$(jq '.' $ETC_DIR/horizon/anax.json)
@@ -185,7 +191,7 @@ checkrc $?
 echo "$anaxJson" > $ETC_DIR/horizon/anax.json
 
 # Restart the horizon service so that the new exchange URL can take effect
-log "Restarting Horizon service ..."
+logIfVerbose "Restarting Horizon service ..."
 systemctl restart horizon.service
 
 edge_conf_template_path="${ETC_DIR}/wiotp-edge/edge.conf.template"
@@ -195,12 +201,12 @@ edge_conf_path="${ETC_DIR}/wiotp-edge/edge.conf"
 cp $edge_conf_template_path $edge_conf_path
 
 # Adjusting edge.conf for enabling/disabling cloud server certificate checks
-log "Setting $edge_conf_path[EC.CloudDisableCertCheck=$WIOTP_INSTALL_EC_DISABLE_CERT_CHECK]"
+logIfVerbose "Setting $edge_conf_path[EC.CloudDisableCertCheck=$WIOTP_INSTALL_EC_DISABLE_CERT_CHECK]"
 sed -i.bak "/EC.CloudDisableCertCheck.*/c\EC.CloudDisableCertCheck $WIOTP_INSTALL_EC_DISABLE_CERT_CHECK" $edge_conf_path
 rm $edge_conf_path.bak
 
 # Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
-log "Creating hzn config input file ..."
+logIfVerbose "Creating hzn config input file ..."
 emptyConfigJson=$(jq '.' $ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json.template)
 checkrc $?
 
@@ -213,25 +219,13 @@ checkrc $?
 configJson=$(jq ".global[0].variables.password = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
 checkrc $?
 
-configJson=$(jq ".microservices[0].variables.WIOTP_CERTS_PASSWORD = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_ORG_ID = \"$WIOTP_INSTALL_ORGID\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_TYPE = \"$WIOTP_INSTALL_DEVICE_TYPE\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_ID = \"$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
-checkrc $?
-
 configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
 checkrc $?
 
 configJson=$(jq ".microservices[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
+checkrc $?
+
+configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
 checkrc $?
 
 configJson=$(jq ".microservices[0].variables.WIOTP_LOCAL_BROKER_PORT = \"2883\" " <<< $configJson)
@@ -242,19 +236,30 @@ echo "$configJson" > $ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
 
 # Generate edge-mqttbroker certificates
 mkdir -p ${VAR_DIR}/wiotp-edge/persist/
-fancyLog "Generating Edge internal certificates" 
+
+log "Generating Edge internal certificates ..." 
 if [[ -z $WIOTP_INSTALL_EDGE_CN ]]; then
-  wiotp_create_certificate -p $WIOTP_INSTALL_DEVICE_TOKEN
+  wiotp_create_certificate -p $WIOTP_INSTALL_DEVICE_TOKEN $VERBOSE
+  checkrc $?
 else  
-  wiotp_create_certificate -p $WIOTP_INSTALL_DEVICE_TOKEN -cn $WIOTP_INSTALL_EDGE_CN
+  wiotp_create_certificate -p $WIOTP_INSTALL_DEVICE_TOKEN  -cn $WIOTP_INSTALL_EDGE_CN $VERBOSE
+  checkrc $?
 fi
 
-fancyLog "Waiting for Horizon service to restart ..."
-sleep 1
+touch /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID" > /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_TYPE=$WIOTP_INSTALL_DEVICE_TYPE" >> /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_ID=$WIOTP_INSTALL_DEVICE_ID" >> /tmp/hzn_register_vars.env
+echo "export WIOTP_INSTALL_DEVICE_TOKEN=$WIOTP_INSTALL_DEVICE_TOKEN" >> /tmp/hzn_register_vars.env
+echo "export VERBOSE=$VERBOSE" >> /tmp/hzn_register_vars.env
 
-fancyLog "Registering Edge node ..."
-echo "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN\" -f ${ETC_DIR}/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE"
-hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f ${ETC_DIR}/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE
-checkrc $?
+if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
+  logIfVerbose "Waiting for Horizon service to restart ..."
+  sleep 1
 
-fancyLog "Agent setup complete."
+  wiotp_agent_register
+
+else
+  log "Horizon registration skipped. Edit /etc/wiotp-edge/hznEdgeCoreIoTInput.json to add specific workload/microservice variables, then run wiotp_agent_register (alternatively, run hzn register manually)."
+fi
+

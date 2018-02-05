@@ -16,6 +16,9 @@ Arguments:
   -h, --help
     Display this usage message and exit.
 
+  -v, --verbose
+    Verbose output
+
   -c <val>, --configFile <val>, --configFile=<val>
     (Optional) Edge config file to be used. If not provided /etc/wiotp-edge/edge.conf will be used by default.
 
@@ -35,14 +38,6 @@ error() { log "ERROR: $*" >&2; }
 fatal() { error "$*"; exit 1; }
 usage_fatal() { error "$*"; usage >&2; exit 1; }
 
-fancyLog() {
-	echo ""
-	echo "**************************************************************"
-	echo $1
-	echo "**************************************************************"
-	echo ""
-}
-
 while [ "$#" -gt 0 ]; do
     arg=$1
     case $1 in
@@ -53,12 +48,28 @@ while [ "$#" -gt 0 ]; do
         -c|--configFile) shift; CONFIG_FILE=$1;;
         -p|--caKeyPassword) shift; CA_PASSWORD=$1;;
         -cn|--edgeConnectorCN) shift; CN_ADDRESS_PARAM=$1;;
+        -v|--verbose) VERBOSE=true;;        
         -h|--help) usage; exit 0;;
         -*) usage_fatal "unknown option: '$1'";;
         *) break;; # reached the list of file names
     esac
     shift || usage_fatal "option '${arg}' requires a value"
 done
+
+logIfVerbose() {
+  if [ ! -z $VERBOSE ]; then
+    log $1
+  fi
+}
+
+function checkrc {
+  if [[ $1 -ne 0 ]]; then
+    log "Last command exited with rc $1, exiting."
+    if [[ ! -z $2 ]]; then    
+      fatal "$2"
+    fi
+  fi
+}
 
 # For Debug
 #echo CONFIG_FILE=$CONFIG_FILE
@@ -68,8 +79,7 @@ done
 # Insure that openssl is installed on the edge node
 OPENSSL_PATH=$(command -v openssl)
 if [ "${OPENSSL_PATH}" = "" ]; then
-  echo "The openssl command, which is required by this shell script, is not installed on this system."
-  exit 99
+  fatal "The openssl command, which is required by this shell script, is not installed on this system."
 fi
 
 if [ -z $CN_ADDRESS_PARAM ]; then
@@ -130,18 +140,17 @@ elif [ "Darwin" = "$(uname)" ]; then
   done
 
 else
-  echo "You are running this script on an unsupported Operating system."
-  exit
+  fatal "You are running this script on an unsupported Operating system."
 fi
 
 ADDRESS_COUNT=${#ADDRESSES[@]}
 if [ $ADDRESS_COUNT -eq 0 ]; then
   if [ -z $CN_ADDRESS_PARAM ]; then
-    echo "No network interfaces were discovered and neither the"
-    echo "-cn parameter nor the --edgeConnectorCN parameter was specified."
-    echo "Rerun after fixing the network interfaces or specify"
-    echo "either the -cn parameter or the --edgeConnectorCN parameter."
-    exit
+    log "No network interfaces were discovered and neither the"
+    log "-cn parameter nor the --edgeConnectorCN parameter was specified."
+    log "Rerun after fixing the network interfaces or specify"
+    log "either the -cn parameter or the --edgeConnectorCN parameter."
+    exit 1
   else
     CN_ADDRESS=${CN_ADDRESS_PARAM}
   fi
@@ -159,7 +168,8 @@ fi
 if [ -z $CONFIG_FILE ]; then
   CONFIG_FILE=/etc/wiotp-edge/edge.conf  
 fi
-echo "Config File: $CONFIG_FILE will be used."
+
+logIfVerbose "Config File: $CONFIG_FILE will be used."
 
 PERSIST_ROOT_DIRECTORY=/var/wiotp-edge/persist
 
@@ -251,22 +261,19 @@ EOF
 # Get the password for the CA key file
 if [ -z $CA_PASSWORD ]; then
   read -s -p "Enter password for the CA key file: " CA_PASSWORD
-  echo
   if [[ ${#CA_PASSWORD} -lt 4 ]]; then
-      echo "The CA file password was less then four characters long"
-      exit
+      fatal "The CA file password was less then four characters long"
   fi
   read -s -p "Verify the password for the CA key file: " CA_PASSWORD_VERIFY
   echo
   if [[ ${CA_PASSWORD} != ${CA_PASSWORD_VERIFY} ]]; then
-      echo "The password for the CA file didn't verify"
-      exit
+      fatal "The password for the CA file didn't verify"
   fi
   echo ""
 else
-  echo "The CA Private key is configured to use the device credential password by default." 
-  echo "Use wiotp_create_certificate tool to manually generate certificates with a new key password"   
-  echo "and restart all edge core iot components"
+  logIfVerbose "The CA Private key is configured to use the device credential password by default." 
+  logIfVerbose "Use wiotp_create_certificate tool to manually generate certificates with a new key password"   
+  logIfVerbose "and restart all edge core iot components"
 fi
 
 BROKER_DIR=${PERSIST_ROOT_DIRECTORY}/broker
@@ -284,47 +291,73 @@ rm -f ${BROKER_DIR}/certs/broker_key.pem ${BROKER_DIR}/certs/broker_cert.pem
 rm -f ${DC_DIR}/certs/key.pem ${DC_DIR}/certs/cert.pem ${DC_DIR}/ca/ca.pem
 
 # Generating the key and certificate for the CA
-echo "${CA_PASSWORD}" | openssl genrsa -aes256 -passout stdin -out ${BROKER_DIR}/ca/ca.key.pem 4096 
+output=$(echo "${CA_PASSWORD}" | openssl genrsa -aes256 -passout stdin -out ${BROKER_DIR}/ca/ca.key.pem 4096 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
+
+
 chmod 400 ${BROKER_DIR}/ca/ca.key.pem
 
-echo "${CA_PASSWORD}" | openssl req -key ${BROKER_DIR}/ca/ca.key.pem  -new -x509 \
+output=$(echo "${CA_PASSWORD}" | openssl req -key ${BROKER_DIR}/ca/ca.key.pem  -new -x509 \
                                          -days 7300 -sha256 -extensions v3_ca \
                                          -out ${BROKER_DIR}/ca/ca.cert.pem -passin stdin \
-                                         -config ca.conf
+                                         -config ca.conf 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
+                                         
 chmod 444 ${BROKER_DIR}/ca/ca.cert.pem
 
 
 # Generating the key and certificate for the local broker
-openssl genrsa -aes256 -passout pass:passw0rd -out key.pem 2048
+output=$(openssl genrsa -aes256 -passout pass:passw0rd -out key.pem 2048 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
 
-openssl rsa -in key.pem -passin pass:passw0rd -out ${BROKER_DIR}/certs/broker_key.pem
+output=$(openssl rsa -in key.pem -passin pass:passw0rd -out ${BROKER_DIR}/certs/broker_key.pem 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
+
 chmod 400 ${BROKER_DIR}/certs/broker_key.pem
 
-openssl req -new -key ${BROKER_DIR}/certs/broker_key.pem -out ${BROKER_DIR}/certs/broker.csr \
-            -config broker.conf
+output=$(openssl req -new -key ${BROKER_DIR}/certs/broker_key.pem -out ${BROKER_DIR}/certs/broker.csr \
+            -config broker.conf 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
 
-echo "${CA_PASSWORD}" | openssl x509 -req -in ${BROKER_DIR}/certs/broker.csr -days 500 -sha256 \
+output=$(echo "${CA_PASSWORD}" | openssl x509 -req -in ${BROKER_DIR}/certs/broker.csr -days 500 -sha256 \
                                      -CA ${BROKER_DIR}/ca/ca.cert.pem -CAkey ${BROKER_DIR}/ca/ca.key.pem \
                                      -CAcreateserial -out ${BROKER_DIR}/certs/broker_cert.pem \
-                                     -passin stdin
+                                     -passin stdin 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
 
 chmod 444 ${BROKER_DIR}/certs/broker_cert.pem
 
 
 # Generating the key and certificate for the edge-connector
-openssl genrsa -aes256 -passout pass:passw0rd -out key.pem 2048
+output=$(openssl genrsa -aes256 -passout pass:passw0rd -out key.pem 2048 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
 
-openssl rsa -in key.pem -passin pass:passw0rd -out ${DC_DIR}/certs/key.pem
+output=$(openssl rsa -in key.pem -passin pass:passw0rd -out ${DC_DIR}/certs/key.pem 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
+
 chmod 400 ${DC_DIR}/certs/key.pem
 
-openssl req -new -key ${DC_DIR}/certs/key.pem -out ${DC_DIR}/certs/cert.csr \
-            -config connector.conf
+output=$(openssl req -new -key ${DC_DIR}/certs/key.pem -out ${DC_DIR}/certs/cert.csr \
+            -config connector.conf 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
 
-echo "${CA_PASSWORD}" | openssl x509 -req -in ${DC_DIR}/certs/cert.csr -days 500 -sha256 \
+output=$(echo "${CA_PASSWORD}" | openssl x509 -req -in ${DC_DIR}/certs/cert.csr -days 500 -sha256 \
                                      -CA ${BROKER_DIR}/ca/ca.cert.pem -CAkey ${BROKER_DIR}/ca/ca.key.pem \
                                      -CAcreateserial -out ${DC_DIR}/certs/cert.pem \
 				     -extfile connector.conf -extensions v3_req \
-                                     -passin stdin
+                                     -passin stdin 2>&1)
+checkrc $? "$output"
+logIfVerbose "$output"
+
 chmod 444 ${DC_DIR}/certs/cert.pem
 
 cp ${BROKER_DIR}/ca/ca.cert.pem ${DC_DIR}/ca/ca.pem
