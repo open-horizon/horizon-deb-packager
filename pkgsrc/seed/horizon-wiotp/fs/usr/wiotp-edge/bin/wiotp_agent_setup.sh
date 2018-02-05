@@ -262,11 +262,8 @@ if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
   logIfVerbose "Waiting for Horizon service to restart ..."
   sleep 1
 
-  logIfVerbose "Registering Edge node ..."
-  logIfVerbose "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN\" -f ${ETC_DIR}/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE"
-  hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f ${ETC_DIR}/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE
-  checkrc $?
-  log "WIoTP Horizon agent complete."
+  wiotp_agent_register
+
 else
   touch /tmp/hzn_register_vars.env
   echo "export WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID" > /tmp/hzn_register_vars.env
