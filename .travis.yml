@@ -13,4 +13,4 @@ deploy:
   draft: false
   on:
     repo: cgiroua/horizon-deb-packager
-    all_branches: true
+    branch: master
