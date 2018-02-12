@@ -1,0 +1,16 @@
+sudo: required
+services:
+- docker
+script:
+- printenv
+- cd build_support && make
+deploy:
+  provider: releases
+  api_key:
+    secure: O4gTp/a6g8NM3jQ3S0vRPp/uzYKEnvBs17rrxr5a1MJJo79B8F/9dF46sru4jkUZ/KJ+Z747KxNhQ9HSU/hFCwgvbJX2XHVunSDJh2+0AgnaYneMci5vQJD5gm0gHE4/E9ApyV5VXmUT0vM2pmwEi4gr6lrTKh/miAw6MZzfUKJeQu4h5sqnDaXTO5ws/HJQ8NrT4IGKcb2LmVYPbtlcOSqul9Chjv/rwXxmkgBmuvKs7NxVWjGgX4bTpiLjYkhFWm8K3NvPR3+B0pJwHEH286reSBpJmEcdIJZ3l9uUgKCe5E1+yBTN8/xlp7w3DGA/TEDyJ28nduqGU0H4Fwt0KKEwYws/85DfN+/+uZVIbuJMJasHPEDBwA5+ulxN9A9pdxu7nTuIXnLZm6xzpAPUQNYz9G4wZIg7HqRfBSvcekljIbFFaS3jmWa9TzxatA77ji/xB2fI1c92UK7Sj86f2NwAFfnhE8m3xTJaPGZlc2hfQf0KcTb3HRGIIJypNJHdGErhuGyLj9dIwfEfC0lsPwydSxf/xsDcpcibtSmjpxHCgea1xCnOEQFW6kiVcWqGZQR49l2wIbQ5DuSSTcJ63ZL5KSGhNVUNRjyKr9hatzoXLl2Uzke+8SeS/hDH5eWkjOUnM1qdEMmGKnKcvkb8qaCUU6cnSNU5OifcQlZDxdQ=
+  file_glob: true
+  file: "dist/*xenial*"
+  draft: false
+  on:
+    repo: cgiroua/horizon-deb-packager
+    all_branches: true
