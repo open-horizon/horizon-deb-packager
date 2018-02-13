@@ -1,9 +1,8 @@
 sudo: required
 services:
-- docker
+  - docker
 script:
-- printenv
-- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]]; then cd build_support && make; else echo "Not building artifacts, since this is not a version change commit"; fi;
+  - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]]; then cd build_support && make; else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
     - master
