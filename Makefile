@@ -12,7 +12,8 @@ aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
 file_version = $(call aug_version,_,$(1))
 
-git_repo_prefix ?= ssh://git@github.com/open-horizon
+#git_repo_prefix ?= ssh://git@github.com/open-horizon
+git_repo_prefix ?= ssh://git@github.com/cgiroua
 
 # only returns names of distributions that are valid for this architecture
 distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
