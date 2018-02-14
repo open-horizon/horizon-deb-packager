@@ -227,7 +227,7 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
 	git commit -m "updated package metadata to $(version)"
 	#git push --set-upstream origin horizon_$(version)
-	git push origin horizon_$(version)
+	git push horizon_$(version)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
