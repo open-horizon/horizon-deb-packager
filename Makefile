@@ -12,7 +12,8 @@ aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
 file_version = $(call aug_version,_,$(1))
 
-git_repo_prefix ?= ssh://git@github.com/open-horizon
+#git_repo_prefix ?= ssh://git@github.com/open-horizon
+git_repo_prefix ?= ssh://git@github.com/cgiroua
 
 # only returns names of distributions that are valid for this architecture
 distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
@@ -24,14 +25,14 @@ meta = $(addprefix meta-,$(distribution_names))
 
 src-packages = $(addsuffix .dsc,$(call file_stub,horizon))
 
-bluehorizon_deb_packages = $(foreach nameprefix, bluehorizon bluehorizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
-other_config_deb_packages = $(foreach nameprefix, horizon-wiotp, $(addsuffix _all.deb, $(call file_stub,$(nameprefix))))
+ui_deb_packages = $(foreach nameprefix, bluehorizon-ui horizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
+config_deb_packages = $(foreach nameprefix, bluehorizon horizon-wiotp, $(addsuffix _all.deb, $(call file_stub,$(nameprefix))))
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
 cli_deb_packages = $(call bin_stub,horizon-cli)
 
-packages = $(horizon_deb_packages) $(bluehorizon_deb_packages) $(other_config_deb_packages) $(cli_deb_packages)
+packages = $(horizon_deb_packages) $(ui_deb_packages) $(config_deb_packages) $(cli_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
@@ -157,10 +158,11 @@ dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.
 	cd $(call dist_dir,$*) && \
 		debuild --preserve-envvar arch -a$(arch) -us -uc -S -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
-$(other_config_deb_packages):
+$(config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
-$(bluehorizon_deb_packages):
+$(ui_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
+dist/horizon-ui$(call file_version,%)_all.deb:
 dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc"
 	-rm -Rf $(call dist_dir,$*)
@@ -195,7 +197,7 @@ arch-packages: $(horizon_deb_packages) $(cli_deb_packages)
 
 packages: $(packages)
 
-noarch-packages: $(bluehorizon_deb_packages) $(other_config_deb_packages)
+noarch-packages: $(ui_deb_packages) $(config_deb_packages)
 
 show-distribution-names:
 	@echo $(distribution_names)
@@ -213,7 +215,7 @@ show-packages:
 	@echo $(packages)
 
 show-noarch-packages:
-	@echo $(bluehorizon_deb_packages) $(other_config_deb_packages)
+	@echo $(ui_deb_packages) $(config_deb_packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
@@ -224,7 +226,8 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	cp bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
 	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
 	git commit -m "updated package metadata to $(version)"
-	git push --set-upstream origin horizon_$(version)
+	#git push --set-upstream origin horizon_$(version)
+	git push -u origin horizon_$(version)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
