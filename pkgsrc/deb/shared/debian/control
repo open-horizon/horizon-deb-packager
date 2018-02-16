@@ -25,24 +25,17 @@ Description: The open source version of the Horizon platform
 Package: horizon-wiotp
 Architecture: all
 Depends: horizon (= ${binary:Version}), ${misc:Depends}
-Description: Configuration for the Horizon platform on the WIoTP backend
+Description: Configuration for the Horizon platform on WIoTP
  Please consult this project's homepage for more detail on this project
 
 Package: bluehorizon
 Architecture: all
 Depends: horizon (= ${binary:Version}), ${misc:Depends}
-Description: Configuration for the Horizon platform on the Blue Horizon backend
- Please consult this project's homepage for more detail on this project
-
-Package: horizon-ui
-Architecture: all
-Replaces: bluehorizon-ui (<< 2.16.0)
-Depends: horizon (= ${binary:Version}), ${misc:Depends}
-Description: Web UI content for the Horizon platform
+Description: Configuration for horizon package to use Blue Horizon backend
  Please consult this project's homepage for more detail on this project
 
 Package: bluehorizon-ui
 Architecture: all
-Depends: horizon-ui (= ${binary:Version}), ${misc:Depends}
-Description: Package function has been replaced by the horizon-cli package, this can be safely deleted
+Depends: horizon (= ${binary:Version}), ${misc:Depends}
+Description: Web UI content for Bluehorizon instance of the Horizon platform
  Please consult this project's homepage for more detail on this project
