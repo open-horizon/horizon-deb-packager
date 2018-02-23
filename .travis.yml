@@ -1,0 +1,41 @@
+services:
+- docker
+env:
+- dist='ubuntu.yakkety'
+- dist='ubuntu.xenial'
+- dist='raspbian.jessie'
+- dist='raspbian.sid'
+- dist='debian.sid'
+script:
+- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] 
+  || [[ $TRAVIS_COMMIT_MESSAGE == *"rebuild-release"* ]]; then cd build_support && make arch=armhf dist=$dist;
+  else echo "Not building artifacts, since this is not a version change commit"; fi;
+branches:
+  only:
+  - master
+before_deploy:
+- export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)
+- rm -r $TRAVIS_BUILD_DIR/dist/*/ && rm -f $TRAVIS_BUILD_DIR/dist/*.build
+- cd $TRAVIS_BUILD_DIR/dist && sha256sum *${dist}* > ${VERSION_TAG}.${dist}.sha256.txt
+  && tar -zcvf ${VERSION_TAG}.${dist}.assets.tar.gz *${dist}* && echo "" >> ${VERSION_TAG}.${dist}.sha256.txt
+  && sha256sum ${VERSION_TAG}.${dist}.assets.tar.gz >> ${VERSION_TAG}.${dist}.sha256.txt
+- git config --global user.email "builds@travis-ci.com"
+- git config --global user.name "Travis"
+- if git tag $VERSION_TAG -a -m "Travis build $TRAVIS_BUILD_NUMBER" 2>/dev/null; then
+  echo "Creating tag $VERSION_TAG"; else echo "Tag already exists"; fi;
+- sleep 15
+deploy:
+  on:
+    repo: cgiroua/horizon-deb-packager-1
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: PiqYcUSeEhdWsgwuXsGknOrKs12EXw+oA1/l43n5WsGVyhJrKaV8WhXx+LJvYb9+u7BKEpTwBykTq/8Q5hhqwkU214JcwF41yDnqr/G1hARpdstGlHUtW6BKf61wd6zm/4z4pqga4DyIp308+TjqMfaBMw1RuQ3wBOjEXxBdtZlxIazDF6U4RIz5q6kzC2mwmOCSNOpgs9wwLQqQHFufBy0JnzRXccp3YVQysngS07XygookoQD9yG9YeBSbkeJG3AdC/jGLvy78TzFkYWBKYvu2krOKoOUn5mTs+ARreFF5Cgq8nwXhv+oxH2d5JFnE9gAVJEVBYC3KryGf2ZjNvdOta8ufMx+WDsi8pXioA0DYAcGHjRZeKAOuwsqHTmGw/6EyZoJ04HFy8Q2NsMxJrH1bduSv8O+MRP3/hVyYz4hFQK8ZqU1D8euDSy95vH7EBRduP1mk9oqeiFXUGBeqPe3Ib0VV4FCADKt8KlNoZd13tx/LGxnT/Zw1V7rYJMljG58keJpjZTpXsGX/xo6h6kIzRAjOCC+8ZYhotnVk9aruPThvb00tlEa/49PUyiQoRVy6r1PmhMlbBK8loijsweCuvL8kH4NRQf+buRMci8zvInIqMZpDlhea9URfnlwx/nqBH9XPvR5HlEPR1/mcFcdJ7M037moa0KPdchtC2as=
+  file:
+  - "$TRAVIS_BUILD_DIR/dist/${VERSION_TAG}.${dist}.assets.tar.gz"
+  - "$TRAVIS_BUILD_DIR/dist/${VERSION_TAG}.${dist}.sha256.txt"
+  draft: false
+  overwrite: true
+notifications:
+  slack:
+    secure: bQHWW+bsvTGCrMrAJ6HZ1TRGv/7xYTWqdslGmamDFF0MEcriWYwNtm7p+5DfSSTYLEFk2Y9UC50e3KJz0LXhKxE+GOILJfOAwQJ7fSrS2BYTfvMUWtJRzOyFGQiiV48v5X2mKQ8JososdueoAH5Tobbs4tDRqPvn1Wo6N2FJYmXLpZvyVFzHJprABhYsNjugoI5sT1PFhU+9aQRgXJ59pAA62Z/jWMdxzZ4oxqf3XKqCmZ8HQ+75OQo7UAxYR50pVfZlyl0g8P4F0y+boB3QNkSpE/CcKVQ4isKnMstm30xD2XbWqvKTRTAZNUQwe8d/ztBqUVs45VkRjH7JEG9PW5/Kx1laffEjDmrpGtrRMkUlXDOuLkW6JTKRfCDtrTMI/Z6RjbqJdHvWSjVygaReH2Q/uBgGD5UDlokGs/BxcaH3Tyfvouv7qV1KsPj/XZVW/kpMHK1Uu1WwWQrlIYf6aH99nRzPX9SZz55oNy4aWuONU4UKJ56roQV6AE3SGtbGbTpTTJgFxIGNkOwAUPO0ZSCSxwZUpsRHXIz3qhfMTMzsaK0uUZhJKmvXyqnC9qaLxLaOZ8Kr/S3brEzxckAMTKDprpuBZ8O1w1acjr5MVMMQOcKDVwTU/Zt7mW8eDhPGp8fTCdtN/MibEgQ9gLdD3nhR6Z2tEHbSmJ68IfJ2yRU=
