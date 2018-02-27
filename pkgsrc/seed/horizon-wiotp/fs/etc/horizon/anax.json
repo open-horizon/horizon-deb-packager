@@ -15,6 +15,12 @@
     "PolicyPath": "/etc/horizon/policy.d/",
     "ExchangeHeartbeat": 60,
     "AgreementTimeoutS": 600,
-    "ReportDeviceStatus": true
+    "ReportDeviceStatus": true,
+    "TrustCertUpdatesFromOrg": false
+  },
+  "ArchSynonyms": {
+    "x86_64": "amd64",
+    "armhf": "arm",
+    "aarch64": "arm64"
   }
 }
