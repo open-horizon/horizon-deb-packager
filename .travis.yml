@@ -26,7 +26,8 @@ before_deploy:
 - sleep 15
 deploy:
   on:
-    repo: cgiroua/horizon-deb-packager-1
+    condition: $TRAVIS_COMMIT_MESSAGE =~ "updated package metadata" || $TRAVIS_COMMIT_MESSAGE =~ "rebuild-release"
+    repo: open-horizon/horizon-deb-packager
   provider: releases
   skip_cleanup: true
   api_key:
@@ -36,8 +37,6 @@ deploy:
   - "$TRAVIS_BUILD_DIR/dist/${VERSION_TAG}.${dist}.sha256.txt"
   draft: false
   overwrite: true
-  on:
-    repo: open-horizon/horizon-deb-packager
 notifications:
   slack:
     secure: Mcl4sVGPyLBmHh8PQYduI6kQD3z+Mx/doMS/y6QCLCI+skN6DJePCWP9jgANH8weiAPtE5nNo5D++QAF8yfGwIFnXcoNJbk2VNMOOJP4gCkGMlxiVN+/pkY51lB6pgptsTuz3ATgwLD+rxGG6ihTf8I9hzR7yq98iH+sudL8HN5VqklkINeJspOmq7KdiCY+xBUNu4VFt36gI1tfsopDaNd+mEqRznUW3SBnVlaCWczV7oxD2bWOUOPW2wdNitY8jE753OCnwJa0vXaQdpgGWJ1N8dMF3sWMIpj/U18PK37eJMwESmfQo1d7c4dYd/jczesS+ZoXgay+P9OR6xrZdfqxJ6wwzLHjZF6ZmqxFjm6aUXgrZj/Y9KXaMoX/qM0pgcADT48jDyLciwBmnsa7li+ZEUgVOT9OKByiGHn5KuJ/xCLW9lbNYbsBw08a36YneyUqASCZDwjVGU+KVwrSNdPXRJsjxdkDVngAlSaNvUwyE1S5i1AWIlGgzDQRuPKsmXihNco5JrX8w+vL5n+N3aCWI9AX8jkeNSfXeZIqCS/rEFKV84uLWi4QhmTu1MJWrAFk88Gax/NY7PPCnI/oAFZ7yC2BV3tOjOTOIGNJQzRNhYK/Qp/o8R5seia7Mpv1ilLmDKEFAg3SLY7dPpC/sEQM8Wc1iWu0KsqJaKKPXHQ=
