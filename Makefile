@@ -3,6 +3,7 @@ subproject_names := anax anax-ui
 subprojects = $(addprefix bld/,$(subproject_names))
 
 arch ?= $(shell tools/arch-tag)
+dist ?= *
 
 version := $(shell cat VERSION)
 version_tail = $(addprefix ~ppa~,$(1))
@@ -15,7 +16,7 @@ file_version = $(call aug_version,_,$(1))
 git_repo_prefix ?= ssh://git@github.com/open-horizon
 
 # only returns names of distributions that are valid for this architecture
-distribution_names = $(shell find pkgsrc/deb/meta/dist/* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
+distribution_names = $(shell find pkgsrc/deb/meta/dist/*$(dist)* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
 
 file_stub = $(foreach dname,$(distribution_names),dist/$(1)$(call file_version,$(dname)))
