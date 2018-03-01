@@ -89,7 +89,7 @@ else
   exit
 fi
 
-# making sure the travis build is complete, and was successful
+# making sure the travis build is complete, and was successful ... it will also stop here before the initial travis build
 SECTION="TRAVIS CHECK"
 if [ "$(curl -s https://${TRAVIS_API}/repos/${REPO}/builds | jq -r .[0].state)" != "finished" ]; then
   STATUS="WAITING"
