@@ -1,11 +1,11 @@
+#!/bin/bash
+
 # This scripts install the ANAX Horizon agent and configures it to run the WIoTP Edge IoT Core Worload
 # 
 # Pre-requisite to run:
 #  wget
 #  curl 
 #  Openssl
-
-#!/bin/bash
 
 usage() {
     cat <<EOF

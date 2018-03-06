@@ -254,7 +254,7 @@ sed "/\COUNTRY/s//${COUNTRY}/; /\CN_ADDRESS/s//${CN_ADDRESS}/g; /\EXTRA_SUBJECT_
     CN                     = CN_ADDRESS
     emailAddress           = some@thing
 [ v3_req ]
-    subjectAltName = IP:CN_ADDRESS, EXTRA_SUBJECT_NAMES DNS:localhost, IP:127.0.0.1
+    subjectAltName = IP:CN_ADDRESS, EXTRA_SUBJECT_NAMES  DNS:edge-connector, DNS:localhost, IP:127.0.0.1
     
 EOF
 
