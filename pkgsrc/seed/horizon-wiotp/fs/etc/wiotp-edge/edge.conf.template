@@ -193,3 +193,6 @@ EC.WildcardSubscription false
 # Clean session parameter for the gateway's connection to the cloud.
 # EC.CloudCleanSession false
 
+# Flag that tells IM whether or not messages are to be forwarded to the cloud
+# when no interface was created for the device type
+IM.ForwardUnprocessedMessages True
