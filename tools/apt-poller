@@ -4,30 +4,29 @@
 # version change and successful release asset generation, update an apt repository
   
 # some initial default values
-STATUS="FAILED"
-SECTION="INITIAL SETUP"
 GIT_API="api.github.com"
 REPO="open-horizon/horizon-deb-packager"
 TRAVIS_API="api.travis-ci.org"
 INCOMING_DIR="/vol/aptrepo-local/repositories/incoming"
+SEMAPHORE="/tmp/$0.sem"
+LOGFILE="/tmp/$(basename "$0").log"
+STATUS="FAILED"
+DETAILS="Initial setup, check $LOGFILE"
 
 slack_alert() {
-  if [[ "$MSG" =~ "FAILED" ]] || [[ "$MSG" =~ "COMPLETED" ]]; then
-    curl -s -X POST -d "{'username': 'apt-poller', 'text': '$MSG', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
-  fi
+  curl -s -X POST -d "{'username': 'apt-poller', 'text': '$STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
 }
 
 exit_tasks() {
   echo "$(date) Exit tasks"
-  if [ "$SECTION" == '' ]; then
-    MSG="$STATUS"
-  else
-    MSG="$STATUS: In section $SECTION"
-  fi
-  if [ -n "$SLACK_HOOK" ]; then
+  if ([ -n "$SLACK_HOOK" ]) && ([ "$STATUS" == "FAILED" ] || [[ "$DETAILS" = *"apt repo updated from"* ]]); then
     slack_alert
   fi
-  echo "$MSG"
+  echo "$STATUS: $DETAILS"
+
+  if [ "$STATUS" == "SUCCESS" ]; then
+    rmdir "$SEMAPHORE"
+  fi
 }
 
 # Define usage
@@ -46,7 +45,7 @@ usage () {
 
 while getopts ":a:g:hi:r:s:t:" opt; do
   case $opt in
-    a) APT_PACKAGES="$OPTARG"
+    a) PACKAGES_URL="$OPTARG"
     ;;
     g) GIT_API="$OPTARG"
     ;;
@@ -64,46 +63,56 @@ while getopts ":a:g:hi:r:s:t:" opt; do
     ;;
   esac
 done
-
+  
 # logging and initial configuration
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1>> "/tmp/$(basename "$0").log" 2>&1
+exec 1>> "$LOGFILE" 2>&1
 trap exit_tasks EXIT
 date
 set -ex
 
+# semaphore creation/check
+if mkdir "$SEMAPHORE"; then
+  echo "Only instance running after clean exit, continuing"
+else
+  echo "Semaphore directory $SEMAPHORE exists, another instance is running or exited uncleanly, investigate /tmp/$(basename "$0").log"
+  STATUS="BLOCKED"
+  exit
+fi
+  
+
 # needs to be defined
-if [ -z "$APT_PACKAGES" ]; then exit; fi
+if [ -z "$PACKAGES_URL" ]; then exit; fi
 
 # comparing the git version and existing apt version to see if we need to update
-SECTION="VERSION CHECK"
-GIT_VERSION=$(curl -s -H 'Accept: application/vnd.github.v3.raw' https://${GIT_API}/repos/${REPO}/contents/VERSION)
-APT_VERSION=$(curl -s "$APT_PACKAGES" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
+DETAILS="Checking for updates"
+GIT_VERSION=$(curl -s -H 'Accept: application/vnd.github.v3.raw' "https://$GIT_API/repos/$REPO/contents/VERSION")
+APT_VERSION=$(curl -s "$PACKAGES_URL" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
 
 if dpkg --compare-versions "$GIT_VERSION" gt "$APT_VERSION"; then
   echo Downloading new content
 else
   echo Nothing to update
-  STATUS="CURRENT"
+  STATUS="SUCCESS"
   exit
 fi
 
 # making sure the travis build is complete, and was successful ... it will also stop here before the initial travis build
-SECTION="TRAVIS CHECK"
-if [ "$(curl -s https://${TRAVIS_API}/repos/${REPO}/builds | jq -r .[0].state)" != "finished" ]; then
-  STATUS="WAITING"
+DETAILS="Travis build wait"
+if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r .[0].state)" != "finished" ]; then
+  STATUS="SUCCESS"
   exit
 fi
 
 # if finished and not successful, then something broke
-if [ "$(curl -s https://${TRAVIS_API}/repos/${REPO}/builds | jq -r .[0].result)" != 0 ]; then
+if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r .[0].result)" != 0 ]; then
   exit
 fi
 
 # grab the release assets, assemble the short DIST for later indexing use
-SECTION="DOWNLOADING RELEASE"
-for asset in $(curl -s https://${GIT_API}/repos/${REPO}/releases/latest | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); do
+DETAILS="Downloading the release"
+for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); do
   echo "Downloading $asset"
   DISTRO=$(echo "$asset" | awk -F "v$GIT_VERSION.|.assets" '{print $3}')
   DIST=$(echo "$DISTRO" | awk -F "." '{print $2}')
@@ -125,13 +134,43 @@ for asset in $(curl -s https://${GIT_API}/repos/${REPO}/releases/latest | jq -r 
   fi 
 
   curl -sL "$asset" | tar -xvz -C "$INCOMING_DIR/$DISTRO"
-  rm -f "$INCOMING_DIR/$DISTRO/*.sha256.txt"
+  rm -f $INCOMING_DIR/$DISTRO/*.sha256.txt
 done
 
 # index each distro
-SECTION="INDEXING RELEASE"
+DETAILS="Initiating indexing, this will take several minutes"
+if [ -n "$SLACK_HOOK" ]; then
+  STATUS="SUCCESS"
+  slack_alert
+  STATUS="FAILED"
+  DETAILS="Indexing release"
+fi
 /usr/bin/docker exec -i horizon-aptrepo /bin/bash -c "for dist in ${DIST_ARRAY[*]}; do reprepro -v -b /var/repositories/ubuntu processincoming incoming-\${dist}; done"
 
+# loop until all versions are updated, give up after 15 minutes
+BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
+CHECK_PACKAGES=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2"-testing/main/binary-"$3"/Packages"}'))
+for i in {1..15}; do
+  CURRENT=true
+  for URL in "${CHECK_PACKAGES[@]}"; do
+    VERSION=$(curl -s "$URL" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
+    if echo "$VERSION" | grep -q "$GIT_VERSION"; then
+      echo "Updated $VERSION - $URL"
+    else
+      echo "Not Updated $VERSION - $URL"
+      CURRENT=false
+      break
+    fi
+  done
+
+  if $CURRENT; then
+    break
+  else
+    echo "Not finished indexing, waiting 1 minute and checking again"
+  fi
+  sleep 60
+done
+
 # made it through with no errors
-SECTION=''
-STATUS="COMPLETED: apt-repo updated to $GIT_VERSION"
+DETAILS="apt repo updated from $APT_VERSION to $GIT_VERSION"
+STATUS="SUCCESS"
