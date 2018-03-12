@@ -7,8 +7,8 @@ env:
 - dist='raspbian.sid'
 - dist='debian.sid'
 script:
-- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] 
-  || [[ $TRAVIS_COMMIT_MESSAGE == *"rebuild-release"* ]]; then cd build_support && make arch=armhf dist=$dist;
+- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
+  == *"rebuild-release"* ]]; then cd build_support && make arch=armhf dist=$dist;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
@@ -26,7 +26,8 @@ before_deploy:
 - sleep 15
 deploy:
   on:
-    condition: $TRAVIS_COMMIT_MESSAGE =~ "updated package metadata" || $TRAVIS_COMMIT_MESSAGE =~ "rebuild-release"
+    condition: $TRAVIS_COMMIT_MESSAGE =~ "updated package metadata" || $TRAVIS_COMMIT_MESSAGE
+      =~ "rebuild-release"
     repo: open-horizon/horizon-deb-packager
   provider: releases
   skip_cleanup: true
@@ -39,4 +40,4 @@ deploy:
   overwrite: true
 notifications:
   slack:
-    secure: Mcl4sVGPyLBmHh8PQYduI6kQD3z+Mx/doMS/y6QCLCI+skN6DJePCWP9jgANH8weiAPtE5nNo5D++QAF8yfGwIFnXcoNJbk2VNMOOJP4gCkGMlxiVN+/pkY51lB6pgptsTuz3ATgwLD+rxGG6ihTf8I9hzR7yq98iH+sudL8HN5VqklkINeJspOmq7KdiCY+xBUNu4VFt36gI1tfsopDaNd+mEqRznUW3SBnVlaCWczV7oxD2bWOUOPW2wdNitY8jE753OCnwJa0vXaQdpgGWJ1N8dMF3sWMIpj/U18PK37eJMwESmfQo1d7c4dYd/jczesS+ZoXgay+P9OR6xrZdfqxJ6wwzLHjZF6ZmqxFjm6aUXgrZj/Y9KXaMoX/qM0pgcADT48jDyLciwBmnsa7li+ZEUgVOT9OKByiGHn5KuJ/xCLW9lbNYbsBw08a36YneyUqASCZDwjVGU+KVwrSNdPXRJsjxdkDVngAlSaNvUwyE1S5i1AWIlGgzDQRuPKsmXihNco5JrX8w+vL5n+N3aCWI9AX8jkeNSfXeZIqCS/rEFKV84uLWi4QhmTu1MJWrAFk88Gax/NY7PPCnI/oAFZ7yC2BV3tOjOTOIGNJQzRNhYK/Qp/o8R5seia7Mpv1ilLmDKEFAg3SLY7dPpC/sEQM8Wc1iWu0KsqJaKKPXHQ=
+    secure: AfNiLrG7WJi304rjSIl6V0pMQgydY//Mo7okJP50WqkqxRLu3sZ30i5whjDHycCgbE+CjAhkgHXJX4ZVliZwpOtv/bfM7AjjlKiJiW+BE2dehoW62K441dDWao1hyoiTFpjt+QnPUFgx8PqDrfcbyoluJMfHLKQ/fkiKccWiux3yFSFFoWgfnRJDi+tdBsBiH9thgFjqru9a1yPymyMsVJul/MSE2Bp0t0fnDWM/VNnfr+5Ok8EN84Fr11MuavV5F5YYXRePthVm+TYLxFrkoJmV2PRgkwbzR9X/AdSLoOHR4AXJJmMXTxMzlHnWaHL/GqzEEnWYCYOjJ+FxM2PNFpcJqfka4bPPDKT/guRtjfqX2GoU/NQNJVZmbO/lxl4MiL5mSa5+lGhOyPn/AUWo15afzWHvJ9yBN5t4RQ65sNidpGtop3lMj/cx2QN3nmdvf3cGMSRbSrdNN2JNEjf1t2PyhziHhC0ntGuQSyF29RKLOO7FNbA3HKbCJOjvnhQeHSsRKc3VZw8NYW8CqyaLYvnL96mihz7fwj5XVgx8Y4ErdIRGXexiZP1ox2EeBmTaiCXgrivuubru7rMXtHrqCYKaXj455WtY9FCFp7o99xEQF1GC2Wr8fRjvAGUXDHJ9rLOgt9rN3ek0rv/Qg7WcVe1UZp6AedxW4S5bTDSgmZ8=
