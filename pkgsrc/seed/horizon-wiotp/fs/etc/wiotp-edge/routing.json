@@ -1,0 +1,7 @@
+[
+  {
+    "rule_id": 1,
+    "matching_filter": "#",
+    "destination": "LOCAL"
+  }
+]
