@@ -14,9 +14,11 @@
     "ExchangeURL": "https://exchange.bluehorizon.network/api/v1/",
     "PolicyPath": "/etc/horizon/policy.d/",
     "ExchangeHeartbeat": 60,
+    "ExchangeVersionCheckIntervalM": 720,
     "AgreementTimeoutS": 600,
     "ReportDeviceStatus": true,
-    "TrustCertUpdatesFromOrg": false
+    "TrustCertUpdatesFromOrg": false,
+    "ServiceUpgradeCheckIntervalS": 300
   },
   "ArchSynonyms": {
     "x86_64": "amd64",
