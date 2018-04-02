@@ -1,7 +1,7 @@
 {
   "Edge": {
     "TorrentDir": "/var/cache/horizon/torrent/",
-    "APIListen": "0.0.0.0:80",
+    "APIListen": "127.0.0.1:80",
     "DBPath": "/var/horizon/",
     "GethURL": "http://127.0.0.1:8545",
     "DockerEndpoint": "unix:///var/run/docker.sock",
