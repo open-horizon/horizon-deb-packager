@@ -210,6 +210,9 @@ checkrc $?
 configJson=$(jq ".microservices[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
 checkrc $?
 
+configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)	
+checkrc $?
+
 # Write the workload json definition file
 echo "$configJson" > $CORE_IOT_HZN_INPUT_FILE
 
