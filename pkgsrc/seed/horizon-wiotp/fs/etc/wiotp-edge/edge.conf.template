@@ -159,9 +159,6 @@ StoreRetentionBytes 52428800
 # Default value: no default value
 # EC.CloudCaFile
 
-# Disable certificate check for testing environment
-EC.CloudDisableCertCheck false
-
 # Enable persistence for MQTT data
 # Enabling persistence can improve reliability but may impact performance  
 # Default value: false 

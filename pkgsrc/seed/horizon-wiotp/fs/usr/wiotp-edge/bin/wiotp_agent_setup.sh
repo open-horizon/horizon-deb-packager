@@ -44,10 +44,6 @@ Arguments:
   -cn <val>, --edgeCN <val>, -edgeCN=<val>
     (Optional) Common Name (CN) to be used when generating the Server Certificate for the Edge Connector.
 
-  --cloudDisableCertCheck <true|false>, --cloudDisableCertCheck=<true|false>
-    (Optional) Sets the CloudDisableCertCheck property for the Edge Connector configuration file. Using true will ignore non-trusted server certificates. 
-    Enabling this property on production environments is not recommended.
-
   -shr, --skipHorizonRegistration
     (Optional) Performs all setup steps (internal certificate creation and hzn input json file preparation), without running hzn register
     Passing this parameter allows the user to edit hznEdgeCoreIoTInput.json and add specific workload variables.
@@ -83,7 +79,6 @@ while [ "$#" -gt 0 ]; do
         -te|--testEnv) shift; WIOTP_INSTALL_TEST_ENV=$1;;
         -r|--region) shift; WIOTP_INSTALL_REGION=$1;;
         -dm|--domain) shift; WIOTP_INSTALL_DOMAIN=$1;;
-        -cdc|--cloudDisableCertCheck) shift; CDCC_TEMP=$1;;
         -shr|--skipHorizonRegistration) SKIP_HORIZON_REGISTRATION=true;;
         -f|--file) shift; CUSTOM_HZN_INPUT_FILE=$1;;
         -cn|--edgeCN) shift; WIOTP_INSTALL_EDGE_CN=$1;;
@@ -192,11 +187,6 @@ edge_conf_path="${ETC_DIR}/wiotp-edge/edge.conf"
 # Create the edge.conf using the edge.conf.template
 cp $edge_conf_template_path $edge_conf_path
 
-# Adjusting edge.conf for enabling/disabling cloud server certificate checks
-logIfVerbose "Setting $edge_conf_path[EC.CloudDisableCertCheck=$WIOTP_INSTALL_EC_DISABLE_CERT_CHECK]"
-sed -i.bak "/EC.CloudDisableCertCheck.*/c\EC.CloudDisableCertCheck $WIOTP_INSTALL_EC_DISABLE_CERT_CHECK" $edge_conf_path
-rm $edge_conf_path.bak
-
 # Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
 logIfVerbose "Creating hzn config input file ..."
 
@@ -220,12 +210,9 @@ checkrc $?
 configJson=$(jq ".microservices[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
 checkrc $?
 
-configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
+configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)	
 checkrc $?
 
-configJson=$(jq ".microservices[0].variables.WIOTP_LOCAL_BROKER_PORT = \"2883\" " <<< $configJson)
-checkrc $?
-              
 # Write the workload json definition file
 echo "$configJson" > $CORE_IOT_HZN_INPUT_FILE
 
