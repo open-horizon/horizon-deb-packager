@@ -18,7 +18,8 @@
     "AgreementTimeoutS": 600,
     "ReportDeviceStatus": true,
     "TrustCertUpdatesFromOrg": false,
-    "ServiceUpgradeCheckIntervalS": 300
+    "ServiceUpgradeCheckIntervalS": 300,
+    "TrustDockerAuthFromOrg": false
   },
   "ArchSynonyms": {
     "x86_64": "amd64",
