@@ -10,7 +10,7 @@
     "TrustSystemCACerts": true,
     "CACertsPath": "/etc/horizon/trust/horizon.pem",
     "DefaultCPUSet": "",
-    "WorkloadROStorage": "/var/tmp/horizon/workload_ro/",
+    "ServiceStorage": "/var/tmp/horizon/service_storage/",
     "ExchangeURL": "https://exchange.bluehorizon.network/api/v1/",
     "PolicyPath": "/etc/horizon/policy.d/",
     "ExchangeHeartbeat": 60,
