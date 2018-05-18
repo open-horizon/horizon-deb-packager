@@ -19,7 +19,8 @@
     "ReportDeviceStatus": true,
     "TrustCertUpdatesFromOrg": true,
     "ServiceUpgradeCheckIntervalS": 300,
-    "TrustDockerAuthFromOrg": false
+    "TrustDockerAuthFromOrg": false,
+    "MultipleAnaxInstances": false
   },
   "ArchSynonyms": {
     "x86_64": "amd64",
