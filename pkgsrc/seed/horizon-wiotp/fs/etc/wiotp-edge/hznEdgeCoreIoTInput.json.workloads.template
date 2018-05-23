@@ -1,16 +1,4 @@
 {
-    "global": [
-        {
-            "type": "HTTPSBasicAuthAttributes",
-            "sensor_urls": [],
-            "publishable": false,
-            "host_only": true,
-            "variables": {
-               "username": "",
-               "password": ""
-            }
-        }
-    ],
     "microservices": [
         {
             "org": "IBM",

@@ -44,10 +44,6 @@ Arguments:
   -cn <val>, --edgeCN <val>, -edgeCN=<val>
     (Optional) Common Name (CN) to be used when generating the Server Certificate for the Edge Connector.
 
-  -shr, --skipHorizonRegistration
-    (Optional) Performs all setup steps (internal certificate creation and hzn input json file preparation), without running hzn register
-    Passing this parameter allows the user to edit hznEdgeCoreIoTInput.json and add specific service variables.
-
   -f, --file
     (Optional) Merges a custom file (containing environment variable definitions for services) with hznEdgeCoreIoTInput.json
     The value passed to this parameter must contain the complete path to the file.
@@ -79,7 +75,6 @@ while [ "$#" -gt 0 ]; do
         -te|--testEnv) shift; WIOTP_INSTALL_TEST_ENV=$1;;
         -r|--region) shift; WIOTP_INSTALL_REGION=$1;;
         -dm|--domain) shift; WIOTP_INSTALL_DOMAIN=$1;;
-        -shr|--skipHorizonRegistration) SKIP_HORIZON_REGISTRATION=true;;
         -f|--file) shift; CUSTOM_HZN_INPUT_FILE=$1;;
         -cn|--edgeCN) shift; WIOTP_INSTALL_EDGE_CN=$1;;
         -h|--help) usage; exit 0;;
@@ -208,16 +203,7 @@ else
   arrayKey="microservices"
 fi
 
-configJson=$(jq ".global[0].sensor_urls[0] = \"https://$regionPrefix.$WIOTP_INSTALL_DOMAIN/api/v0002/horizon-image/common\" " <<< $emptyConfigJson)
-checkrc $?
-
-configJson=$(jq ".global[0].variables.username = \"$WIOTP_INSTALL_ORGID/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".global[0].variables.password = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
+configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $emptyConfigJson)
 checkrc $?
 
 configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
@@ -335,16 +321,12 @@ else
   checkrc $?
 fi
 
-if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
-  logIfVerbose "Waiting for Horizon service to restart ..."
-  sleep 1
+logIfVerbose "Waiting for Horizon service to restart ..."
+sleep 1
 
-  logIfVerbose "Registering Edge node ..."
-  logIfVerbose "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN\" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE"
-  hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE
-  checkrc $?
-  echo "Agent registration complete."
-else
-  log "Horizon registration skipped. Edit /etc/wiotp-edge/hznEdgeCoreIoTInput.json to add specific service variables, then run wiotp_agent_register (alternatively, run hzn register manually)."
-fi
+logIfVerbose "Registering Edge node ..."
+logIfVerbose "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN\" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE"
+hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE
+checkrc $?
+echo "Agent registration complete."
 
