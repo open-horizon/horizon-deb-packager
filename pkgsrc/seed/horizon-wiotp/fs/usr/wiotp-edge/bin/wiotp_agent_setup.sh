@@ -156,14 +156,22 @@ fi
 
 logIfVerbose "Device id, device type and device authentication token are valid."
 
+CORE_IOT_HZN_INPUT_FILE=$ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
+
 logIfVerbose "Checking pattern..."
 output=$(curl -s -H "Content-type: application/json" -u "$WIOTP_INSTALL_ORGID/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" https://$httpDomainPrefix.$WIOTP_INSTALL_DOMAIN/api/v0002/edgenode/orgs/$WIOTP_INSTALL_ORGID/patterns/$WIOTP_INSTALL_DEVICE_TYPE)
 servicesArray=$(jq -r ".patterns.\"$WIOTP_INSTALL_ORGID/$WIOTP_INSTALL_DEVICE_TYPE\".services | to_entries[]" <<< $output)
 if [[ -z $servicesArray ]]; then
   logIfVerbose "Pattern in workload/microservices format."
+  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.workloads.template)
+  checkrc $?
+  arrayKey="microservices"
   servicesFormat=false
 else
   logIfVerbose "Pattern in services format."
+  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.services.template)
+  checkrc $?
+  arrayKey="services"
   servicesFormat=true
 fi
 
@@ -190,18 +198,6 @@ cp $edge_conf_template_path $edge_conf_path
 
 # Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
 logIfVerbose "Creating hzn config input file ..."
-
-CORE_IOT_HZN_INPUT_FILE=$ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
-
-if [[ $servicesFormat == true ]]; then
-  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.services.template)
-  checkrc $?
-  arrayKey="services"
-else
-  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.workloads.template)
-  checkrc $?
-  arrayKey="microservices"
-fi
 
 configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $emptyConfigJson)
 checkrc $?
