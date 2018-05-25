@@ -44,12 +44,8 @@ Arguments:
   -cn <val>, --edgeCN <val>, -edgeCN=<val>
     (Optional) Common Name (CN) to be used when generating the Server Certificate for the Edge Connector.
 
-  -shr, --skipHorizonRegistration
-    (Optional) Performs all setup steps (internal certificate creation and hzn input json file preparation), without running hzn register
-    Passing this parameter allows the user to edit hznEdgeCoreIoTInput.json and add specific workload variables.
-
   -f, --file
-    (Optional) Merges a custom file (containing environment variable definitions for microservices and workloads) with hznEdgeCoreIoTInput.json
+    (Optional) Merges a custom file (containing environment variable definitions for services) with hznEdgeCoreIoTInput.json
     The value passed to this parameter must contain the complete path to the file.
 
 EOF
@@ -79,7 +75,6 @@ while [ "$#" -gt 0 ]; do
         -te|--testEnv) shift; WIOTP_INSTALL_TEST_ENV=$1;;
         -r|--region) shift; WIOTP_INSTALL_REGION=$1;;
         -dm|--domain) shift; WIOTP_INSTALL_DOMAIN=$1;;
-        -shr|--skipHorizonRegistration) SKIP_HORIZON_REGISTRATION=true;;
         -f|--file) shift; CUSTOM_HZN_INPUT_FILE=$1;;
         -cn|--edgeCN) shift; WIOTP_INSTALL_EDGE_CN=$1;;
         -h|--help) usage; exit 0;;
@@ -105,11 +100,6 @@ fi
 if [[ "${WIOTP_INSTALL_REGION}" != "us" && "${WIOTP_INSTALL_REGION}" != "uk" && "${WIOTP_INSTALL_REGION}" != "de" && "${WIOTP_INSTALL_REGION}" != "ch" && "${WIOTP_INSTALL_REGION}" != "nl" ]];then
     usage_fatal "Invalid region."
 fi
-
-WIOTP_INSTALL_EC_DISABLE_CERT_CHECK=false
-case $CDCC_TEMP in
-  (true)    WIOTP_INSTALL_EC_DISABLE_CERT_CHECK=true;;
-esac
 
 function checkrc {
 	if [[ $1 -ne 0 ]]; then
@@ -166,6 +156,25 @@ fi
 
 logIfVerbose "Device id, device type and device authentication token are valid."
 
+CORE_IOT_HZN_INPUT_FILE=$ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
+
+logIfVerbose "Checking pattern..."
+output=$(curl -s -H "Content-type: application/json" -u "$WIOTP_INSTALL_ORGID/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" https://$httpDomainPrefix.$WIOTP_INSTALL_DOMAIN/api/v0002/edgenode/orgs/$WIOTP_INSTALL_ORGID/patterns/$WIOTP_INSTALL_DEVICE_TYPE)
+servicesArray=$(jq -r ".patterns.\"$WIOTP_INSTALL_ORGID/$WIOTP_INSTALL_DEVICE_TYPE\".services | to_entries[]" <<< $output)
+if [[ -z $servicesArray ]]; then
+  logIfVerbose "Pattern in workload/microservices format."
+  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.workloads.template)
+  checkrc $?
+  arrayKey="microservices"
+  servicesFormat=false
+else
+  logIfVerbose "Pattern in services format."
+  emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.services.template)
+  checkrc $?
+  arrayKey="services"
+  servicesFormat=true
+fi
+
 # Read the json object in /etc/horizon/anax.json
 anaxJson=$(jq '.' $ETC_DIR/horizon/anax.json)
 checkrc $?
@@ -190,30 +199,16 @@ cp $edge_conf_template_path $edge_conf_path
 # Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
 logIfVerbose "Creating hzn config input file ..."
 
-CORE_IOT_HZN_INPUT_FILE=$ETC_DIR/wiotp-edge/hznEdgeCoreIoTInput.json
-
-emptyConfigJson=$(jq '.' ${CORE_IOT_HZN_INPUT_FILE}.template)
+configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $emptyConfigJson)
 checkrc $?
 
-configJson=$(jq ".global[0].sensor_urls[0] = \"https://$regionPrefix.$WIOTP_INSTALL_DOMAIN/api/v0002/horizon-image/common\" " <<< $emptyConfigJson)
+configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
 checkrc $?
 
-configJson=$(jq ".global[0].variables.username = \"$WIOTP_INSTALL_ORGID/g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)
+configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)	
 checkrc $?
 
-configJson=$(jq ".global[0].variables.password = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".microservices[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)	
-checkrc $?
-
-# Write the workload json definition file
+# Write the service json definition file
 echo "$configJson" > $CORE_IOT_HZN_INPUT_FILE
 
 if [[ ! -z $CUSTOM_HZN_INPUT_FILE ]]; then
@@ -221,7 +216,7 @@ if [[ ! -z $CUSTOM_HZN_INPUT_FILE ]]; then
 
     logIfVerbose "Merging custom hzn config input file ..."
 
-    # Temporary files to store the arrays of both hznEdgeCoreIoTInput.json and the custom workload input json passed to "-f"
+    # Temporary files to store the arrays of both hznEdgeCoreIoTInput.json and the custom service input json passed to "-f"
     # so that "jq -s '.=.|add'" command can concatenated the arrays
     CORE_IOT_ARRAY_FILE="/tmp/origArray.json"
     CUSTOM_ARRAY_FILE="/tmp/customArray.json"
@@ -229,7 +224,7 @@ if [[ ! -z $CUSTOM_HZN_INPUT_FILE ]]; then
     # Read the Json object from hznEdgeCoreIoTInput.json
     coreIoTJson=$(jq '.' $CORE_IOT_HZN_INPUT_FILE)
     checkrc $?
-    # Read the Json object from the custom workload input json
+    # Read the Json object from the custom service input json
     customJson=$(jq '.' $CUSTOM_HZN_INPUT_FILE)
     checkrc $?
 
@@ -246,43 +241,63 @@ if [[ ! -z $CUSTOM_HZN_INPUT_FILE ]]; then
     mergedGlobalArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
     checkrc $?
 
-    # Extract the "microservices" array from coreIoTJson
-    coreIoTMicroservicesArray=$(jq -r '.microservices' <<< $coreIoTJson)
-    checkrc $?
-    # Extract the "microservices" array from customJson
-    customMicroservicesArray=$(jq -r '.microservices' <<< $customJson)
-    checkrc $?
-    # Write the "microservices" array in the temporary file
-    echo "$coreIoTMicroservicesArray" > $CORE_IOT_ARRAY_FILE
-    echo "$customMicroservicesArray" > $CUSTOM_ARRAY_FILE
-    # Merge both "microservices" arrays by reading them from the temporary files with "jq -s"
-    mergedMicroservicesArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
-    checkrc $?
+    if [[ $servicesFormat == true ]]; then
+      # Extract the "services" array from coreIoTJson
+      coreIoTServicesArray=$(jq -r '.services' <<< $coreIoTJson)
+      checkrc $?
+      # Extract the "services" array from customJson
+      customServicesArray=$(jq -r '.services' <<< $customJson)
+      checkrc $?
+      # Write the "services" array in the temporary file
+      echo "$coreIoTServicesArray" > $CORE_IOT_ARRAY_FILE
+      echo "$customServicesArray" > $CUSTOM_ARRAY_FILE
+      # Merge both "services" arrays by reading them from the temporary files with "jq -s"
+      mergedServicesArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
+      checkrc $?
 
-    # Extract the "workloads" array from coreIoTJson
-    coreIoTWorkloadsArray=$(jq -r '.workloads' <<< $coreIoTJson)
-    checkrc $?
-    # Extract the "workloads" array from customJson
-    customWorkloadsArray=$(jq -r '.workloads' <<< $customJson)
-    checkrc $?
-    # Write the "workloads" array in the temporary file
-    echo "$coreIoTWorkloadsArray" > $CORE_IOT_ARRAY_FILE
-    echo "$customWorkloadsArray" > $CUSTOM_ARRAY_FILE
-    # Merge both "workloads" arrays by reading them from the temporary files with "jq -s"
-    mergedWorkloadsArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
-    checkrc $?
+      outputJson=$(jq ".services = $mergedServicesArray " <<< $coreIoTJson)
+      checkrc $?
+    else
+      # Extract the "workloads" array from coreIoTJson
+      coreIoTWorkloadsArray=$(jq -r '.workloads' <<< $coreIoTJson)
+      checkrc $?
+      # Extract the "workloads" array from customJson
+      customWorkloadsArray=$(jq -r '.workloads' <<< $customJson)
+      checkrc $?
+      # Write the "workloads" array in the temporary file
+      echo "$coreIoTWorkloadsArray" > $CORE_IOT_ARRAY_FILE
+      echo "$customWorkloadsArray" > $CUSTOM_ARRAY_FILE
+      # Merge both "workloads" arrays by reading them from the temporary files with "jq -s"
+      mergedWorkloadsArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
+      checkrc $?
+
+      # Extract the "microservices" array from coreIoTJson
+      coreIoTMicroservicesArray=$(jq -r '.microservices' <<< $coreIoTJson)
+      checkrc $?
+      # Extract the "microservices" array from customJson
+      customMicroservicesArray=$(jq -r '.microservices' <<< $customJson)
+      checkrc $?
+      # Write the "microservices" array in the temporary file
+      echo "$coreIoTMicroservicesArray" > $CORE_IOT_ARRAY_FILE
+      echo "$customMicroservicesArray" > $CUSTOM_ARRAY_FILE
+      # Merge both "microservices" arrays by reading them from the temporary files with "jq -s"
+      mergedMicroservicesArray=$(jq -s '.=.|add' $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE)
+      checkrc $?
+
+      outputJson=$(jq ".workloads = $mergedWorkloadsArray " <<< $coreIoTJson)
+      checkrc $?
+      outputJson=$(jq ".microservices = $mergedMicroservicesArray " <<< $outputJson)
+      checkrc $?
+    fi
+
 
     # Remove temporary files
     rm $CORE_IOT_ARRAY_FILE $CUSTOM_ARRAY_FILE
 
-    # Write all merged arrays (global, microservices and workloads) and write them back to hznEdgeCoreIoTInput.json
-    outputJson=$(jq ".global = $mergedGlobalArray " <<< $coreIoTJson)
-    checkrc $?
-    outputJson=$(jq ".microservices = $mergedMicroservicesArray " <<< $outputJson)
-    checkrc $?
-    outputJson=$(jq ".workloads = $mergedWorkloadsArray " <<< $outputJson)
+    outputJson=$(jq ".global = $mergedGlobalArray " <<< $outputJson)
     checkrc $?
 
+    # Write all merged arrays (global, services) and write them back to hznEdgeCoreIoTInput.json
     echo "$outputJson" > $CORE_IOT_HZN_INPUT_FILE
   else
     fatal "File $CUSTOM_HZN_INPUT_FILE not found."
@@ -302,20 +317,12 @@ else
   checkrc $?
 fi
 
-touch /tmp/hzn_register_vars.env
-echo "export WIOTP_INSTALL_ORGID=$WIOTP_INSTALL_ORGID" > /tmp/hzn_register_vars.env
-echo "export WIOTP_INSTALL_DEVICE_TYPE=$WIOTP_INSTALL_DEVICE_TYPE" >> /tmp/hzn_register_vars.env
-echo "export WIOTP_INSTALL_DEVICE_ID=$WIOTP_INSTALL_DEVICE_ID" >> /tmp/hzn_register_vars.env
-echo "export WIOTP_INSTALL_DEVICE_TOKEN=$WIOTP_INSTALL_DEVICE_TOKEN" >> /tmp/hzn_register_vars.env
-echo "export VERBOSE=$VERBOSE" >> /tmp/hzn_register_vars.env
+logIfVerbose "Waiting for Horizon service to restart ..."
+sleep 1
 
-if [[ -z $SKIP_HORIZON_REGISTRATION ]]; then
-  logIfVerbose "Waiting for Horizon service to restart ..."
-  sleep 1
-
-  wiotp_agent_register
-
-else
-  log "Horizon registration skipped. Edit /etc/wiotp-edge/hznEdgeCoreIoTInput.json to add specific workload/microservice variables, then run wiotp_agent_register (alternatively, run hzn register manually)."
-fi
+logIfVerbose "Registering Edge node ..."
+logIfVerbose "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN\" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE"
+hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE
+checkrc $?
+echo "Agent registration complete."
 
