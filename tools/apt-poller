@@ -8,13 +8,16 @@ GIT_API="api.github.com"
 REPO="open-horizon/horizon-deb-packager"
 TRAVIS_API="api.travis-ci.org"
 INCOMING_DIR="/vol/aptrepo-local/repositories/incoming"
-SEMAPHORE="/tmp/$0.sem"
+SEMAPHORE="/tmp/$(basename "$0").sem"
 LOGFILE="/tmp/$(basename "$0").log"
 STATUS="FAILED"
-DETAILS="Initial setup, check $LOGFILE"
+DETAILS="Initial setup, check $(hostname):$LOGFILE"
 
 slack_alert() {
   curl -s -X POST -d "{'username': 'apt-poller', 'text': '$STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
+  if [ "$STATUS" == "FAILED" ]; then
+    curl -s -X POST -d "{'username': 'apt-poller', 'text': 'Once the failure is resolved, rebuild and rmdir $(hostname):$SEMAPHORE', 'icon_emoji': ':debian:'}" "https://hooks.slack.com/services/${SLACK_HOOK}"
+  fi
 }
 
 exit_tasks() {
@@ -116,6 +119,7 @@ for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.
   echo "Downloading $asset"
   DISTRO=$(echo "$asset" | awk -F "v$GIT_VERSION.|.assets" '{print $3}')
   DIST=$(echo "$DISTRO" | awk -F "." '{print $2}')
+  REPO=$(echo "$DISTRO" | awk -F "." '{print $1}')
 
   # build a unique array of short-name distros as we go
   EXISTS=0
@@ -129,6 +133,18 @@ for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.
     DIST_ARRAY+=("$DIST")
   fi
 
+  # same for repos
+  EXISTS=0
+  for element in "${DIST_ARRAY[@]}"; do
+    if [[ "$element" == "$REPO" ]]; then
+      EXISTS=1
+    break
+    fi
+  done
+  if [ $EXISTS == "0" ]; then
+    REPO_ARRAY+=("$REPO")
+  fi
+
   if [ ! -d "$INCOMING_DIR/$DISTRO" ]; then
     mkdir -p "$INCOMING_DIR/$DISTRO"
   fi 
@@ -138,14 +154,16 @@ for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.
 done
 
 # index each distro
-DETAILS="Initiating indexing, this will take several minutes"
+DETAILS="Release artifacts downloaded, initiating indexing"
 if [ -n "$SLACK_HOOK" ]; then
   STATUS="SUCCESS"
   slack_alert
   STATUS="FAILED"
   DETAILS="Indexing release"
 fi
-/usr/bin/docker exec -i horizon-aptrepo /bin/bash -c "for dist in ${DIST_ARRAY[*]}; do reprepro -v -b /var/repositories/ubuntu processincoming incoming-\${dist}; done"
+for repo in ${REPO_ARRAY[@]}; do
+  /usr/bin/docker exec -i horizon-aptrepo /bin/bash -c "for dist in ${DIST_ARRAY[*]}; do if [[ \$(grep incoming-\${dist} /var/repositories/${repo}/conf/incoming) ]]; then reprepro -v -b /var/repositories/${repo} processincoming incoming-\${dist}; else echo \"Intentionally skipping indexing of $repo \$dist\"; fi; done"
+done
 
 # loop until all versions are updated, give up after 15 minutes
 BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
