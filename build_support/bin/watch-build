@@ -146,7 +146,7 @@ function build_publish() {
   packages_url="$3"
   sources_url="$4"
 
-  expected_binaries="horizon_$(binary_version $dist $rel).changes horizon_$(binary_version $dist $rel).deb bluehorizon_$(binary_version $dist $rel).deb bluehorizon-ui_$(binary_version $dist $rel).deb"
+  expected_binaries="horizon_$(binary_version $dist $rel).changes horizon_$(binary_version $dist $rel).deb bluehorizon_$(binary_version $dist $rel).deb horizon-ui_$(binary_version $dist $rel).deb"
   expected_sources="horizon_$(source_version $dist $rel).debian.tar.xz horizon_$(source_version $dist $rel).dsc horizon_$(source_version $dist $rel).orig.tar.gz"
   upload_destination="${publish_destination_stub}/${dist}.${rel}/"
 

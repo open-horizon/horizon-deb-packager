@@ -15,7 +15,6 @@ HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 HORIZON-CLI-OUTDIRBASE=$(CURDIR)/debian/horizon-cli
 HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
-BLUEHORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/bluehorizon-ui
 HORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/horizon-ui
 override_dh_auto_build:
 	cd anax && $(MAKE) arch=$(arch) all-nodeps
@@ -39,7 +38,7 @@ override_dh_strip:
 
 clean:
 	@echo "Executing rules/clean"
-	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(HORIZON-WIOTP-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(HORIZON-UI-OUTDIRBASE) $(BLUEHORIZON-UI-OUTDIRBASE)
+	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(HORIZON-WIOTP-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(HORIZON-UI-OUTDIRBASE)
 	@echo "Running mostlyclean in $(CURDIR)/anax to remove compiled artifacts"
 	cd anax && $(MAKE) mostlyclean
 
