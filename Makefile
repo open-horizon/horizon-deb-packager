@@ -25,7 +25,7 @@ meta = $(addprefix meta-,$(distribution_names))
 
 src-packages = $(addsuffix .dsc,$(call file_stub,horizon))
 
-ui_deb_packages = $(foreach nameprefix, bluehorizon-ui horizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
+ui_deb_packages = $(foreach nameprefix, horizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
 config_deb_packages = $(foreach nameprefix, bluehorizon horizon-wiotp, $(addsuffix _all.deb, $(call file_stub,$(nameprefix))))
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
@@ -162,8 +162,7 @@ $(config_deb_packages):
 dist/horizon-wiotp$(call file_version,%)_all.deb:
 $(ui_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
-dist/horizon-ui$(call file_version,%)_all.deb:
-dist/bluehorizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
+dist/horizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc"
 	-rm -Rf $(call dist_dir,$*)
 	dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
