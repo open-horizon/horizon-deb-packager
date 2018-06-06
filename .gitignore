@@ -2,4 +2,4 @@
 ./bluehorizon_*
 *.sw*
 bld/
-dist/
+/dist/
