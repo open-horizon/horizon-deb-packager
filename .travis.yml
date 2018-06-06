@@ -22,8 +22,7 @@ before_deploy:
   && sha256sum ${VERSION_TAG}.${dist}.assets.tar.gz >> ${VERSION_TAG}.${dist}.sha256.txt
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis"
-- if git tag $VERSION_TAG -a -m "Travis build $TRAVIS_BUILD_NUMBER" 2>/dev/null; then
-  echo "Creating tag $VERSION_TAG"; else echo "Tag already exists"; fi;
+- git tag $VERSION_TAG --force -a -m "Travis build $TRAVIS_BUILD_NUMBER"
 - sleep 15
 deploy:
   on:
