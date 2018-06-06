@@ -3,10 +3,10 @@ services:
 env:
 - dist='ubuntu.yakkety'
 - dist='ubuntu.xenial'
+- dist='debian.stretch'
+- dist='debian.sid'
 - dist='raspbian.jessie'
 - dist='raspbian.sid'
-- dist='debian.sid'
-- dist='debian.stretch'
 script:
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
   == *"rebuild-release"* ]]; then cd build_support && make arch=armhf dist=$dist;
