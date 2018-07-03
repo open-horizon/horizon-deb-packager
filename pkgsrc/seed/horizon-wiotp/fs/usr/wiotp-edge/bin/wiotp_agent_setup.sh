@@ -190,22 +190,10 @@ echo "$anaxJson" > $ETC_DIR/horizon/anax.json
 logIfVerbose "Restarting Horizon service ..."
 systemctl restart horizon.service
 
-edge_conf_template_path="${ETC_DIR}/wiotp-edge/edge.conf.template"
-edge_conf_path="${ETC_DIR}/wiotp-edge/edge.conf"
-
-# Create the edge.conf using the edge.conf.template
-cp $edge_conf_template_path $edge_conf_path
-
 # Create the hznEdgeCoreIoTInput.json using the hznEdgeCoreIoTInput.json.template and user inputs
 logIfVerbose "Creating hzn config input file ..."
 
 configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DEVICE_AUTH_TOKEN = \"$WIOTP_INSTALL_DEVICE_TOKEN\" " <<< $emptyConfigJson)
-checkrc $?
-
-configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_DOMAIN = \"$mqttDomainPrefix.$WIOTP_INSTALL_DOMAIN\" " <<< $configJson)
-checkrc $?
-
-configJson=$(jq ".\"$arrayKey\"[0].variables.WIOTP_CLIENT_ID = \"g:$WIOTP_INSTALL_ORGID:$WIOTP_INSTALL_DEVICE_TYPE:$WIOTP_INSTALL_DEVICE_ID\" " <<< $configJson)	
 checkrc $?
 
 # Write the service json definition file
@@ -325,4 +313,3 @@ logIfVerbose "hzn register -n \"g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVI
 hzn register -n "g@$WIOTP_INSTALL_DEVICE_TYPE@$WIOTP_INSTALL_DEVICE_ID:$WIOTP_INSTALL_DEVICE_TOKEN" -f /etc/wiotp-edge/hznEdgeCoreIoTInput.json $WIOTP_INSTALL_ORGID $WIOTP_INSTALL_DEVICE_TYPE $VERBOSE
 checkrc $?
 echo "Agent registration complete."
-
