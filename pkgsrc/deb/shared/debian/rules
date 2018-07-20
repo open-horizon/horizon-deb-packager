@@ -16,6 +16,8 @@ HORIZON-CLI-OUTDIRBASE=$(CURDIR)/debian/horizon-cli
 HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 HORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/horizon-ui
+ANAX-OUTDIRBASE=$(CURDIR)/anax
+
 override_dh_auto_build:
 	cd anax && $(MAKE) arch=$(arch) all-nodeps
 	cd anax-ui && $(MAKE) all-nodeps
@@ -25,6 +27,12 @@ override_dh_auto_install:
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
 	mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin && mv $(HORIZON-OUTDIRBASE)/usr/horizon/bin/hzn $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin
+	if [ -e $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 ]; then \
+		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1 && mv $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1; \
+	fi
+	if [ -e $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh ]; then \
+		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d && mv $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d; \
+	fi
 	mkdir -p $(HORIZON-WIOTP-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon-wiotp/. $(HORIZON-WIOTP-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
 	cd anax-ui && $(MAKE) install DESTDIR=$(HORIZON-UI-OUTDIRBASE)/usr/horizon
