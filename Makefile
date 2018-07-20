@@ -17,16 +17,18 @@ git_repo_prefix ?= ssh://git@github.com/open-horizon
 
 # only returns names of distributions that are valid for this architecture
 distribution_names = $(shell find pkgsrc/deb/meta/dist/*$(dist)* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
+all_distributions = $(shell find pkgsrc/deb/meta/dist/*$(dist)* -maxdepth 0 -exec bash -c 'for d; do echo $$(basename $$d); done' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
 
 file_stub = $(foreach dname,$(distribution_names),dist/$(1)$(call file_version,$(dname)))
+noarch_file_stub = $(foreach dname,$(all_distributions),dist/$(1)$(call file_version,$(dname)))
 
 meta = $(addprefix meta-,$(distribution_names))
 
-src-packages = $(addsuffix .dsc,$(call file_stub,horizon))
+src-packages = $(addsuffix .dsc,$(call noarch_file_stub,horizon))
 
-ui_deb_packages = $(foreach nameprefix, horizon-ui, $(addsuffix _all.deb,$(call file_stub,$(nameprefix))))
-config_deb_packages = $(foreach nameprefix, bluehorizon horizon-wiotp, $(addsuffix _all.deb, $(call file_stub,$(nameprefix))))
+ui_deb_packages = $(foreach nameprefix, horizon-ui, $(addsuffix _all.deb,$(call noarch_file_stub,$(nameprefix))))
+config_deb_packages = $(foreach nameprefix, bluehorizon horizon-wiotp, $(addsuffix _all.deb, $(call noarch_file_stub,$(nameprefix))))
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
