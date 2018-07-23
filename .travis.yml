@@ -9,7 +9,7 @@ env:
 - dist='raspbian.sid'
 script:
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
-  == *"rebuild-release"* ]]; then cd build_support && make arch=armhf dist=$dist;
+  == *"rebuild-release"* ]]; then cd build_support && make dist=$dist;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
