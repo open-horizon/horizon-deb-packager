@@ -22,12 +22,6 @@ Depends: horizon-cli (= ${binary:Version}), docker-engine (>= 17.0) | docker-ce 
 Description: The open source version of the Horizon platform
  Please consult this project's homepage for more detail on this project
 
-Package: horizon-wiotp
-Architecture: all
-Depends: horizon (= ${binary:Version}), ${misc:Depends}
-Description: Configuration for the Horizon platform on the WIoTP backend
- Please consult this project's homepage for more detail on this project
-
 Package: bluehorizon
 Architecture: all
 Depends: horizon (= ${binary:Version}), ${misc:Depends}

@@ -28,7 +28,7 @@ meta = $(addprefix meta-,$(distribution_names))
 src-packages = $(addsuffix .dsc,$(call noarch_file_stub,horizon))
 
 ui_deb_packages = $(foreach nameprefix, horizon-ui, $(addsuffix _all.deb,$(call noarch_file_stub,$(nameprefix))))
-config_deb_packages = $(foreach nameprefix, bluehorizon horizon-wiotp, $(addsuffix _all.deb, $(call noarch_file_stub,$(nameprefix))))
+config_deb_packages = $(foreach nameprefix, bluehorizon, $(addsuffix _all.deb, $(call noarch_file_stub,$(nameprefix))))
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
@@ -113,11 +113,6 @@ $(call dist_dir,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | $(call dist_di
 		./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json.example && \
 		cp pkgsrc/mk-dir-trees $$dir/usr/horizon/sbin/
 
-$(call dist_dir,%)/debian/fs-horizon-wiotp: $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
-	dir=$(call dist_dir,$*)/debian/fs-horizon-wiotp && \
-		mkdir -p $$dir && \
-		cp -Ra ./pkgsrc/seed/horizon-wiotp/fs/. $$dir
-
 $(call dist_dir,%)/debian/fs-bluehorizon: $(call dist_dir,%)/debian/fs-horizon $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
 	dir=$(call dist_dir,$*)/debian/fs-bluehorizon && \
 		mkdir -p $$dir && \
@@ -137,7 +132,7 @@ $(addprefix $(call dist_dir,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb
 		cp -Ra pkgsrc/deb/meta/dist/$*/debian/* $(call dist_dir,$*)/debian/; \
 	fi
 
-dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon-wiotp $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
+dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
         	if [ "$$(basename $$src)" == "anax" ]; then \
         		sed -i.bak 's,local build,'${version}',' $${src}/version/version.go; \
@@ -161,7 +156,6 @@ dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.
 		debuild --preserve-envvar arch -a$(arch) -us -uc -S -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(config_deb_packages):
-dist/horizon-wiotp$(call file_version,%)_all.deb:
 $(ui_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
 dist/horizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
@@ -230,6 +224,6 @@ publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	git push --set-upstream origin horizon_$(version)
 
 # make these "precious" so Make won't remove them
-.PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon fs-horizon-wiotp)
+.PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon)
 
 .PHONY: clean clean-src $(meta) mostlyclean publish-meta publish-meta-bld/% show-distribution-names show-packages show-subprojects
