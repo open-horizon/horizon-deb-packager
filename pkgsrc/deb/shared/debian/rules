@@ -13,7 +13,6 @@ override_dh_auto_test:
 # these are expected to be the same location as in the wrapping Makefile
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 HORIZON-CLI-OUTDIRBASE=$(CURDIR)/debian/horizon-cli
-HORIZON-WIOTP-OUTDIRBASE=$(CURDIR)/debian/horizon-wiotp
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 HORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/horizon-ui
 ANAX-OUTDIRBASE=$(CURDIR)/anax
@@ -33,7 +32,6 @@ override_dh_auto_install:
 	if [ -e $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh ]; then \
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d && mv $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d; \
 	fi
-	mkdir -p $(HORIZON-WIOTP-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon-wiotp/. $(HORIZON-WIOTP-OUTDIRBASE)
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
 	cd anax-ui && $(MAKE) install DESTDIR=$(HORIZON-UI-OUTDIRBASE)/usr/horizon
 
@@ -46,7 +44,7 @@ override_dh_strip:
 
 clean:
 	@echo "Executing rules/clean"
-	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(HORIZON-WIOTP-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(HORIZON-UI-OUTDIRBASE)
+	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(HORIZON-UI-OUTDIRBASE)
 	@echo "Running mostlyclean in $(CURDIR)/anax to remove compiled artifacts"
 	cd anax && $(MAKE) mostlyclean
 
