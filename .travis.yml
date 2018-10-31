@@ -7,6 +7,8 @@ env:
 - dist='debian.sid'
 - dist='raspbian.jessie'
 - dist='raspbian.sid'
+language: go
+go: 1.10.x
 script:
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
   == *"rebuild-release"* ]]; then cd build_support && make dist=$dist;
