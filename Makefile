@@ -108,8 +108,7 @@ $(call dist_dir,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | $(call dist_di
 		mkdir -p $$dir && \
 		./pkgsrc/mk-dir-trees $$dir && \
 		cp -Ra ./pkgsrc/seed/horizon/fs/. $$dir && \
-		echo "SNAP_COMMON=/var/horizon" > $$dir/etc/default/horizon && \
-		envsubst < ./pkgsrc/seed/dynamic/horizon.tmpl >> $$dir/etc/default/horizon && \
+		envsubst < ./pkgsrc/seed/dynamic/horizon.tmpl > $$dir/etc/default/horizon && \
 		./pkgsrc/render-json-config ./pkgsrc/seed/dynamic/anax.json.tmpl $$dir/etc/horizon/anax.json.example && \
 		cp pkgsrc/mk-dir-trees $$dir/usr/horizon/sbin/
 
