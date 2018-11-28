@@ -17,7 +17,7 @@ elif [ "$1" == "remove" ]; then
   if [ "$containers" != "" ]; then
     # TODO: add infrastructure labels too
     # reassign containers variable after doing some filtering
-    containers=$(echo $containers | xargs docker inspect | jq -r '.[] | select ((.Config.Labels | length != 0) and (.Config.Labels["network.bluehorizon.colonus.service_name"] !="" or .Config.Labels["network.bluehorizon.colonus.infrastructure"] != ""))')
+    containers=$(echo $containers | xargs docker inspect | jq -r '.[] | select ((.Config.Labels | length != 0) and (.Config.Labels["openhorizon.anax.service_name"] !="" or .Config.Labels["openhorizon.anax.infrastructure"] != "" or .Config.Labels["network.bluehorizon.colonus.service_name"] !="" or .Config.Labels["network.bluehorizon.colonus.infrastructure"] != ""))')
   fi
 
   # TODO: deal with no container output
