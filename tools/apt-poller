@@ -16,7 +16,7 @@ DETAILS="Initial setup, check $(hostname):$LOGFILE"
 slack_alert() {
   curl -s -X POST -d "{'username': 'apt-poller', 'text': '$STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
   if [ "$STATUS" == "FAILED" ]; then
-    curl -s -X POST -d "{'username': 'apt-poller', 'text': 'Once the failure is resolved, rebuild and rmdir $(hostname):$SEMAPHORE', 'icon_emoji': ':debian:'}" "https://hooks.slack.com/services/${SLACK_HOOK}"
+    curl -s -X POST -d "{'username': 'apt-poller', 'text': 'Once the failure is resolved, rebuild and run \`ssh $(hostname) rmdir $SEMAPHORE\`', 'icon_emoji': ':debian:'}" "https://hooks.slack.com/services/${SLACK_HOOK}"
   fi
 }
 
