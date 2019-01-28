@@ -25,7 +25,7 @@ override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
 	# copy the staged, static files
 	mkdir -p $(HORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-horizon/. $(HORIZON-OUTDIRBASE)
-	mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin && mv $(HORIZON-OUTDIRBASE)/usr/horizon/bin/hzn $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin
+	mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin && mv $(HORIZON-OUTDIRBASE)/usr/horizon/bin/hzn $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin && mv $(HORIZON-OUTDIRBASE)/usr/horizon/bin/horizon-container $(HORIZON-CLI-OUTDIRBASE)/usr/horizon/bin
 	if [ -e $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 ]; then \
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1 && mv $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1; \
 	fi
