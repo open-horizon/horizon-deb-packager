@@ -5,6 +5,9 @@ case "$1" in
       if [[ ! -e "/usr/bin/hzn" ]]; then
         ln -s /usr/horizon/bin/hzn /usr/bin/hzn
       fi
+      if [[ ! -e "/usr/bin/horizon-container" ]]; then
+        ln -s /usr/horizon/bin/horizon-container /usr/bin/horizon-container
+      fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
