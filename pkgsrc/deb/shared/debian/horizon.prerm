@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$1" == "remove" ]; then
+if [ "$1" == "remove" ] || [ "$1" == "purge" ]; then
   # save off container, etc. resources anax knows about for later removal
   # all agreements anax has ever made
 
@@ -14,10 +14,10 @@ if [ "$1" == "remove" ]; then
     anax_agreements=$(echo $agreements_fetch | jq -r '(.agreements.active[], .agreements.archived[])')
 
     # get all image names
-    echo "$agreements" | jq -r '.proposal' | jq -r '.tsandcs'  | jq -r '.workloads[].deployment' | jq -r '.services[].image' | sort | uniq > $IMAGES_OUT
+    echo "$anax_agreements" | jq -r '.proposal' | jq -r '.tsandcs'  | jq -r '.workloads[].deployment' | jq -r '.services[].image' | sort | uniq > $IMAGES_OUT
 
     # get all network bridge names (same as agreement right now)
-    echo $agreements | jq -r '.current_agreement_id' | sort | uniq > $BRIDGES_OUT
+    echo $anax_agreements | jq -r '.current_agreement_id' | sort | uniq > $BRIDGES_OUT
   fi
 fi
 
@@ -27,7 +27,7 @@ if [ "$?" == 0 ]; then
   systemctl stop horizon.service
 fi
 
-if [ "$1" == "remove" ]; then
+if [ "$1" == "remove" ] || [ "$1" == "purge" ]; then
   systemctl --quiet is-enabled horizon.service
   if [ "$?" == 0 ]; then
     systemctl disable horizon.service
