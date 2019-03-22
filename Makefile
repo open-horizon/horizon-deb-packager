@@ -1,12 +1,17 @@
 SHELL := /bin/bash
-subproject_names := anax anax-ui
+subproject_names := anax
 subprojects = $(addprefix bld/,$(subproject_names))
 
 arch ?= $(shell tools/arch-tag)
 dist ?= *
 
+# The packager will build from a git branch or from master. In order to build a subproject branch, the
+# deb packager project has to have the same branch name and this makefile is from that branch. That is,
+# The builder must switch the deb pakcager project to the branch with the same name as the branch of the
+# subprojects that need to be built and packaged.
+branch_name ?= $(shell tools/branch-name)
 version := $(shell cat VERSION)
-version_tail = $(addprefix ~ppa~,$(1))
+version_tail = $(addprefix ~$(branch_name)~ppa~,$(1))
 
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 
@@ -19,6 +24,7 @@ git_repo_prefix ?= ssh://git@github.com/open-horizon
 distribution_names = $(shell find pkgsrc/deb/meta/dist/*$(dist)* -maxdepth 0 -exec bash -c 'for d; do if grep -q "$(arch)" "$${d}/arch"; then echo $$(basename $$d);  fi; done ' _ {} +)
 all_distributions = $(shell find pkgsrc/deb/meta/dist/*$(dist)* -maxdepth 0 -exec bash -c 'for d; do echo $$(basename $$d); done' _ {} +)
 release_only = $(lastword $(subst ., ,$1))
+suite_prefix = $(addprefix $(release_only),$(shell tools/branch-name "-"))
 
 file_stub = $(foreach dname,$(distribution_names),dist/$(1)$(call file_version,$(dname)))
 noarch_file_stub = $(foreach dname,$(all_distributions),dist/$(1)$(call file_version,$(dname)))
@@ -27,14 +33,13 @@ meta = $(addprefix meta-,$(distribution_names))
 
 src-packages = $(addsuffix .dsc,$(call noarch_file_stub,horizon))
 
-ui_deb_packages = $(foreach nameprefix, horizon-ui, $(addsuffix _all.deb,$(call noarch_file_stub,$(nameprefix))))
 config_deb_packages = $(foreach nameprefix, bluehorizon, $(addsuffix _all.deb, $(call noarch_file_stub,$(nameprefix))))
 
 bin_stub = $(addsuffix _$(arch).deb,$(call file_stub,$1))
 horizon_deb_packages = $(call bin_stub,horizon)
 cli_deb_packages = $(call bin_stub,horizon-cli)
 
-packages = $(horizon_deb_packages) $(ui_deb_packages) $(config_deb_packages) $(cli_deb_packages)
+packages = $(horizon_deb_packages) $(config_deb_packages) $(cli_deb_packages)
 
 debian_shared = $(shell find ./pkgsrc/deb/shared/debian -type f | sed 's,^./pkgsrc/deb/shared/debian/,,g' | xargs)
 
@@ -52,10 +57,10 @@ bld:
 bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \
-	if [ "$($(*)-branch)" != "" ]; then git checkout $($(*)-branch); else \
+	if [ "$(branch_name)" != "" ]; then git checkout $(branch_name); else \
 	  if [[ "$$(git tag -l $(docker_tag_prefix)/$(version))" != "" ]]; then \
 	  	git checkout -b "$(docker_tag_prefix)/$(version)-b" $(docker_tag_prefix)/$(version); \
-		fi; \
+	  fi; \
 	fi
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
@@ -100,7 +105,11 @@ distclean: clean
 	@echo "distclean"
 	# TODO: add other files to reset that might have changed?
 	-@git reset VERSION
-	-@git checkout master && git branch -D horizon_$(version)
+	if [[ "$(branch_name)" == "" ]]; then \
+		-@git checkout master && git branch -D horizon_$(version); \
+	else \
+		-@git checkout $(branch_name) && git branch -D horizon_$(version); \
+	fi
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
 $(call dist_dir,%)/debian/fs-horizon: $(shell find pkgsrc/seed) | $(call dist_dir,%)/debian
@@ -120,7 +129,7 @@ $(call dist_dir,%)/debian/fs-bluehorizon: $(call dist_dir,%)/debian/fs-horizon $
 
 # meta for every distribution, the target of horizon_$(version)-meta/$(distribution_names)
 $(call dist_dir,%)/debian/changelog: bld/changelog.tmpl | $(call dist_dir,%)/debian
-	sed "s,++DISTRIBUTIONS++,$(call release_only,$*) $(addprefix $(call release_only,$*)-,updates testing unstable),g" bld/changelog.tmpl > $(call dist_dir,$*)/debian/changelog
+	sed "s,++DISTRIBUTIONS++,$(call suite_prefix,$*) $(addprefix $(call suite_prefix,$*)-,updates testing unstable),g" bld/changelog.tmpl > $(call dist_dir,$*)/debian/changelog
 	sed -i.bak "s,++VERSIONSUFFIX++,$(call version_tail,$*),g" $(call dist_dir,$*)/debian/changelog && rm $(call dist_dir,$*)/debian/changelog.bak
 
 # N.B. This target will copy all files from the source to the dest. as one target
@@ -134,7 +143,7 @@ $(addprefix $(call dist_dir,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb
 dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
         	if [ "$$(basename $$src)" == "anax" ]; then \
-        		sed -i.bak 's,local build,'${version}',' $${src}/version/version.go; \
+				sed -i.bak 's,local build,'${version}${branch_name}',' $${src}/version/version.go; \
         		rm -f $${src}/version/version.go.bak; \
         	fi; \
 		bash -c "cd $${src} && make deps"; \
@@ -155,9 +164,7 @@ dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.
 		debuild --preserve-envvar arch -a$(arch) -us -uc -S -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 $(config_deb_packages):
-$(ui_deb_packages):
 dist/bluehorizon$(call file_version,%)_all.deb:
-dist/horizon-ui$(call file_version,%)_all.deb: dist/horizon$(call file_version,%).dsc
 	@echo "Running arch all pkg build in $*; using dist/horizon$(call file_version,$*).dsc"
 	-rm -Rf $(call dist_dir,$*)
 	dpkg-source -x dist/horizon$(call file_version,$*).dsc $(call dist_dir,$*)
@@ -191,7 +198,7 @@ arch-packages: $(horizon_deb_packages) $(cli_deb_packages)
 
 packages: $(packages)
 
-noarch-packages: $(ui_deb_packages) $(config_deb_packages)
+noarch-packages: $(config_deb_packages)
 
 show-distribution-names:
 	@echo $(distribution_names)
@@ -209,7 +216,7 @@ show-packages:
 	@echo $(packages)
 
 show-noarch-packages:
-	@echo $(ui_deb_packages) $(config_deb_packages)
+	@echo $(config_deb_packages)
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
