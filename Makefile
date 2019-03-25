@@ -11,7 +11,7 @@ dist ?= *
 # subprojects that need to be built and packaged.
 branch_name ?= $(shell tools/branch-name)
 version := $(shell cat VERSION)
-version_tail = $(addprefix ~$(branch_name)~ppa~,$(1))
+version_tail = $(addprefix $(shell tools/branch-name "~")~ppa~,$(1))
 
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 
