@@ -9,10 +9,20 @@ A project used to create and publish Debian packages of the Horizon platform. Cu
  * Architectures: amd64, armhf, arm64 ppc64el
  * Distributions: Ubuntu Trusty, Xenial, and Yakkety; Raspbian Jessie, Stretch and Sid; and Debian Jessie and Sid
 
+Debian packages produced by this process are installed by a user where the user knows:
+ * which operating system they need
+ * which stream of code they want (where the name of the stream includes our branch name)
+
+That information is specified in an apt sources.list file as follows, e.g.:
+deb [arch=amd64] http://pkg.bluehorizon.network/linux/ubuntu xenial-testing main
+
+where xenial-testing is the distribution suite and main is the component
+
+when producing packages for a source branch that is not master, the branch name appears in the suite name, e.g. xenial-la-testing for the la branch.
+
 Related Projects:
 
  * `anax` (http://github.com/open-horizon/anax): The client control application in the Horizon system
- * `anax-ui` (http://github.com/open-horizon/anax-ui): The source for the Anax web UI
  * `raspbian-image` (http://github.com/open-horizon/raspbian-image): The Raspbian image builder for Raspberry Pi 2 and 3 models dedicated to Horizon
 
 ## Manual use

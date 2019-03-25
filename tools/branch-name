@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+# This script pulls the current branch name from git. If the current branch is master then
+# an empty string is returned, otherwise the git branch name is returned. It should be noted that
+# the branch name returned will be the branch of the packager repo, prefixed with the optional delimeter.
+delim=$1
+
+branch="$(git branch 2> /dev/null)"
+if [[ "${branch}" == "master" ]]; then
+  echo ""
+else
+  echo "${delim}$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
+fi

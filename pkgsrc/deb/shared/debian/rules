@@ -14,12 +14,10 @@ override_dh_auto_test:
 HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 HORIZON-CLI-OUTDIRBASE=$(CURDIR)/debian/horizon-cli
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
-HORIZON-UI-OUTDIRBASE=$(CURDIR)/debian/horizon-ui
 ANAX-OUTDIRBASE=$(CURDIR)/anax
 
 override_dh_auto_build:
 	cd anax && $(MAKE) arch=$(arch) all-nodeps
-	cd anax-ui && $(MAKE) all-nodeps
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon
@@ -33,7 +31,6 @@ override_dh_auto_install:
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d && mv $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d; \
 	fi
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
-	cd anax-ui && $(MAKE) install DESTDIR=$(HORIZON-UI-OUTDIRBASE)/usr/horizon
 
 #override_dh_builddeb:
 #	@echo "Running dh_builddeb"
@@ -44,7 +41,7 @@ override_dh_strip:
 
 clean:
 	@echo "Executing rules/clean"
-	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE) $(HORIZON-UI-OUTDIRBASE)
+	rm -Rf $(HORIZON-OUTDIRBASE) $(HORIZON-CLI-OUTDIRBASE) $(BLUEHORIZON-OUTDIRBASE)
 	@echo "Running mostlyclean in $(CURDIR)/anax to remove compiled artifacts"
 	cd anax && $(MAKE) mostlyclean
 
