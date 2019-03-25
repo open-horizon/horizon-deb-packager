@@ -10,9 +10,9 @@ env:
 language: go
 go: 1.10.x
 script:
+- printenv
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
-  == *"rebuild-release"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
-  == *"test-build-deb-packages"* ]]; then cd build_support && make dist=$dist;
+  == *"rebuild-release"* ]] || [[ $TRAVIS_PULL_REQUEST != ''false'' ]]; then cd build_support && make dist=$dist;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:

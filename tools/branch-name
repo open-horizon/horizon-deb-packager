@@ -3,11 +3,25 @@
 # This script pulls the current branch name from git. If the current branch is master then
 # an empty string is returned, otherwise the git branch name is returned. It should be noted that
 # the branch name returned will be the branch of the packager repo, prefixed with the optional delimeter.
+# Parts of the build process run in Travis in such a way that the branch name isnt available, so it
+# is obtained via a Travis env var.
 delim=$1
 
-branch="$(git branch 2> /dev/null)"
-if [[ "${branch}" == "master" ]]; then
-  echo ""
+if [[ -z $TRAVIS_BRANCH ]]; then
+  branch="$(git branch 2> /dev/null | grep '*' 2> /dev/null)"
+
+  if [[ "${branch}" == "* master" ]]; then
+    echo ""
+  elif [[ "${branch}" =~ '(' ]]; then
+    echo "Can't determine real branch name from '$branch' exiting"
+    exit 1
+  else
+    echo "${delim}$(git branch 2> /dev/null | grep '*' 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
+  fi
 else
-  echo "${delim}$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
+  if [[ $TRAVIS_BRANCH == "master" ]]; then
+    echo ""
+  else
+    echo "${delim}$TRAVIS_BRANCH"
+  fi
 fi
