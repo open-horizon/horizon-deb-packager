@@ -12,11 +12,16 @@ go: 1.10.x
 script:
 - printenv
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
-  == *"rebuild-release"* ]] || [[ $TRAVIS_PULL_REQUEST != ''false'' ]]; then cd build_support && make dist=$dist;
+  == *"rebuild-release"* ]] || [[ $TRAVIS_PULL_REQUEST != ''false'' ]]; then make -C build_support && make dist=$dist;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
   - master
+after_script:
+- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
+  == *"rebuild-release"* ]]; then echo "$DOCKER_HUB_PASS" | docker login -u="$DOCKER_HUB_USER"
+  --password-stdin && make fss-containers;
+  else echo "Not pushing images, since this is not a version change commit"; fi;
 before_deploy:
 - export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)
 - rm -r $TRAVIS_BUILD_DIR/dist/*/ && rm -f $TRAVIS_BUILD_DIR/dist/*.build
@@ -43,4 +48,4 @@ deploy:
   overwrite: true
 notifications:
   slack:
-    secure: AfNiLrG7WJi304rjSIl6V0pMQgydY//Mo7okJP50WqkqxRLu3sZ30i5whjDHycCgbE+CjAhkgHXJX4ZVliZwpOtv/bfM7AjjlKiJiW+BE2dehoW62K441dDWao1hyoiTFpjt+QnPUFgx8PqDrfcbyoluJMfHLKQ/fkiKccWiux3yFSFFoWgfnRJDi+tdBsBiH9thgFjqru9a1yPymyMsVJul/MSE2Bp0t0fnDWM/VNnfr+5Ok8EN84Fr11MuavV5F5YYXRePthVm+TYLxFrkoJmV2PRgkwbzR9X/AdSLoOHR4AXJJmMXTxMzlHnWaHL/GqzEEnWYCYOjJ+FxM2PNFpcJqfka4bPPDKT/guRtjfqX2GoU/NQNJVZmbO/lxl4MiL5mSa5+lGhOyPn/AUWo15afzWHvJ9yBN5t4RQ65sNidpGtop3lMj/cx2QN3nmdvf3cGMSRbSrdNN2JNEjf1t2PyhziHhC0ntGuQSyF29RKLOO7FNbA3HKbCJOjvnhQeHSsRKc3VZw8NYW8CqyaLYvnL96mihz7fwj5XVgx8Y4ErdIRGXexiZP1ox2EeBmTaiCXgrivuubru7rMXtHrqCYKaXj455WtY9FCFp7o99xEQF1GC2Wr8fRjvAGUXDHJ9rLOgt9rN3ek0rv/Qg7WcVe1UZp6AedxW4S5bTDSgmZ8=
+    secure: MsDy912R5awEshRTEwyprzRwRs7XqARdxToRwEs6fuDIxLUvVzwuYw8FzoQSlhBVSXVhFfoqPIEADbiJttqUYkn1FmanaOd+6i+TcZSVhuPqu3kITdX16VOCfme0lyEwo6lTzLfXjvKl1nWs0kFOVeoeU9T3gnK3XON+vBFSBZhxnqVSlLukafvlbicGyP3w+JNt1dgkGJS6W8focOmEs6aqQcMIVY5ewxEtB1PvoHPYrihK6JJuCik/hQXa4nZej5ougSFU2MLM/vVysPttAmnDSx7pyXv+umQjh4Cd5X7UceTjWac8Ca8pswTh0rsuMeaanKiYsMbeRT9n/zZOPs+jwu+ngwC/2pGESmyaxNdp571eZTZEIEc0Mp1BWn80dhEI0nlg23QLYyTNDW2ZNgdLV02iIwfLQbzdcvXYtUFnPCfiw1b8BoHMRU+x8r92+hLn1tQPP6x6wxLNmiE1BNOc4wPTDcftt7fPAiqBNwh+JWlrnbyg0ON+QEfp+46baI/u8k+Oc+oXGPuoPrDgyGHuBTcY4qA0Aw1MAp9QAZYVh4JJXzHo9umwjDA+qM4FoE/l73MTm4LjekhAKuqRB6Ya8/vl+PjNRzS6UW7F6v+o635LYeaBbMPMMslDKZUlFwskZBl5D0MkeWtO39ncZMCYXmj6w4ffuqJAQHH2nuo=

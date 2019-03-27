@@ -73,6 +73,7 @@ artifacts: $(FLAGNAME)
 # artifacts together, differing source packages are built and the deb index will fail to ingest them.
 all-artifacts: clean $(FLAGNAME)
 	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) arch=$(arch) dist='$(dist)' src-packages noarch-packages"
+	@echo "Iterating architectures to build architecture specific binaries"
 	for ix_arch in $(architectures); do \
 		SECONDS=0; \
 		docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) dist='$(dist)' arch=$$ix_arch arch-packages"; \

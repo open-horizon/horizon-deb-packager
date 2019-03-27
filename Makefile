@@ -181,6 +181,13 @@ dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,
 	cd $(call dist_dir,$*) && \
 		debuild --preserve-envvar arch -a$(arch) -us -uc -B -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
+# This target is called by the travis yaml file after the deb packages are built but before they are deployed.
+fss_containers:
+	@echo "Building FSS containers for arch amd64 in ./bld/anax"
+	cd bld/anax && \
+		make arch=amd64 opsys=Linux all-nodeps && \
+			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 fss-package
+
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
 	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)" $(subprojects)

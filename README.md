@@ -18,7 +18,18 @@ deb [arch=amd64] http://pkg.bluehorizon.network/linux/ubuntu xenial-testing main
 
 where xenial-testing is the distribution suite and main is the component
 
-when producing packages for a source branch that is not master, the branch name appears in the suite name, e.g. xenial-la-testing for the la branch.
+This project also produces containers and pushes them into dockerhub.
+
+When producing packages and containers for a source branch that is not master, the branch name appears in the suite name, e.g. xenial-la-testing for the la branch.
+
+The process of building the packages and containers is quite complex, as outlined in the following steps:
+1. The ./VERSION file is modified with a new version number.
+2. make meta is called to produce the appropriate changelog for the new packages.
+3. make meta-publish is called to commit the changes and trigger a Travis job that builds the packages and containers in the background.
+4. The Travis job is defined by the .travis.yml file.
+5. This job invokes the ./build_support/Makefile all-artifacts target
+6. The build_support/Makefile creates and runs a special build container to create the deb packages and containers one at a time for each linux distribution that we support and for each architecture that we support.
+7. If everything worked, the deb packages are uploaded by the ./tools/aptpoller and the containers are uploaded to dockerhub.
 
 Related Projects:
 
