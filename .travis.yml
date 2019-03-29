@@ -17,11 +17,6 @@ script:
 branches:
   only:
   - master
-after_script:
-- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
-  == *"rebuild-release"* ]]; then echo "$DOCKER_HUB_PASS" | docker login -u="$DOCKER_HUB_USER"
-  --password-stdin && make fss-containers;
-  else echo "Not pushing images, since this is not a version change commit"; fi;
 before_deploy:
 - export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)
 - rm -r $TRAVIS_BUILD_DIR/dist/*/ && rm -f $TRAVIS_BUILD_DIR/dist/*.build
@@ -46,6 +41,11 @@ deploy:
   - "$TRAVIS_BUILD_DIR/dist/${VERSION_TAG}.${dist}.sha256.txt"
   draft: false
   overwrite: true
+after_script:
+- if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
+  == *"rebuild-release"* ]]; then echo "$DOCKER_HUB_PASS" | docker login -u="$DOCKER_HUB_USER"
+  --password-stdin && cd $TRAVIS_BUILD_DIR && make fss-containers;
+  else echo "Not pushing images, since this is not a version change commit"; fi;
 notifications:
   slack:
     secure: MsDy912R5awEshRTEwyprzRwRs7XqARdxToRwEs6fuDIxLUvVzwuYw8FzoQSlhBVSXVhFfoqPIEADbiJttqUYkn1FmanaOd+6i+TcZSVhuPqu3kITdX16VOCfme0lyEwo6lTzLfXjvKl1nWs0kFOVeoeU9T3gnK3XON+vBFSBZhxnqVSlLukafvlbicGyP3w+JNt1dgkGJS6W8focOmEs6aqQcMIVY5ewxEtB1PvoHPYrihK6JJuCik/hQXa4nZej5ougSFU2MLM/vVysPttAmnDSx7pyXv+umQjh4Cd5X7UceTjWac8Ca8pswTh0rsuMeaanKiYsMbeRT9n/zZOPs+jwu+ngwC/2pGESmyaxNdp571eZTZEIEc0Mp1BWn80dhEI0nlg23QLYyTNDW2ZNgdLV02iIwfLQbzdcvXYtUFnPCfiw1b8BoHMRU+x8r92+hLn1tQPP6x6wxLNmiE1BNOc4wPTDcftt7fPAiqBNwh+JWlrnbyg0ON+QEfp+46baI/u8k+Oc+oXGPuoPrDgyGHuBTcY4qA0Aw1MAp9QAZYVh4JJXzHo9umwjDA+qM4FoE/l73MTm4LjekhAKuqRB6Ya8/vl+PjNRzS6UW7F6v+o635LYeaBbMPMMslDKZUlFwskZBl5D0MkeWtO39ncZMCYXmj6w4ffuqJAQHH2nuo=
