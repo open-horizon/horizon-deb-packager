@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
       gawk \
       wget \
       gettext
+RUN curl -fsSL get.docker.com | sh
 RUN curl -s ##golang_dl_url## | tar zxf - -C /usr/local
 RUN ln -s /usr/local/go/bin/go* /usr/bin/
 ##node_install##
