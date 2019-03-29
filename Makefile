@@ -182,7 +182,7 @@ dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,
 		debuild --preserve-envvar arch -a$(arch) -us -uc -B -sa -tc --lintian-opts --allow-root -X cruft,init.d,binaries
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
-fss_containers:
+fss-containers:
 	@echo "Building FSS containers for arch amd64 in ./bld/anax"
 	cd bld/anax && \
 		make arch=amd64 opsys=Linux all-nodeps && \
