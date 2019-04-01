@@ -1,13 +1,13 @@
 Name: incoming-jessie
 IncomingDir: /var/repositories/incoming/raspbian.jessie
 TempDir: /var/repositories/tmp/raspbian.jessie
-Allow: jessie-testing
-Default: jessie-testing
+Allow: jessie-la-testing
+Default: jessie-la-testing
 Permit: older_version
 
 Name: incoming-sid
 IncomingDir: /var/repositories/incoming/raspbian.sid
 TempDir: /var/repositories/tmp/raspbian.sid
-Allow: sid-testing
-Default: sid-testing
+Allow: sid-la-testing
+Default: sid-la-testing
 Permit: older_version

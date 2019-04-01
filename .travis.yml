@@ -16,7 +16,7 @@ script:
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
-  - master
+  - la
 before_deploy:
 - export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)
 - rm -r $TRAVIS_BUILD_DIR/dist/*/ && rm -f $TRAVIS_BUILD_DIR/dist/*.build

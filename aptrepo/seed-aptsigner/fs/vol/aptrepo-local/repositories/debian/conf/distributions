@@ -1,7 +1,7 @@
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: jessie
-Codename: jessie
+Suite: jessie-la
+Codename: jessie-la
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -10,8 +10,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: jessie-updates
-Codename: jessie-updates
+Suite: jessie-la-updates
+Codename: jessie-la-updates
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -20,8 +20,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: jessie-testing
-Codename: jessie-testing
+Suite: jessie-la-testing
+Codename: jessie-la-testing
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -30,8 +30,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: jessie-unstable
-Codename: jessie-unstable
+Suite: jessie-la-unstable
+Codename: jessie-la-unstable
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -40,8 +40,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: sid
-Codename: sid
+Suite: sid-la
+Codename: sid-la
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -50,8 +50,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: sid-updates
-Codename: sid-updates
+Suite: sid-la-updates
+Codename: sid-la-updates
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -60,8 +60,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: sid-testing
-Codename: sid-testing
+Suite: sid-la-testing
+Codename: sid-la-testing
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -70,8 +70,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: sid-unstable
-Codename: sid-unstable
+Suite: sid-la-unstable
+Codename: sid-la-unstable
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -80,8 +80,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: stretch
-Codename: stretch
+Suite: stretch-la
+Codename: stretch-la
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -90,8 +90,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: stretch-updates
-Codename: stretch-updates
+Suite: stretch-la-updates
+Codename: stretch-la-updates
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -100,8 +100,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: stretch-testing
-Codename: stretch-testing
+Suite: stretch-la-testing
+Codename: stretch-la-testing
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages
@@ -110,8 +110,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: stretch-unstable
-Codename: stretch-unstable
+Suite: stretch-la-unstable
+Codename: stretch-la-unstable
 Architectures: armhf source
 Components: main
 Description: Blue Horizon packages

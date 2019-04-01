@@ -1,20 +1,20 @@
 Name: incoming-jessie
 IncomingDir: /var/repositories/incoming/debian.jessie
 TempDir: /var/repositories/tmp/debian.jessie
-Allow: jessie-testing
-Default: jessie-testing
+Allow: jessie-la-testing
+Default: jessie-la-testing
 Permit: older_version
 
 Name: incoming-stretch
 IncomingDir: /var/repositories/incoming/debian.stretch
 TempDir: /var/repositories/tmp/debian.stretch
-Allow: stretch-testing
-Default: stretch-testing
+Allow: stretch-la-testing
+Default: stretch-la-testing
 Permit: older_version
 
 Name: incoming-sid
 IncomingDir: /var/repositories/incoming/debian.sid
 TempDir: /var/repositories/tmp/debian.sid
-Allow: sid-testing
-Default: sid-testing
+Allow: sid-la-testing
+Default: sid-la-testing
 Permit: older_version
