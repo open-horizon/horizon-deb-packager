@@ -1,7 +1,7 @@
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: trusty
-Codename: trusty
+Suite: trusty-la
+Codename: trusty-la
 Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
@@ -10,8 +10,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: trusty-updates
-Codename: trusty-updates
+Suite: trusty-la-updates
+Codename: trusty-la-updates
 Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
@@ -20,8 +20,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: trusty-testing
-Codename: trusty-testing
+Suite: trusty-la-testing
+Codename: trusty-la-testing
 Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
@@ -30,8 +30,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: trusty-unstable
-Codename: trusty-unstable
+Suite: trusty-la-unstable
+Codename: trusty-la-unstable
 Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
@@ -40,8 +40,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial
-Codename: xenial
+Suite: xenial-la
+Codename: xenial-la
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -50,8 +50,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-updates
-Codename: xenial-updates
+Suite: xenial-la-updates
+Codename: xenial-la-updates
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -60,8 +60,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-testing
-Codename: xenial-testing
+Suite: xenial-la-testing
+Codename: xenial-la-testing
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -70,8 +70,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: xenial-unstable
-Codename: xenial-unstable
+Suite: xenial-la-unstable
+Codename: xenial-la-unstable
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -80,8 +80,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety
-Codename: yakkety
+Suite: yakkety-la
+Codename: yakkety-la
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -90,8 +90,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-updates
-Codename: yakkety-updates
+Suite: yakkety-la-updates
+Codename: yakkety-la-updates
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -100,8 +100,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-testing
-Codename: yakkety-testing
+Suite: yakkety-la-testing
+Codename: yakkety-la-testing
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
@@ -110,8 +110,8 @@ SignWith: 8F813713
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
-Suite: yakkety-unstable
-Codename: yakkety-unstable
+Suite: yakkety-la-unstable
+Codename: yakkety-la-unstable
 Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
