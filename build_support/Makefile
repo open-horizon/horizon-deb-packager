@@ -10,7 +10,7 @@ architectures ?= amd64 arm64 armhf ppc64el
 
 # docker build container
 DOCKERB_CNAME := horizon-deb-packager
-DOCKERB_INAME := summit.hovitos.engineering/$(buildarch)/$(DOCKERB_CNAME)-i
+DOCKERB_INAME := us.icr.io/horizon/$(DOCKERB_CNAME)-i
 DOCKERB_TAG := $(shell cat VERSION)
 DOCKERB_OPTS := --rm --no-cache
 
