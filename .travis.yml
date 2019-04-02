@@ -9,6 +9,7 @@ env:
 - dist='raspbian.sid'
 language: go
 go: 1.10.x
+if: tag IS blank
 script:
 - printenv
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
