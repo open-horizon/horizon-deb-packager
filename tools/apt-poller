@@ -8,13 +8,11 @@ GIT_API="api.github.com"
 REPO="open-horizon/horizon-deb-packager"
 TRAVIS_API="api.travis-ci.org"
 INCOMING_DIR="/vol/aptrepo-local/repositories/incoming"
-SEMAPHORE="/tmp/$(basename "$0").sem"
-LOGFILE="/tmp/$(basename "$0").log"
+# Pre-setting failure, success has to be marked
 STATUS="FAILED"
-DETAILS="Initial setup, check $(hostname):$LOGFILE"
 
 slack_alert() {
-  curl -s -X POST -d "{'username': 'apt-poller', 'text': '$STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
+  curl -s -X POST -d "{'username': 'apt-poller', 'text': 'apt-poller for branch $BRANCH_NAME $STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
   if [ "$STATUS" == "FAILED" ]; then
     curl -s -X POST -d "{'username': 'apt-poller', 'text': 'Once the failure is resolved, rebuild and run \`ssh $(hostname) rmdir $SEMAPHORE\`', 'icon_emoji': ':debian:'}" "https://hooks.slack.com/services/${SLACK_HOOK}"
   fi
@@ -36,6 +34,7 @@ exit_tasks() {
 usage () {
   echo -e "\\nUsage:\\n
   \\t-a\\tFull URL to an apt repo Packages file for version comparison (No default)
+  \\t-b\\tBranch name (No default, usually master)
   \\t-g\\tGithub api (Default: api.github.com)
   \\t-h\\tHelp, prints this usage
   \\t-i\\tIncoming directory (Default: /vol/aptrepo-local/repositories/incoming)
@@ -46,9 +45,11 @@ usage () {
   exit
 }
 
-while getopts ":a:g:hi:r:s:t:" opt; do
+while getopts ":a:b:g:hi:r:s:t:" opt; do
   case $opt in
     a) PACKAGES_URL="$OPTARG"
+    ;;
+    b) BRANCH_NAME="$OPTARG"
     ;;
     g) GIT_API="$OPTARG"
     ;;
@@ -67,6 +68,13 @@ while getopts ":a:g:hi:r:s:t:" opt; do
   esac
 done
   
+# needs to be defined
+if [ -z "$PACKAGES_URL" ] || [ -z "$BRANCH_NAME" ]; then usage; fi
+
+SEMAPHORE="/tmp/$(basename "$0")-$BRANCH_NAME.sem"
+LOGFILE="/tmp/$(basename "$0")-$BRANCH_NAME.log"
+DETAILS="Initial setup, check $(hostname):$LOGFILE"
+
 # logging and initial configuration
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
@@ -79,21 +87,22 @@ set -ex
 if mkdir "$SEMAPHORE"; then
   echo "Only instance running after clean exit, continuing"
 else
-  echo "Semaphore directory $SEMAPHORE exists, another instance is running or exited uncleanly, investigate /tmp/$(basename "$0").log"
+  echo "Semaphore directory $SEMAPHORE exists, another instance is running or exited uncleanly, investigate $LOGFILE"
   STATUS="BLOCKED"
   exit
 fi
   
-
-# needs to be defined
-if [ -z "$PACKAGES_URL" ]; then exit; fi
-
 # comparing the git version and existing apt version to see if we need to update
 DETAILS="Checking for updates"
-GIT_VERSION=$(curl -s -H 'Accept: application/vnd.github.v3.raw' "https://$GIT_API/repos/$REPO/contents/VERSION")
+PACKAGE_TRUNK_URL=$(echo "$PACKAGES_URL" | awk -F '/' '{print "http://"$3}')
+if ! -sSf "$PACKAGE_TRUNK_URL"; then
+  echo "Couldn't reach packager repo URL"
+  exit
+fi
+GIT_VERSION=$(curl -s -H 'Accept: application/vnd.github.v3.raw' "https://$GIT_API/repos/$REPO/contents/VERSION?ref=$BRANCH_NAME")
 APT_VERSION=$(curl -s "$PACKAGES_URL" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
 
-if dpkg --compare-versions "$GIT_VERSION" gt "$APT_VERSION"; then
+if [ -z $APT_VERSION ] || dpkg --compare-versions "$GIT_VERSION" gt "$APT_VERSION"; then
   echo Downloading new content
 else
   echo Nothing to update
@@ -103,21 +112,22 @@ fi
 
 # making sure the travis build is complete, and was successful ... it will also stop here before the initial travis build
 DETAILS="Travis build wait"
-if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r .[0].state)" != "finished" ]; then
+if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r --arg BRANCH_NAME "$BRANCH_NAME" '[.[]|select(.branch==$BRANCH_NAME)][0].state')" != "finished" ]; then
   STATUS="SUCCESS"
   exit
 fi
 
 # if finished and not successful, then something broke
-if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r .[0].result)" != 0 ]; then
+if [ "$(curl -s https://$TRAVIS_API/repos/$REPO/builds | jq -r --arg BRANCH_NAME "$BRANCH_NAME" '[.[]|select(.branch==$BRANCH_NAME)][0].result')" != 0 ]; then
   exit
 fi
 
 # grab the release assets, assemble the short DIST for later indexing use
 DETAILS="Downloading the release"
-for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); do
+
+for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/tags/v$GIT_VERSION-$BRANCH_NAME" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); do
   echo "Downloading $asset"
-  DISTRO=$(echo "$asset" | awk -F "v$GIT_VERSION.|.assets" '{print $3}')
+  DISTRO=$(echo "$asset" | awk -F "v$GIT_VERSION-$BRANCH_NAME.|.assets" '{print $3}')
   DIST=$(echo "$DISTRO" | awk -F "." '{print $2}')
   REPO=$(echo "$DISTRO" | awk -F "." '{print $1}')
 
@@ -153,11 +163,15 @@ for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/latest" | jq -r '.
   rm -f $INCOMING_DIR/$DISTRO/*.sha256.txt
 done
 
+#### Exit for now
+exit
+
 # index each distro
 DETAILS="Release artifacts downloaded, initiating indexing"
 if [ -n "$SLACK_HOOK" ]; then
   STATUS="SUCCESS"
   slack_alert
+  # Pre-setting failure, success has to be marked
   STATUS="FAILED"
   DETAILS="Indexing release"
 fi
@@ -167,7 +181,14 @@ done
 
 # loop until all versions are updated, give up after 15 minutes
 BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
-CHECK_PACKAGES=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2"-testing/main/binary-"$3"/Packages"}'))
+if [[ $BRANCH_NAME == "master" ]]; then
+  APPEND_STRING=""
+else
+  APPEND_STRING="-$BRANCH_NAME"
+fi
+
+#### This is where some tweaking may need to happen
+CHECK_PACKAGES=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2""'$APPEND_STRING'"-testing/main/binary-"$3"/Packages"}'))
 for i in {1..15}; do
   CURRENT=true
   for URL in "${CHECK_PACKAGES[@]}"; do
@@ -190,5 +211,5 @@ for i in {1..15}; do
 done
 
 # made it through with no errors
-DETAILS="apt repo updated from $APT_VERSION to $GIT_VERSION"
+DETAILS="apt repo for $BRANCH_NAME-testing updated from $APT_VERSION to $GIT_VERSION"
 STATUS="SUCCESS"
