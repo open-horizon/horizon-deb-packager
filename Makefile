@@ -13,6 +13,7 @@ branch_name ?= $(shell tools/branch-name)
 version := $(shell cat VERSION)
 version_tail = $(addprefix $(shell tools/branch-name "~")~ppa~,$(1))
 
+#### Here too??
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
 
 dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
@@ -58,27 +59,27 @@ bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \
 	if [ "$(branch_name)" != "" ]; then git checkout $(branch_name); else \
-	  if [[ "$$(git tag -l $(docker_tag_prefix)/$(version))" != "" ]]; then \
-	  	git checkout -b "$(docker_tag_prefix)/$(version)-b" $(docker_tag_prefix)/$(version); \
+	  if [[ "$$(git tag -l $(docker_tag_prefix)/$(version)$(branch_name))" != "" ]]; then \
+	  	git checkout -b "$(docker_tag_prefix)/$(version)$(branch_name)-b" $(docker_tag_prefix)/$(version)$(branch_name); \
 	  fi; \
 	fi
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
-	bash tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(docker_tag_prefix)/$(version)"
+	bash tools/git-gen-changelog "$(CURDIR)/bld/$*" "$(CURDIR)/pkgsrc/deb/meta/changelog.tmpl" "$(docker_tag_prefix)/$(version)$(branch_name)"
 
 bld/changelog.tmpl: pkgsrc/deb/meta/changelog.tmpl $(addsuffix /.git-gen-changelog,$(subprojects))
 	mkdir -p bld
-	if [[ "$$(cat pkgsrc/deb/meta/changelog.tmpl | head -n1 | grep $(version))" != "" ]]; then \
+	if [[ "$$(cat pkgsrc/deb/meta/changelog.tmpl | head -n1 | grep $(version)$(branch_name))" != "" ]]; then \
 		cp pkgsrc/deb/meta/changelog.tmpl bld/changelog.tmpl; \
 	else \
-		tools/render-debian-changelog "++DISTRIBUTIONS++" "$(version)" "++VERSIONSUFFIX++" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog"); \
+		tools/render-debian-changelog "++DISTRIBUTIONS++" "$(version)$(branch_name)" "++VERSIONSUFFIX++" bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl $(shell find bld -iname ".git-gen-changelog"); \
 	fi
 
 $(call dist_dir,%)/debian:
 	mkdir -p $(call dist_dir,$*)/debian
 
 clean: clean-src mostlyclean
-	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(version) branch"
+	@echo "Use distclean target to revert all configuration, in addition to build artifacts, and clean up horizon_$(version)$(branch_name) branch"
 	-rm -f bld/changelog.tmpl
 	-rm -Rf horizon* bluehorizon*
 	-rm -Rf bld
@@ -106,9 +107,9 @@ distclean: clean
 	# TODO: add other files to reset that might have changed?
 	-@git reset VERSION
 	if [[ "$(branch_name)" == "" ]]; then \
-		-@git checkout master && git branch -D horizon_$(version); \
+		-@git checkout master && git branch -D horizon_$(version)$(branch_name); \
 	else \
-		-@git checkout $(branch_name) && git branch -D horizon_$(version); \
+		-@git checkout $(branch_name) && git branch -D horizon_$(version)$(branch_name); \
 	fi
 
 # both creates directory and fills it: this is not the best use of make but it is trivial work that can stay flexible
@@ -190,7 +191,7 @@ fss-containers:
 
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
-	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)" $(subprojects)
+	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)$(branch_name)" $(subprojects)
 endif
 	@echo "================="
 	@echo "Metadata created"
@@ -227,14 +228,14 @@ show-noarch-packages:
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
-	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)"
+	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)$(branch_name)"
 
 publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
-	git checkout -b horizon_$(version)
+	git checkout -b horizon_$(version)$(branch_name)
 	cp bld/changelog.tmpl pkgsrc/deb/meta/changelog.tmpl
 	git add ./VERSION pkgsrc/deb/meta/changelog.tmpl
-	git commit -m "updated package metadata to $(version)"
-	git push --set-upstream origin horizon_$(version)
+	git commit -m "updated package metadata to $(version)$(branch_name)"
+	git push --set-upstream origin horizon_$(version)$(branch_name)
 
 # make these "precious" so Make won't remove them
 .PRECIOUS: dist/horizon$(call file_version,%).orig.tar.gz bld/%/.git/logs/HEAD $(call dist_dir,%)/debian $(addprefix $(call dist_dir,%)/debian/,$(debian_shared) changelog fs-horizon fs-bluehorizon)
