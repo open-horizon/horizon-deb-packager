@@ -14,7 +14,6 @@ version := $(shell cat VERSION)
 version_tail = $(addprefix $(shell tools/branch-name "~")~ppa~,$(1))
 
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
-
 dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
 file_version = $(call aug_version,_,$(1))
 
