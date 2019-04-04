@@ -32,6 +32,7 @@ deploy:
     condition: $TRAVIS_COMMIT_MESSAGE =~ "updated package metadata" || $TRAVIS_COMMIT_MESSAGE
       =~ "rebuild-release"
     repo: open-horizon/horizon-deb-packager
+    all_branches: true
   provider: releases
   skip_cleanup: true
   api_key:
