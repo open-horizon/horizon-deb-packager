@@ -14,6 +14,7 @@ fi
 dry=$1
 repo_path=$2
 tag=$3
+branch_name=$4
 
 function get_local_hash() {
   local tag_query="$(git show-ref --tags "$tag" 2>&1)"
@@ -43,7 +44,7 @@ fi
 
 if [[ "$(get_local_hash)" == "" ]]; then
   # no local tag exists
-  git tag -m "$(echo "$tag" | sed 's,/, ,')" -a $tag
+  git tag -m "$(echo "$tag" | sed 's,/, ,')" -a $tag $branch_name
   if [[ $? != 0 ]]; then
     (>&2 echo "Failed to tag repo with $tag. Manual intervention required.")
     exit 1
