@@ -18,7 +18,7 @@ script:
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 before_deploy:
 - if [[ $TRAVIS_BRANCH == "master" ]]; then BRANCH_TAG=""; else BRANCH_TAG="-${TRAVIS_BRANCH}"; fi
-- export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)-${BRANCH_TAG}
+- export VERSION_TAG=v$(cat $TRAVIS_BUILD_DIR/VERSION)${BRANCH_TAG}
 - rm -r $TRAVIS_BUILD_DIR/dist/*/ && rm -f $TRAVIS_BUILD_DIR/dist/*.build
 - cd $TRAVIS_BUILD_DIR/dist && sha256sum *${dist}* > ${VERSION_TAG}.${dist}.sha256.txt
   && tar -zcvf ${VERSION_TAG}.${dist}.assets.tar.gz *${dist}* && echo "" >> ${VERSION_TAG}.${dist}.sha256.txt
