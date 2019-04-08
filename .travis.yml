@@ -1,12 +1,9 @@
 services:
 - docker
 env:
-- dist='ubuntu.yakkety'
+- dist='ubuntu.bionic'
 - dist='ubuntu.xenial'
-- dist='debian.stretch'
-- dist='debian.sid'
-- dist='raspbian.jessie'
-- dist='raspbian.sid'
+- dist='raspbian.stretch'
 language: go
 go: 1.10.x
 if: tag IS blank
