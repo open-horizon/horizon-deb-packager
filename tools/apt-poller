@@ -213,3 +213,4 @@ done
 # made it through with no errors
 DETAILS="apt repo for $BRANCH_NAME-testing updated from $APT_VERSION to $GIT_VERSION"
 STATUS="SUCCESS"
+exit
