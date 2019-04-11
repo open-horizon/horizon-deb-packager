@@ -20,7 +20,7 @@ slack_alert() {
 
 exit_tasks() {
   echo "$(date) Exit tasks"
-  if ([ -n "$SLACK_HOOK" ]) && ([ "$STATUS" == "FAILED" ] || [[ "$DETAILS" = *"apt repo updated from"* ]]); then
+  if ([ -n "$SLACK_HOOK" ]) && ([ "$STATUS" == "FAILED" ] || [[ "$DETAILS" = *"testing updated from"* ]]); then
     slack_alert
   fi
   echo "$STATUS: $DETAILS"
@@ -95,7 +95,7 @@ fi
 # comparing the git version and existing apt version to see if we need to update
 DETAILS="Checking for updates"
 PACKAGE_TRUNK_URL=$(echo "$PACKAGES_URL" | awk -F '/' '{print "http://"$3}')
-if ! -sSf "$PACKAGE_TRUNK_URL"; then
+if ! curl -sSf "$PACKAGE_TRUNK_URL"; then
   echo "Couldn't reach packager repo URL"
   exit
 fi
@@ -124,10 +124,21 @@ fi
 
 # grab the release assets, assemble the short DIST for later indexing use
 DETAILS="Downloading the release"
+if [ "$BRANCH_NAME" == "master" ]; then
+  BRANCH_TAG=""
+else
+  BRANCH_TAG="-$BRANCH_NAME"
+fi
+RELEASE_TAG="v${GIT_VERSION}-${BRANCH_NAME}"
 
-for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/tags/v$GIT_VERSION-$BRANCH_NAME" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); do
+if ! ASSETS=$(curl -s "https://$GIT_API/repos/$REPO/releases/tags/$RELEASE_TAG" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); then
+  echo "Couldn't construct asset URL's to download"
+  exit
+fi
+
+for asset in ${ASSETS[@]}; do
   echo "Downloading $asset"
-  DISTRO=$(echo "$asset" | awk -F "v$GIT_VERSION-$BRANCH_NAME.|.assets" '{print $3}')
+  DISTRO=$(echo "$asset" | awk -F "$RELEASE_TAG.|.assets" '{print $3}')
   DIST=$(echo "$DISTRO" | awk -F "." '{print $2}')
   REPO=$(echo "$DISTRO" | awk -F "." '{print $1}')
 
@@ -155,16 +166,27 @@ for asset in $(curl -s "https://$GIT_API/repos/$REPO/releases/tags/v$GIT_VERSION
     REPO_ARRAY+=("$REPO")
   fi
 
-  if [ ! -d "$INCOMING_DIR/$DISTRO" ]; then
-    mkdir -p "$INCOMING_DIR/$DISTRO"
+  DIST_DIR="$INCOMING_DIR/$DISTRO${BRANCH_TAG}"
+
+  if [ ! -d "$DIST_DIR" ]; then
+    mkdir -p "$DIST_DIR"
   fi 
 
-  curl -sL "$asset" | tar -xvz -C "$INCOMING_DIR/$DISTRO"
-  rm -f $INCOMING_DIR/$DISTRO/*.sha256.txt
+  if ! curl -sL "$asset" | tar -xvz -C "$DIST_DIR"; then
+    echo "Error downloading asset '$asset'"
+    exit
+  fi
+  rm -f $DIST_DIR/*.sha256.txt
 done
 
-#### Exit for now
-exit
+# Define our Packages URL's to check
+BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
+ALL_PACKAGES_URLS=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep "~$BRANCH_TAG" | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2"'$BRANCH_TAG'-testing/main/binary-"$3"/Packages"}'))
+
+if [ -z $ALL_PACKAGES_URLS ]; then
+  echo "Couldn't construct package URL's from downloaded files, did they download?"
+  exit
+fi
 
 # index each distro
 DETAILS="Release artifacts downloaded, initiating indexing"
@@ -176,22 +198,13 @@ if [ -n "$SLACK_HOOK" ]; then
   DETAILS="Indexing release"
 fi
 for repo in ${REPO_ARRAY[@]}; do
-  /usr/bin/docker exec -i horizon-aptrepo /bin/bash -c "for dist in ${DIST_ARRAY[*]}; do if [[ \$(grep incoming-\${dist} /var/repositories/${repo}/conf/incoming) ]]; then reprepro -v -b /var/repositories/${repo} processincoming incoming-\${dist}; else echo \"Intentionally skipping indexing of $repo \$dist\"; fi; done"
+  /usr/bin/docker exec -i horizon-aptrepo /bin/bash -c "for dist in ${DIST_ARRAY[*]}; do if [[ \$(grep incoming-\${dist}${BRANCH_TAG} /var/repositories/${repo}/conf/incoming) ]]; then reprepro -v -b /var/repositories/${repo} processincoming incoming-\${dist}${BRANCH_TAG}; else echo \"Intentionally skipping indexing of $repo \${dist}${BRANCH_TAG}\"; fi; done"
 done
 
 # loop until all versions are updated, give up after 15 minutes
-BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
-if [[ $BRANCH_NAME == "master" ]]; then
-  APPEND_STRING=""
-else
-  APPEND_STRING="-$BRANCH_NAME"
-fi
-
-#### This is where some tweaking may need to happen
-CHECK_PACKAGES=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2""'$APPEND_STRING'"-testing/main/binary-"$3"/Packages"}'))
 for i in {1..15}; do
   CURRENT=true
-  for URL in "${CHECK_PACKAGES[@]}"; do
+  for URL in "${ALL_PACKAGES_URLS[@]}"; do
     VERSION=$(curl -s "$URL" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
     if echo "$VERSION" | grep -q "$GIT_VERSION"; then
       echo "Updated $VERSION - $URL"
@@ -211,5 +224,5 @@ for i in {1..15}; do
 done
 
 # made it through with no errors
-DETAILS="apt repo for $BRANCH_NAME-testing updated from $APT_VERSION to $GIT_VERSION"
+DETAILS="*${BRANCH_TAG}-testing updated from $APT_VERSION to $GIT_VERSION"
 STATUS="SUCCESS"
