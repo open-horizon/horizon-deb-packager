@@ -14,7 +14,6 @@ version := $(shell cat VERSION)
 version_tail = $(addprefix $(shell tools/branch-name "~")~ppa~,$(1))
 
 aug_version = $(addsuffix $(call version_tail,$(2)),$(1)$(version))
-
 dist_dir = $(addprefix dist/horizon,$(addsuffix _$(arch),$(call aug_version,-,$(1))))
 file_version = $(call aug_version,_,$(1))
 
@@ -57,10 +56,11 @@ bld:
 bld/%/.git/logs/HEAD: | bld
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \
-	if [ "$(branch_name)" != "" ]; then git checkout $(branch_name); else \
-	  if [[ "$$(git tag -l $(docker_tag_prefix)/$(version))" != "" ]]; then \
-	  	git checkout -b "$(docker_tag_prefix)/$(version)-b" $(docker_tag_prefix)/$(version); \
-	  fi; \
+	if [ "$(branch_name)" != "" ] && [ "$$(git tag -l $(docker_tag_prefix)/$(version))" == "" ]; then \
+		git checkout $(branch_name); else \
+		if [[ "$$(git tag -l $(docker_tag_prefix)/$(version))" != "" ]]; then \
+			git checkout -b "$(docker_tag_prefix)/$(version)-b" $(docker_tag_prefix)/$(version); \
+		fi; \
 	fi
 
 bld/%/.git-gen-changelog: bld/%/.git/logs/HEAD | bld
@@ -227,7 +227,7 @@ show-noarch-packages:
 
 publish-meta-bld/%:
 	@echo "+ Visiting publish-meta subproject $*"
-	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)"
+	tools/git-tag 0 "$(CURDIR)/bld/$*" "$(docker_tag_prefix)/$(version)" "$(branch_name)"
 
 publish-meta: $(addprefix publish-meta-bld/,$(subproject_names))
 	git checkout -b horizon_$(version)
