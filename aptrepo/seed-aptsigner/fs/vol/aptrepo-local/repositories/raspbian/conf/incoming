@@ -1,13 +1,6 @@
-Name: incoming-jessie
-IncomingDir: /var/repositories/incoming/raspbian.jessie
-TempDir: /var/repositories/tmp/raspbian.jessie
-Allow: jessie-testing
-Default: jessie-testing
-Permit: older_version
-
-Name: incoming-sid
-IncomingDir: /var/repositories/incoming/raspbian.sid
-TempDir: /var/repositories/tmp/raspbian.sid
-Allow: sid-testing
-Default: sid-testing
+Name: incoming-stretch
+IncomingDir: /var/repositories/incoming/raspbian.stretch
+TempDir: /var/repositories/tmp/raspbian.stretch
+Allow: stretch-testing
+Default: stretch-testing
 Permit: older_version

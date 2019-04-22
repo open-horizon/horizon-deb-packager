@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Small reprepro promotion script for horizon, testing -> updates
+
+BRANCH=$1
+ANAX_VERSION=$2
+
+if [ -z $BRANCH ] || [ -z $ANAX_VERSION ]; then
+  echo "Usage: ./promote-debs <branch> <Anax version>"
+  exit
+fi
+
+if [ $BRANCH == "master" ]; then
+  BRANCH_TAG=""
+  APT_TAG=""
+else
+  BRANCH_TAG="-$BRANCH"
+  APT_TAG="\~$BRANCH"
+fi
+
+PROMOTE_DISTROS=( ubuntu.xenial ubuntu.bionic raspbian.stretch )
+for DISTRO in ${PROMOTE_DISTROS[@]}; do 
+  OS_NAME=$(echo $DISTRO | awk -F '.' '{print $1}')
+  CODENAME=$(echo $DISTRO | awk -F '.' '{print $2}')
+  echo "Running:"
+  echo "docker exec -it horizon-aptrepo bash -c \"reprepro -b /var/repositories/$OS_NAME copy $CODENAME${BRANCH_TAG}-updates $CODENAME${BRANCH_TAG}-testing {bluehorizon,horizon{,-cli}}=$ANAX_VERSION${APT_TAG}\~ppa\~$DISTRO\""
+  if ! docker exec -it horizon-aptrepo bash -c "reprepro -b /var/repositories/$OS_NAME copy $CODENAME${BRANCH_TAG}-updates $CODENAME${BRANCH_TAG}-testing {bluehorizon,horizon{,-cli}}=$ANAX_VERSION${APT_TAG}\~ppa\~$DISTRO"; then
+    echo "Above command failed, investigate error and resolve"
+    exit 1
+  fi
+done

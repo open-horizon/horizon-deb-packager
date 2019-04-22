@@ -18,7 +18,7 @@ See also http://www.red-bean.com/doc/reprepro/manual.html
 
     docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/ubuntu copy xenial-updates xenial-testing {blue,}horizon=2.0.17~ppa~ubuntu.xenial'
     Exporting indices...
-    docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/raspbian copy jessie-updates jessie-testing {blue,}horizon=2.0.17~ppa~raspbian.jessie'
+    docker exec -it horizon-aptrepo bash -c 'reprepro -b /var/repositories/raspbian copy stretch-updates stretch-testing {blue,}horizon=2.0.17~ppa~raspbian.stretch'
     Exporting indices...
 
 #### List packages in a suite
@@ -27,15 +27,15 @@ See also http://www.red-bean.com/doc/reprepro/manual.html
 
 ### Delete versions
 
-NOTE: This needs to be done for each repository (`ubuntu` in this example) and codename (`yakkety-testing` in this example)
+NOTE: This needs to be done for each repository (`ubuntu` in this example) and codename (`xenial-testing` in this example)
 
 List them first with a filter to isolate what you want to delete:
 
-    docker exec -it horizon-aptrepo bash -c 'reprepro -Vb /var/repositories/ubuntu listfilter yakkety-testing "Version (== 2.22.8~ppa~ubuntu.yakkety)"'
+    docker exec -it horizon-aptrepo bash -c 'reprepro -Vb /var/repositories/ubuntu listfilter xenial-testing "Version (== 2.22.8~ppa~ubuntu.xenial)"'
 
 Delete them:
 
-    docker exec -it horizon-aptrepo bash -c 'reprepro -Vb /var/repositories/ubuntu removefilter yakkety-testing "Version (== 2.22.8~ppa~ubuntu.yakkety)"'
+    docker exec -it horizon-aptrepo bash -c 'reprepro -Vb /var/repositories/ubuntu removefilter xenial-testing "Version (== 2.22.8~ppa~ubuntu.xenial)"'
 
 ### Add a new 'branch' repo/codename
 

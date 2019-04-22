@@ -1,3 +1,0 @@
-1,11,21,31,41,51 * * * * root docker exec -it horizon-aptrepo bash -c 'for dist in jessie sid; do reprepro -b /var/repositories/raspbian processincoming incoming-${dist}; done'
-
-5,15,25,35,45,55 * * * * root docker exec -it horizon-aptrepo bash -c 'for dist in xenial yakkety; do reprepro -b /var/repositories/ubuntu processincoming incoming-${dist}; done'

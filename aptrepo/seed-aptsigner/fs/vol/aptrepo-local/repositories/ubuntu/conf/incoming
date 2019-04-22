@@ -1,10 +1,3 @@
-Name: incoming-trusty
-IncomingDir: /var/repositories/incoming/ubuntu.trusty
-TempDir: /var/repositories/tmp/ubuntu.trusty
-Allow: trusty-testing
-Default: trusty-testing
-Permit: older_version
-
 Name: incoming-xenial
 IncomingDir: /var/repositories/incoming/ubuntu.xenial
 TempDir: /var/repositories/tmp/ubuntu.xenial
@@ -12,9 +5,9 @@ Allow: xenial-testing
 Default: xenial-testing
 Permit: older_version
 
-Name: incoming-yakkety
-IncomingDir: /var/repositories/incoming/ubuntu.yakkety
-TempDir: /var/repositories/tmp/ubuntu.yakkety
-Allow: yakkety-testing
-Default: yakkety-testing
+Name: incoming-bionic
+IncomingDir: /var/repositories/incoming/ubuntu.bionic
+TempDir: /var/repositories/tmp/ubuntu.bionic
+Allow: bionic-testing
+Default: bionic-testing
 Permit: older_version
