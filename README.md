@@ -6,8 +6,7 @@
 
 A project used to create and publish Debian packages of the Horizon platform. Current supported architectures and distributions include:
 
- * Architectures: amd64, armhf, arm64 ppc64el
- * Distributions: Ubuntu Trusty, Xenial, and Yakkety; Raspbian Jessie, Stretch and Sid; and Debian Jessie and Sid
+ * Distributions: Ubuntu Xenial and Bionic (Arch: amd64, armhf, arm64 ppc64el); Raspbian Stretch (Arch: armhf)
 
 Debian packages produced by this process are installed by a user where the user knows:
  * which operating system they need
@@ -53,11 +52,9 @@ Steps:
 
 ### Creating a local version
 
-(Shown below is use of the optional cross compilation feature).
+    cd build_support/ && make dist=ubuntu.xenial
 
-    cd build_support/ && make artifacts arch=arm64
-
-This command will build all packages for all distributions supported for the current architecture.
+This command will build all packages for all supported architectures for the supplied distribution.
 
 ## Running your own build agent
 
