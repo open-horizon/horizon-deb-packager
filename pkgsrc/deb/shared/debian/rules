@@ -30,6 +30,7 @@ override_dh_auto_install:
 	if [ -e $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh ]; then \
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d && mv $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d; \
 	fi
+	mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/horizon && cp $(CURDIR)/anax/cli/hzn.json $(HORIZON-CLI-OUTDIRBASE)/etc/horizon
 	mkdir -p $(BLUEHORIZON-OUTDIRBASE) && cp -Ra $(CURDIR)/debian/fs-bluehorizon/. $(BLUEHORIZON-OUTDIRBASE)
 
 #override_dh_builddeb:
