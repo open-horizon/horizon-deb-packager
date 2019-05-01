@@ -129,7 +129,7 @@ if [ "$BRANCH_NAME" == "master" ]; then
 else
   BRANCH_TAG="-$BRANCH_NAME"
 fi
-RELEASE_TAG="v${GIT_VERSION}-${BRANCH_NAME}"
+RELEASE_TAG="v${GIT_VERSION}${BRANCH_TAG}"
 
 if ! ASSETS=$(curl -s "https://$GIT_API/repos/$REPO/releases/tags/$RELEASE_TAG" | jq -r '.assets[].browser_download_url' | grep assets.tar.gz); then
   echo "Couldn't construct asset URL's to download"
@@ -181,7 +181,7 @@ done
 
 # Define our Packages URL's to check
 BASE_URL=$(echo "$PACKAGES_URL" | awk -F '/linux/' '{print $1}')/linux/
-ALL_PACKAGES_URLS=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep "~$BRANCH_TAG" | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2"'$BRANCH_TAG'-testing/main/binary-"$3"/Packages"}'))
+ALL_PACKAGES_URLS=($(find "$INCOMING_DIR" -name '*.deb' -type f | grep "~${BRANCH_TAG:1}" | grep -v 'all\.deb' | awk -F 'ppa~' '{print $NF}' | sort -u | awk -F '\\.|_' '{print "'$BASE_URL'"$1"/dists/"$2"'$BRANCH_TAG'-testing/main/binary-"$3"/Packages"}'))
 
 if [ -z $ALL_PACKAGES_URLS ]; then
   echo "Couldn't construct package URL's from downloaded files, did they download?"

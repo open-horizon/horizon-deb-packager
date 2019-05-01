@@ -19,7 +19,7 @@ else
 fi
 
 PROMOTE_DISTROS=( ubuntu.xenial ubuntu.bionic raspbian.stretch )
-for DISTRO in ${PROMOTE_DISTROS[@]}; do 
+for DISTRO in ${PROMOTE_DISTROS[@]}; do
   OS_NAME=$(echo $DISTRO | awk -F '.' '{print $1}')
   CODENAME=$(echo $DISTRO | awk -F '.' '{print $2}')
   echo "Running:"
