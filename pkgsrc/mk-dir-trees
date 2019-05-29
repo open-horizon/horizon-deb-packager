@@ -6,7 +6,7 @@ if [[ ! -d "$1" ]]; then
 fi
 
 # ephemeral and config
-mkdir -p $1/var/{cache/horizon/torrent/,horizon/,run/horizon/}
+mkdir -p $1/var/{horizon/,run/horizon/}
 mkdir -p $1/etc/{default/,horizon/}
 mkdir -p $1/etc/horizon/{policy.d,agbot/policy.d/,trust/}
 
