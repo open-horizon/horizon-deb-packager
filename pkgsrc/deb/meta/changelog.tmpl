@@ -1,3 +1,57 @@
+horizon (2.23.4++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - c68cefc (linggao): Issue 955 - Update hzn register to support policy based nodes
+      - 4e02d6b (Dave Booz): Issue 945 - MMS object placement
+      - a29371e (LeZhang): resolve conflict
+      - 609a424 (linggao): Added more business policies in the e2edev test and using the NONS, NOGPS, NOPWS, NOLOC and NOHELLO environmental variales in the node constraints.
+      - 1ae56c4 (linggao): Issue 892 #4: add node built-in properties to node policy.
+      - 4ed2b5f (MaxMcAdam): Issue #892 last point validate input properties and support all property types
+      - d40e866 (MaxMcAdam): Issue #892 point 6: all external functions in text_language to handle constraint values with spaces
+      - 91fe544 (MaxMcAdam): Fix import cycle
+      - 959faa5 (linggao): Issue 956 - Remove the torrent and image store support for image fetching.
+      - afc52f9 (linggao): uplevel the exchange version to 1.84.0
+      - faf7a8e (linggao): Fixed unregistration problem for policy case.
+      - c5a37fc (linggao): Added hzn command for list/add/remove business policies for a agbot supporting list.
+      - 4c37835 (linggao): Remove counterparty properties from policy and attribute api.
+      - ca1098f (Dave Booz): Issue 945 - upgrade to newest sync service
+      - 8038aa1 (Dave Booz): Issue 945 - initial mms CLI
+      - 060b862 (linggao): Agbot handle service policy changes
+      - 3ba1100 (LeZhang): clean up
+      - ad5a353 (LeZhang): update arch if arch from exchange is empty
+      - 4e0c103 (linggao): Moved policy/version.go to semanticversion package
+      - 5acdbd2 (linggao): Removed ResourceLimit in policy
+      - 8f45677 (MaxMcAdam): Issue 892 - added validation for external policy type properties
+      - 707117b (linggao): Agbot polls the exchange for changes to the service policy and reacts by invalidating agreements
+      - 7d906e9 (linggao): Issue 896 - Update Agreement Negotiation for Business Policies
+      - 42b9779 (linggao): Changed counterparty properties to constraints in the internal policy object for agreement negotiation
+      - 124618f (linggao): Moved the PropertyList back from policy to externalpolicy package
+      - a71a888 (linggao): Remove the requirement for dependent services when making agreement through policy
+      - 4814e75 (linggao): Support exchange API calls for service policy and business policy. Support conversion of external policy and business policy to real policy format.
+      - 720c459 (linggao): Handled node policy changes by canceling active agreements
+      - 69d6e01 (linggao): Added node policy to policy manager
+      - 3a5e1f7 (linggao): Issue 880: agreement made for node policy case when apispecs are set.
+      - 0b8adbd (Dave Booz): issue880 - prelim
+      - 2f98323 (Dave Booz): fix make check failures
+      - 01562e7 (zhangl): modify logs showing allowed comparisonOpType
+      - 82eefdb (zhangl): add arch support
+      - b5bc1da (Dave Booz): Issue 945 - Model policy
+      - 7cee9bc (zhangl): issue 892 modify some log messages
+      - e1e941f (zhangl): issue 892 make changes per PR review
+      - 20d8ed9 (zhangl): add 2 more cases for string list
+      - 3473382 (zhangl): issue 892 modify comments
+      - fb6d037 (zhangl): issue 892 add unit test
+      - 76d2c9d (Nadim): Issue 903 - Tmpfs Documentation Update
+      - 4d17e81 (Nadim): Issue 903 - Add Tmpfs Support
+      - 13cd265 (zhangl): issue 892 initial change
+      - 5b07b29 (MaxMcAdam): Issue #926 added 'hzn exchange' commands for business policy
+      - 0e689cb (linggao): Support reading and writing service policy and business policy from/to exchange.
+      - b84d5f0 (zhangl): short() -> Short()
+      - a2d0404 (zhangl): add name to hzn register command
+      - cf26791 (zhangl): add initial arch change
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Tue, 04 Jun 2019 12:33:20 -0400
+
 horizon (2.23.3++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax.git, branch: master
