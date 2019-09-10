@@ -15,6 +15,7 @@ HORIZON-OUTDIRBASE=$(CURDIR)/debian/horizon
 HORIZON-CLI-OUTDIRBASE=$(CURDIR)/debian/horizon-cli
 BLUEHORIZON-OUTDIRBASE=$(CURDIR)/debian/bluehorizon
 ANAX-OUTDIRBASE=$(CURDIR)/anax
+SUPPORTED_LOCALES=de  es  fr  it  ja  ko  pt_BR  zh_CN  zh_TW
 
 override_dh_auto_build:
 	cd anax && $(MAKE) arch=$(arch) all-nodeps
@@ -27,6 +28,11 @@ override_dh_auto_install:
 	if [ -e $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 ]; then \
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1 && mv $(ANAX-OUTDIRBASE)/cli/man1/hzn.1 $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/man1; \
 	fi
+	for loc in $(SUPPORTED_LOCALES); do \
+		if [ -e $(ANAX-OUTDIRBASE)/cli/man1/hzn.1.$$loc ]; then \
+			mkdir -p $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/$$loc/man1 && mv $(ANAX-OUTDIRBASE)/cli/man1/hzn.1.$$loc $(HORIZON-CLI-OUTDIRBASE)/usr/share/man/$$loc/man1/hzn.1; \
+		fi; \
+	done
 	if [ -e $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh ]; then \
 		mkdir -p $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d && mv $(ANAX-OUTDIRBASE)/cli/bash_completion/hzn_bash_autocomplete.sh $(HORIZON-CLI-OUTDIRBASE)/etc/bash_completion.d; \
 	fi
