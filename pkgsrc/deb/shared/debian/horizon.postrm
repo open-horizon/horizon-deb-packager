@@ -24,7 +24,7 @@ fi
 
 if [ "$1" == "purge" ]; then
 
-  rm -Rf /etc/horizon /var/cache/horizon /etc/default/horizon /var/tmp/horizon
+  rm -Rf /etc/horizon /var/cache/horizon /etc/default/horizon /var/tmp/horizon /var/run/horizon
 
   # remove all content from /var/horizon that isn't related to the dedicated SBC images
   find /var/horizon -mindepth 1 ! \( -name '.firstboot' -or -name 'image_version' \) -exec rm -rf {} +
