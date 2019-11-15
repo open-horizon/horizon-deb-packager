@@ -9,7 +9,7 @@ dist ?= *
 # deb packager project has to have the same branch name and this makefile is from that branch. That is,
 # The builder must switch the deb pakcager project to the branch with the same name as the branch of the
 # subprojects that need to be built and packaged.
-branch_name ?= $(shell tools/branch-name)
+branch_name ?= $(shell tools/branch-name -)
 version := $(shell cat VERSION)
 version_tail = $(addprefix $(shell tools/branch-name "~")~ppa~,$(1))
 
