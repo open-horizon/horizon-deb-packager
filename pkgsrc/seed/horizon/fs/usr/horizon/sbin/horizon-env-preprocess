@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cmtn_device_id_varname="HZN_DEVICE_ID"
+agent_port_varname="HZN_AGENT_PORT"
+default_port="8510"
 
 if [ "$1" == "" ]; then
   (>&2 echo "Missing required first argument configuration file path")
@@ -10,22 +11,19 @@ fi
 var_filepath="$1"
 
 # make sure to avoid matching windows line endings
-existing_device_id=$(grep -oP "${cmtn_device_id_varname}=\K([^\r\n]+)" $var_filepath)
+existing_agent_port=$(grep -oP "${agent_port_varname}=\K([^\r\n^M]+)" $var_filepath)
 
-if [ "$existing_device_id" == "" ]; then
-  systemd-cat -t horizon-set-device-id echo "No existing ${cmtn_device_id_varname} in $var_filepath, calculating one"
+# If the HZN_AGENT_PORT variable is present but not set to a value, then use sed to set the
+# variable to its default value. If the variable is not present at all, then use sed to append
+# a line with the default value.
 
-  device_id=$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
-
-  if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
-    # can't use this for device id, use mac address of interface instead
-    device_id=$(echo $(sha1sum <(ip -o link show $(basename $(ls -d /proc/sys/net/ipv4/conf/[we]* | head -n1)) | grep -oP "link/ether \K([:\w\d]+) ")) | awk '{print $1}')
-    if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
-      # couldn't use the MAC, using a random string
-      device_id=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-32};echo)
-    fi
+if [ "$existing_agent_port" == "" ]; then
+  anaxPort=$(grep $agent_port_varname $var_filepath)
+  if [ "$anaxPort" != "" ]; then
+    systemd-cat -t horizon-set-agent-port echo "Setting ${agent_port_varname} in $var_filepath to $default_port"
+    sed -i "s,${agent_port_varname}=,${agent_port_varname}=${default_port}," $var_filepath
+  else
+    systemd-cat -t horizon-set-agent-port echo "Setting ${agent_port_varname} in $var_filepath to $default_port"
+    sed -i "$ a ${agent_port_varname}=$default_port" $var_filepath
   fi
-
-  systemd-cat -t horizon-set-device-id echo "Setting ${cmtn_device_id_varname} in $var_filepath to $device_id"
-  sed -i "s,${cmtn_device_id_varname}=,${cmtn_device_id_varname}=${device_id}," $var_filepath
 fi
