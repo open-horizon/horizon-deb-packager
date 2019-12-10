@@ -4,7 +4,10 @@ services:
 env:
 - dist='ubuntu.bionic'
 - dist='ubuntu.xenial'
+- dist='debian.stretch'
+- dist='debian.buster'
 - dist='raspbian.stretch'
+- dist='raspbian.buster'
 language: go
 go: 1.10.x
 if: tag IS blank

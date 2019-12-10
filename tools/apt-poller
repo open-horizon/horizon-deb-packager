@@ -10,6 +10,7 @@ TRAVIS_API="api.travis-ci.org"
 INCOMING_DIR="/vol/aptrepo-local/repositories/incoming"
 # Pre-setting failure, success has to be marked
 STATUS="FAILED"
+FORCE=false
 
 slack_alert() {
   curl -s -X POST -d "{'username': 'apt-poller', 'text': 'apt-poller for branch $BRANCH_NAME $STATUS: $DETAILS', 'icon_emoji': ':debian:'}"  "https://hooks.slack.com/services/${SLACK_HOOK}"
@@ -35,6 +36,7 @@ usage () {
   echo -e "\\nUsage:\\n
   \\t-a\\tFull URL to an apt repo Packages file for version comparison (No default)
   \\t-b\\tBranch name (No default, usually master)
+  \\t-f\\tForce an update (if a rebuild of a github release was done, using the same version)
   \\t-g\\tGithub api (Default: api.github.com)
   \\t-h\\tHelp, prints this usage
   \\t-i\\tIncoming directory (Default: /vol/aptrepo-local/repositories/incoming)
@@ -45,11 +47,13 @@ usage () {
   exit
 }
 
-while getopts ":a:b:g:hi:r:s:t:" opt; do
+while getopts ":a:b:fg:hi:r:s:t:" opt; do
   case $opt in
     a) PACKAGES_URL="$OPTARG"
     ;;
     b) BRANCH_NAME="$OPTARG"
+    ;;
+    f) FORCE=true
     ;;
     g) GIT_API="$OPTARG"
     ;;
@@ -102,12 +106,16 @@ fi
 GIT_VERSION=$(curl -s -H 'Accept: application/vnd.github.v3.raw' "https://$GIT_API/repos/$REPO/contents/VERSION?ref=$BRANCH_NAME")
 APT_VERSION=$(curl -s "$PACKAGES_URL" | grep -A 2 'Package: horizon' | grep -m 1 'Version:' | awk -F ' |~' '{print $2}')
 
-if [ -z $APT_VERSION ] || dpkg --compare-versions "$GIT_VERSION" gt "$APT_VERSION"; then
-  echo Downloading new content
+if [ $FORCE == 'false' ]; then
+  if [ -z $APT_VERSION ] || dpkg --compare-versions "$GIT_VERSION" gt "$APT_VERSION"; then
+    echo Downloading new content
+  else
+    echo Nothing to update
+    STATUS="SUCCESS"
+    exit
+  fi
 else
-  echo Nothing to update
-  STATUS="SUCCESS"
-  exit
+  echo Downloading new content
 fi
 
 # making sure the travis build is complete, and was successful ... it will also stop here before the initial travis build
