@@ -1,0 +1,13 @@
+Name: incoming-stretch
+IncomingDir: /var/repositories/incoming/ubuntu.stretch
+TempDir: /var/repositories/tmp/ubuntu.stretch
+Allow: stretch-testing
+Default: stretch-testing
+Permit: older_version
+
+Name: incoming-buster
+IncomingDir: /var/repositories/incoming/ubuntu.buster
+TempDir: /var/repositories/tmp/ubuntu.buster
+Allow: buster-testing
+Default: buster-testing
+Permit: older_version

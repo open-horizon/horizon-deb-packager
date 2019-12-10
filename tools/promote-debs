@@ -18,7 +18,7 @@ else
   APT_TAG="\~$BRANCH"
 fi
 
-PROMOTE_DISTROS=( ubuntu.xenial ubuntu.bionic raspbian.stretch )
+PROMOTE_DISTROS=( ubuntu.xenial ubuntu.bionic raspbian.stretch raspbian.buster debian.stretch debian.buster )
 for DISTRO in ${PROMOTE_DISTROS[@]}; do
   OS_NAME=$(echo $DISTRO | awk -F '.' '{print $1}')
   CODENAME=$(echo $DISTRO | awk -F '.' '{print $2}')

@@ -6,7 +6,13 @@
 
 A project used to create and publish Debian packages of the Horizon platform. Current supported architectures and distributions include:
 
- * Distributions: Ubuntu Xenial and Bionic (Arch: amd64, armhf, arm64 ppc64el); Raspbian Stretch (Arch: armhf)
+ * Distributions
+   * Ubuntu Xenial and Bionic
+     * amd64, armhf, arm64, ppc64el
+   * Debian Stretch and Buster
+     * amd64
+   * Raspbian Stretch and Buster
+     * armhf
 
 Debian packages produced by this process are installed by a user where the user knows:
  * which operating system they need
