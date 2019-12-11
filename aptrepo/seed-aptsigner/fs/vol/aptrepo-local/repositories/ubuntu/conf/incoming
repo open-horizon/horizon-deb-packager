@@ -11,3 +11,31 @@ TempDir: /var/repositories/tmp/ubuntu.bionic
 Allow: bionic-testing
 Default: bionic-testing
 Permit: older_version
+
+Name: incoming-xenial-la
+IncomingDir: /var/repositories/incoming/ubuntu.xenial-la
+TempDir: /var/repositories/tmp/ubuntu.xenial-la
+Allow: xenial-la-testing
+Default: xenial-la-testing
+Permit: older_version
+
+Name: incoming-bionic-la
+IncomingDir: /var/repositories/incoming/ubuntu.bionic-la
+TempDir: /var/repositories/tmp/ubuntu.bionic-la
+Allow: bionic-la-testing
+Default: bionic-la-testing
+Permit: older_version
+
+Name: incoming-xenial-v3.2.1
+IncomingDir: /var/repositories/incoming/ubuntu.xenial-v3.2.1
+TempDir: /var/repositories/tmp/ubuntu.xenial-v3.2.1
+Allow: xenial-v3.2.1-testing
+Default: xenial-v3.2.1-testing
+Permit: older_version
+
+Name: incoming-bionic-v3.2.1
+IncomingDir: /var/repositories/incoming/ubuntu.bionic-v3.2.1
+TempDir: /var/repositories/tmp/ubuntu.bionic-v3.2.1
+Allow: bionic-v3.2.1-testing
+Default: bionic-v3.2.1-testing
+Permit: older_version

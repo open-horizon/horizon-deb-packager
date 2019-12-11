@@ -6,7 +6,7 @@ Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
@@ -16,7 +16,7 @@ Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
@@ -26,7 +26,7 @@ Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
@@ -36,5 +36,84 @@ Architectures: armhf arm64 amd64 ppc64el source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-la-updates
+Codename: xenial-la-updates
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-la-testing
+Codename: xenial-la-testing
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: bionic-la-updates
+Codename: bionic-la-updates
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: bionic-la-testing
+Codename: bionic-la-testing
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-v3.2.1-updates
+Codename: xenial-v3.2.1-updates
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: xenial-v3.2.1-testing
+Codename: xenial-v3.2.1-testing
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: bionic-v3.2.1-updates
+Codename: bionic-v3.2.1-updates
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
+
+Origin: pkg.bluehorizon.network
+Label: pkg.bluehorizon.network
+Suite: bionic-v3.2.1-testing
+Codename: bionic-v3.2.1-testing
+Architectures: armhf arm64 amd64 ppc64el source
+Components: main
+Description: Blue Horizon packages
+Tracking: minimal
+SignWith: 86BD8BEC
