@@ -11,3 +11,17 @@ TempDir: /var/repositories/tmp/raspbian.buster
 Allow: buster-testing
 Default: buster-testing
 Permit: older_version
+
+Name: incoming-stretch-la
+IncomingDir: /var/repositories/incoming/raspbian.stretch-la
+TempDir: /var/repositories/tmp/raspbian.stretch-la
+Allow: stretch-la-testing
+Default: stretch-la-testing
+Permit: older_version
+
+Name: incoming-stretch-v3.2.1
+IncomingDir: /var/repositories/incoming/raspbian.stretch-v3.2.1
+TempDir: /var/repositories/tmp/raspbian.stretch-v3.2.1
+Allow: stretch-v3.2.1-testing
+Default: stretch-v3.2.1-testing
+Permit: older_version

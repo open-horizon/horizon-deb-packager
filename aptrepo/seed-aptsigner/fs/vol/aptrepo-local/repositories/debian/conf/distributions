@@ -2,38 +2,38 @@ Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: stretch-updates
 Codename: stretch-updates
-Architectures: amd64
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: stretch-testing
 Codename: stretch-testing
-Architectures: amd64
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: buster-updates
 Codename: buster-updates
-Architectures: amd64
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
 
 Origin: pkg.bluehorizon.network
 Label: pkg.bluehorizon.network
 Suite: buster-testing
 Codename: buster-testing
-Architectures: amd64
+Architectures: amd64 source
 Components: main
 Description: Blue Horizon packages
 Tracking: minimal
-SignWith: 8F813713
+SignWith: 86BD8BEC
