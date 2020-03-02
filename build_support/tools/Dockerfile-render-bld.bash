@@ -41,7 +41,7 @@ case "$ARCH" in
   ;;
 esac
 
-golang_dl_url="https://storage.googleapis.com/golang/go1.10.4.linux-${golang_arch}.tar.gz"
+golang_dl_url="https://storage.googleapis.com/golang/go1.14.linux-${golang_arch}.tar.gz"
 
 sed "s,##from_image##,$from_image," "$FNAME" > "$DEST"
 sed -i.bak "s,##arch##,$ARCH," "$DEST" && rm -f "$DEST".bak
