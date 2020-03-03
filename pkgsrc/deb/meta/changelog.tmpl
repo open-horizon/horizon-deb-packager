@@ -1,3 +1,32 @@
+horizon (2.25.0++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 8e99aff (linggao): Upgrade go-dockerclient to current level
+      - 9f26063 (linggao): Issue 1534 - Upgrade go compiler to current levels
+      - 3ef17bb (zhangl): Issue 1351 - MMS object metadata should keep track of the creator/owner of an object
+      - c756819 (Dave Booz): Issue 1566 - Allow work to queue up
+      - 28811e8 (zhangl): Issue 1532 - check css status when started by hzn dev service start
+      - 8634b25 (zhangl): fix unit test failure
+      - 4e259ea (linggao): Issue 711 - Remove named volumes from the node when unregistering.
+      - 83dd242 (MaxMcAdam): Issue 1298 & 860 - If 'hzn register' fails, it should automatically unregister
+      - 1870de7 (MaxMcAdam): Issue 1497 - Change the CLI to support deployment policy as an alias for business policy
+      - 207bd60 (zhangl): Issue 1531 - add hzn mms command to download data for an object
+      - f5c09e6 (zhangl): Issue 1496 - 424 when running hzn service log
+      - f48a83b (Dave Booz): Issue 1495 - handle DB error during reply
+      - c30f346 (linggao): Issue 1524 - Remove agreement requirement before increasing polling interval
+      - 0e59392 (zhangl): fix exchange db container for e2e test
+      - 16c03de (zhangl): Issue 1394 - 'hzn exchange node list' gives 'illegal base64 data' error
+      - ca9f570 (MaxMcAdam): Issue #1522 - hzn deploycheck all failed to find privilege problem
+      - f894e7f (Dave Booz): Issue 1517 - limit the number of messages consumed by the agbot
+      - 6e603ba (MaxMcAdam): Issue #1375 - hzn policy update - display warning for ignoring builtin properties
+      - 980db06 (zhangl): Issue 1272 - hzn register should take the same user input as the hzn userinput cmd
+      - 60ef11b (linggao): Issue 1301 - Detect when node is registered, user changes exchange url and restarts agent
+      - 3800b6b (MaxMcAdam): Issue #1462 - Resolve use of list of string and list of strings across policy and user input config
+      - 4039ee2 (MaxMcAdam): Anax #1421 - Changes to message wordings
+      - 0eaad23 (MaxMcAdam): Trim spaces around node ids in batch agent install
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Tue, 03 Mar 2020 15:21:33 -0500
+
 horizon (2.24.18++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax.git, branch: master
