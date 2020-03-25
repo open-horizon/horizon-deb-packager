@@ -188,6 +188,13 @@ fss-containers:
 		make arch=amd64 opsys=Linux all-nodeps && \
 			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 fss-package
 
+# This target is called by the travis yaml file after the deb packages are built but before they are deployed.
+agent-k8s-containers:
+	@echo "Building agent containers for k8s, arch amd64 in ./bld/anax/agent-in-k8s"
+	cd bld/anax && \
+		make arch=amd64 opsys=Linux all-nodeps && \
+			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_K8S_IMAGE_VERSION=$(version) anax-k8s-package
+
 $(meta): meta-%: bld/changelog.tmpl dist/horizon$(call file_version,%).orig.tar.gz
 ifndef skip-precheck
 	tools/meta-precheck $(CURDIR) "$(docker_tag_prefix)/$(version)" $(subprojects)
