@@ -15,7 +15,7 @@ script:
 - printenv
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
   == *"rebuild-release"* ]] || [[ $TRAVIS_PULL_REQUEST != ''false'' ]]; then echo "$ICR_PASS" |
-  docker login -u="$ICR_USER" --password-stdin $ICR_REG && mkdir -p $GOPATH/pkg && make -C build_support && make dist=$dist;
+  docker login -u="$ICR_USER" --password-stdin $ICR_REG && $GOPATH/pkg && make -C build_support && make dist=$dist GOPATH=$GOPATH;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
@@ -32,7 +32,7 @@ before_deploy:
 - git tag $VERSION_TAG --force -a -m "Travis build $TRAVIS_BUILD_NUMBER"
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
   == *"rebuild-release"* ]]; then echo "$DOCKER_HUB_PASS" | docker login -u="$DOCKER_HUB_USER"
-  --password-stdin && make -C $TRAVIS_BUILD_DIR fss-containers && make -C $TRAVIS_BUILD_DIR agent-k8s-containers;
+  --password-stdin && make -C $TRAVIS_BUILD_DIR fss-containers GOPATH=$GOPATH && make -C $TRAVIS_BUILD_DIR agent-k8s-containers GOPATH=$GOPATH;
   else echo "Not pushing images, since this is not a version change commit"; fi;
 deploy:
   on:
