@@ -53,13 +53,13 @@ mostlyclean:
 
 src-artifacts: $(FLAGNAME)
 	@echo "Making source artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c 'make $(build_vars) dist='$(dist)' mostlyclean src-packages'
+	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir)/bld/godeps-tmp:/tmp -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) dist='$(dist)' mostlyclean src-packages"
 
 # leaving out arch-artifacts, noarch-artifacts target until someone wants it
 
 artifacts: $(FLAGNAME)
 	@echo "Making artifacts using build container"
-	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) arch=$(arch) dist='$(dist)' clean packages"
+	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir)/bld/godeps-tmp:/tmp -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) arch=$(arch) dist='$(dist)' clean packages"
 
 # TODO: add documentation that helps with the use cases:
 # - 1) build for arch, 2) build for dist, 3) build in two-stage (not yet built)
@@ -72,11 +72,11 @@ artifacts: $(FLAGNAME)
 # is the most general target for a CI process: without building all distro's
 # artifacts together, differing source packages are built and the deb index will fail to ingest them.
 all-artifacts: clean $(FLAGNAME)
-	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) arch=$(arch) dist='$(dist)' src-packages noarch-packages"
+	docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir)/bld/godeps-tmp:/tmp -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) arch=$(arch) dist='$(dist)' src-packages noarch-packages"
 	@echo "Iterating architectures to build architecture specific binaries"
 	for ix_arch in $(architectures); do \
 		SECONDS=0; \
-		docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) dist='$(dist)' arch=$$ix_arch arch-packages"; \
+		docker run --name "$(DOCKERB_CNAME)" -e "TRAVIS_BRANCH=$(TRAVIS_BRANCH)" --rm -v $(horizon-deb-packager-dir)/bld/godeps-tmp:/tmp -v $(horizon-deb-packager-dir):/horizon-deb-packager -u $(shell id -u) -it "$(DOCKERB_INAME):$(DOCKERB_TAG)" /bin/bash -c "make $(build_vars) dist='$(dist)' arch=$$ix_arch arch-packages"; \
 		echo "*** Architecture $$ix_arch builds complete. Total build time: $$SECONDS s." ; \
 	done; true
 

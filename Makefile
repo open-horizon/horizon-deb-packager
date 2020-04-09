@@ -146,7 +146,7 @@ dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-hor
 				sed -i.bak 's,local build,'${version}${branch_name}',' $${src}/version/version.go; \
         		rm -f $${src}/version/version.go.bak; \
         	fi; \
-		bash -c "cd $${src} && make deps"; \
+		bash -c "cd $${src} && make all-nodeps"; \
 		rsync -a --exclude=".git*" $(PWD)/$$src $(call dist_dir,$*)/; \
 		if [ -e $${src}-rules.env ]; then \
 			cp $${src}-rules.env $(call dist_dir,$*)/$$(basename $$src)/rules.env; \
