@@ -54,9 +54,6 @@ bld:
 	mkdir -p bld
 
 bld/%/.git/logs/HEAD: | bld
-	@echo "'$(CURDIR)'"
-	ls -l $(CURDIR) $(CURDIR)/..
-	whoami
 	git clone $(git_repo_prefix)/$*.git "$(CURDIR)/bld/$*"
 	cd $(CURDIR)/bld/$* && \
 	if [ "$(branch_name)" != "" ] && [ "$$(git tag -l $(docker_tag_prefix)/$(version))" == "" ]; then \
