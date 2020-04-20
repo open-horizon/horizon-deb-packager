@@ -193,21 +193,21 @@ agent-k8s-images:
 	@echo "Building agent images for k8s, arch amd64 in ./bld/anax/agent-in-k8s"
 	cd bld/anax && \
 		make arch=amd64 opsys=Linux all-nodeps && \
-			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_K8S_IMAGE_VERSION=$(version) anax-k8s-package
+			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) anax-k8s-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 anax-images:
 	@echo "Building anax images for arch amd64, ubi image in ./bld/anax/anax-in-container"
 	cd bld/anax && \
 		make arch=amd64 opsys=Linux all-nodeps && \
-			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 DOCKER_IMAGE_VERSION=$(version) anax-package
+			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) anax-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 agbot-images:
 	@echo "Building agbot images for arch amd64, ubi image in ./bld/anax/anax-in-container"
 	cd bld/anax && \
 		make arch=amd64 opsys=Linux all-nodeps && \
-			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 DOCKER_IMAGE_VERSION=$(version) agbot-package
+			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) agbot-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 all-images: fss-images agent-k8s-images anax-images agbot-images
