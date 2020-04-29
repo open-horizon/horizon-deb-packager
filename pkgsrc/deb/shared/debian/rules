@@ -18,7 +18,7 @@ ANAX-OUTDIRBASE=$(CURDIR)/anax
 SUPPORTED_LOCALES=de  es  fr  it  ja  ko  pt_BR  zh_CN  zh_TW
 
 override_dh_auto_build:
-	cd anax && $(MAKE) arch=$(arch) all-nodeps
+	cd anax && $(MAKE) arch=$(arch)
 
 override_dh_auto_install:
 	cd anax && $(MAKE) install DESTDIR=$(HORIZON-OUTDIRBASE)/usr/horizon

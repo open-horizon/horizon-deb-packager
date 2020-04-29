@@ -15,7 +15,7 @@ script:
 - printenv
 - if [[ $TRAVIS_COMMIT_MESSAGE == *"updated package metadata"* ]] || [[ $TRAVIS_COMMIT_MESSAGE
   == *"rebuild-release"* ]] || [[ $TRAVIS_PULL_REQUEST != ''false'' ]]; then echo "$ICR_PASS" |
-  docker login -u="$ICR_USER" --password-stdin $ICR_REG && make -C build_support && make dist=$dist;
+  docker login -u="$ICR_USER" --password-stdin $ICR_REG && make -C build_support dist=$dist && make dist=$dist;
   else echo "Not building artifacts, since this is not a version change commit"; fi;
 branches:
   only:
