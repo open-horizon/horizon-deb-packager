@@ -143,10 +143,14 @@ $(addprefix $(call dist_dir,%)/debian/,$(debian_shared)): $(addprefix pkgsrc/deb
 dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-horizon $(call dist_dir,%)/debian/fs-bluehorizon $(call dist_dir,%)/debian/changelog $(addprefix $(call dist_dir,%)/debian/,$(debian_shared))
 	for src in $(subprojects); do \
         	if [ "$$(basename $$src)" == "anax" ]; then \
-				sed -i.bak 's,local build,'${version}${branch_name}',' $${src}/version/version.go; \
+			sed -i.bak 's,local build,'${version}${branch_name}',' $${src}/version/version.go; \
         		rm -f $${src}/version/version.go.bak; \
+			if [[ (-f i18n_messages/catalog.go) && (-f $${src}/cli/i18n_messages/catalog.go) ]]; then \
+				bash -c "cd $${src} && make"; \
+			else \
+				bash -c "cd $${src} && make i18n-catalog"; \
+			fi; \
         	fi; \
-		bash -c "cd $${src} && make all-nodeps"; \
 		rsync -a --exclude=".git*" $(PWD)/$$src $(call dist_dir,$*)/; \
 		if [ -e $${src}-rules.env ]; then \
 			cp $${src}-rules.env $(call dist_dir,$*)/$$(basename $$src)/rules.env; \
@@ -157,7 +161,7 @@ dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-hor
 
 $(src-packages):
 dist/horizon$(call file_version,%).dsc: dist/horizon$(call file_version,%).orig.tar.gz
-	@echo "Running src pkg build in $*'"
+	@echo "Running src pkg build in $*"
 	-rm -Rf $(call dist_dir,$*)
 	mkdir $(call dist_dir,$*) && tar zxf dist/horizon$(call file_version,$*).orig.tar.gz -C $(call dist_dir,$*)/
 	cd $(call dist_dir,$*) && \
@@ -185,28 +189,28 @@ dist/horizon$(call file_version,%)_$(arch).deb: dist/horizon$(call file_version,
 fss-images:
 	@echo "Building FSS images for arch amd64 in ./bld/anax"
 	cd bld/anax && \
-		make arch=amd64 opsys=Linux all-nodeps && \
+		make arch=amd64 opsys=Linux && \
 			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 fss-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 agent-k8s-images:
 	@echo "Building agent images for k8s, arch amd64 in ./bld/anax/agent-in-k8s"
 	cd bld/anax && \
-		make arch=amd64 opsys=Linux all-nodeps && \
+		make arch=amd64 opsys=Linux && \
 			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) anax-k8s-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 anax-images:
 	@echo "Building anax images for arch amd64, ubi image in ./bld/anax/anax-in-container"
 	cd bld/anax && \
-		make arch=amd64 opsys=Linux all-nodeps && \
+		make arch=amd64 opsys=Linux && \
 			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) anax-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
 agbot-images:
 	@echo "Building agbot images for arch amd64, ubi image in ./bld/anax/anax-in-container"
 	cd bld/anax && \
-		make arch=amd64 opsys=Linux all-nodeps && \
+		make arch=amd64 opsys=Linux && \
 			make BRANCH_NAME=$(shell tools/branch-name "-") arch=amd64 ANAX_IMAGE_VERSION=$(version) agbot-package
 
 # This target is called by the travis yaml file after the deb packages are built but before they are deployed.
