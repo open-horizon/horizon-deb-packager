@@ -145,7 +145,7 @@ dist/horizon$(call file_version,%).orig.tar.gz: $(call dist_dir,%)/debian/fs-hor
         	if [ "$$(basename $$src)" == "anax" ]; then \
 			sed -i.bak 's,local build,'${version}${branch_name}',' $${src}/version/version.go; \
         		rm -f $${src}/version/version.go.bak; \
-			if [[ (-f i18n_messages/catalog.go) && (-f $${src}/cli/i18n_messages/catalog.go) ]]; then \
+			if [[ (-f $${src}/i18n_messages/catalog.go) && (-f $${src}/cli/i18n_messages/catalog.go) ]]; then \
 				bash -c "cd $${src} && make"; \
 			else \
 				bash -c "cd $${src} && make i18n-catalog"; \
