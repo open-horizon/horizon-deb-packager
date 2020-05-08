@@ -1,3 +1,28 @@
+horizon (2.26.4++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 7304af4 (MaxMcAdam): Issue 1593 - Add built-in node policy for cluster agent
+      - 3ad7c0f (linggao): Issue 1622 - Somehow /private/var/tmp/horizon/horizon1/ess-auth was created with root ownership
+      - 52141d1 (Dave Booz): Issue 1732 - allow compile args to be overridden
+      - 2db831d (linggao): Second PII drop for 2Q2020
+      - 17758dc (linggao): Issue 1723 - Problems in message files
+      - 03fe435 (zhangl): Issue 1715 - Using CSS/ESS UBI image as the primary image
+      - 4e46104 (zhangl): Issue 1602 - Remove all surfaced node errors at unregister
+      - 478332b (linggao): Issue 1700 - Prevent hzn user from accidentally creating deployment policy with no constraints
+      - c3b6154 (Troy Fine): changed  to variable for code readability
+      - cc16f32 (linggao): Issue 1621 - Improve messages related to 'hzn deploycheck all'
+      - 8cd0b08 (linggao): Issue 1623 - 'hzn exchange service publish' doesn't store the public signing key by default
+      - 3b2e610 (Dave Booz): Issue 1540 - prevent agbot partition take over when db heartbeat is failing
+      - c384212 (MaxMcAdam): Issue 1658 - Use the namespace to create the k8s artifacts if provided
+      - 8392700 (Dave Booz): Issue 1665 - Correctly claim unowned partition with no agreements_x table
+      - f46e501 (linggao): Issue 1560 - Privileged containers should not be subjected to bind permission checks
+      - 6b3ddb9 (linggao): Fixed a few error handling code
+      - 025e7cd (zhangl): Issue 1697 Unregister edge cluster agent returns DockerEndpoint error
+      - d6d863f (zhangl): Issue 1600 - Add 'hzn exchange node liststatus <node>'
+      - c09654b (linggao): Issue 1708 - Enable userinput for cluster node type
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Fri, 08 May 2020 16:40:08 -0400
+
 horizon (2.26.3++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax.git, branch: master
