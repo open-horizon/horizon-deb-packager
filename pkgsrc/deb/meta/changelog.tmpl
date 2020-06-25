@@ -1,3 +1,61 @@
+horizon (2.26.12++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 75bfa8ba (Dave Booz): Issue 1833 - correctly remove deleted deployment policies
+      - cf970e19 (Bruce Potter): changed kubectl to KUBECTL variable
+      - e30beeee (zhangl): Issue 1828 - agent-uninstall.sh Fixes
+      - 68b4df06 (zhangl): use KUBECTL var instead of kubectl
+      - b8f3dd29 (zhangl): handle image name in deployment.yml for ocp registry, and multiple changes for script user input
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Mon, 01 Jun 2020 21:31:50 -0400
+
+horizon (2.26.11++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - e318d0c (Dave Booz): Issue 1823 - mms object routing unreliable with multiple agbots
+      - d2931c7 (linggao): es translation fix
+      - 8daa75a (zhangl): Issue 1820 - agent-install.sh: improve the way it handles the horizon env file
+      - d0c0e66 (Bruce Potter): removed blank like in hzn register output
+      - 5759a5b (Bruce Potter): do not remove template files to avoid rerun errors
+      - bb0b777 (zhangl): Enhancement - add default agent namespace to agent-uninstall.sh
+      - 608411b (MaxMcAdam): Issue 1810 - Version property not matching version range
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Sat, 30 May 2020 01:07:20 -0400
+
+horizon (2.26.10++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - 48487aa (Dave Booz): Issue 1808 - fix panic when processing negative proposal reply
+      - 2aeacca (zhangl): fix typo in agent-install.sh
+      - f1bebe8 (linggao): Translated messaged for the 3rd drop 2q2020
+      - 98c1bf8 (zhangl): Fix Issue 1780 - agent-install.sh does not check for docker pre-requisite
+      - 2e2a6be (linggao): Issue 1766 - Readme 'Horizon Managed Service Detail' needs updating
+      - 2c758d0 (zhangl): Issue 1784 - Other Docker Registries not currently supported through agent-install.sh script
+      - 393f458 (Dave Booz): Issue 1803 - ensure agbot gets max change id
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Wed, 27 May 2020 16:52:52 -0400
+
+horizon (2.26.9++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
+
+    * github.com/open-horizon/anax.git, branch: master
+      - b2459fa (Dave Booz): Issue 1800 - run agbot synconinit after protocol handlers are setup
+      - 1109dbc (linggao): Issue 1788 - Operator pod(s) stuck in Terminating state
+      - 719c6d1 (linggao): Fixed external deep clean for cluster type upon unregister
+      - 7c44cb6 (Bruce Potter): agent-install.sh accept KUBECTL env var instead of being sourced on microk8s
+      - b24b604 (Troy Fine): added docker check to cluster install
+      - 0693f98 (MaxMcAdam): Issue 1789 - Edge cluster node status shows services in Terminating state when they are running
+      - 0750f24 (Dave Booz): Issue 1786 - omit ESS env vars from edge cluster deployments
+      - 4b62dd8 (Troy Fine): added docker check to linux install
+      - d0ad860 (Troy Fine): added docker check to linux install
+      - 819b3a2 (linggao): PII files for 3rd drop for 2Q 2020
+      - 4a3c11f (zhangl): Enhancement - agent install only select running agent pod before exec hzn command
+      - 51bd27c (zhangl): Enhancement - Rename IMAGE_ON_EDGE_CLUSTER_REGISTRY field in agent-install.cfg file
+      - f77e2e1 (zhangl): Don't unregister node if deleting agent pod
+      - 9732e96 (Dave Booz): Issue 1769 - fix agreement deletion at scale
+      - 5a244b1 (linggao): 1767 - hzn dev fails to pull image with auth
+
+ -- Blue Horizon Team <developers@bluehorizon.network>  Tue, 26 May 2020 15:58:39 -0400
+
 horizon (2.26.8++VERSIONSUFFIX++) ++DISTRIBUTIONS++; urgency=medium
 
     * github.com/open-horizon/anax.git, branch: master
